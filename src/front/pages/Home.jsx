@@ -1,6 +1,6 @@
 import React from "react";
 
-const Home = () => {
+export const Home = () => {
   return (
     <>
       <style>{`
@@ -262,4 +262,4 @@ const Home = () => {
   );
 };
 
-export default Home; 
+export { Home }; 
