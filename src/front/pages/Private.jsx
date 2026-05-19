@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 
 export const Private = () => {
   const navigate = useNavigate();
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState("Loading...");
 
   useEffect(() => {
     const validateToken = async () => {
       const token = sessionStorage.getItem("token");
+      console.log("Token enviado:", token);
 
       if (!token) {
         navigate("/login");
@@ -20,15 +21,20 @@ export const Private = () => {
         const response = await fetch(`${backendUrl}/api/protected`, {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`
+
           },
         });
 
         if (!response.ok) {
-          sessionStorage.removeItem("token");
-          navigate("/login");
+          setMessage("Session expired, redirecting...");
+          setTimeout(() => {
+            sessionStorage.removeItem("token");
+            navigate("/login");
+          }, 1500);
           return;
         }
+
 
         const data = await response.json();
         setMessage(`Logged as user id: ${data.logged_in_as}`);

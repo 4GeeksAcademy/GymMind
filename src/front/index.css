@@ -410,3 +410,9 @@
   font-weight: bold;
 }
 
+.options input[type="checkbox"],
+.terms input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}

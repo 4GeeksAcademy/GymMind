@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
+import { Link } from "react-router-dom";
 
 export const Login = () => {
   const navigate = useNavigate();
@@ -21,14 +22,16 @@ export const Login = () => {
       });
 
       const data = await response.json();
+      console.log("Login response:", data);
 
       if (response.ok) {
+        const token = data.token;
         sessionStorage.setItem("token", data.token);
         sessionStorage.setItem("user", JSON.stringify(data.user));
 
         dispatch({
           type: "login",
-          payload: { token: data.token, user: data.user },
+          payload: { token, user: data.user },
         });
 
         navigate("/private");
@@ -101,7 +104,7 @@ export const Login = () => {
           </button>
 
           <p className="signup-text">
-            Don’t have an account? <span>Sign up for free</span>
+            Don’t have an account? <Link to="/signup">Sign up for free</Link>
           </p>
         </form>
       </div>
