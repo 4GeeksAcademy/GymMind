@@ -262,4 +262,3 @@ export const Home = () => {
   );
 };
 
-export { Home }; 
