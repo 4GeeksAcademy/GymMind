@@ -1,4 +1,6 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
+
 
 export const Home = () => {
   return (
@@ -121,7 +123,7 @@ export const Home = () => {
             <a href="#">Pricing</a>
           </div>
           <div className="gm-nav-cta">
-            <button className="gm-btn-ghost">Login</button>
+            <button className="gm-btn-ghost" onClick={() => navigate("/login")}>Login</button>
             <button className="gm-btn-primary-nav">Get started free</button>
           </div>
         </nav>
