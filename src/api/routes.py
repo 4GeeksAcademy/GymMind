@@ -5,6 +5,12 @@ from flask import Flask, request, jsonify, url_for, Blueprint
 from api.models import db, User
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
+from flask_jwt_extended import (
+    create_access_token,
+    jwt_required,
+    get_jwt_identity
+)
+
 
 api = Blueprint('api', __name__)
 
@@ -21,11 +27,12 @@ def handle_hello():
 
     return jsonify(response_body), 200
 
+
 @api.route('/signup', methods=['POST'])
 def signup():
 
     body = request.get_json()
-    
+
     first_name = body.get("first_name")
     last_name = body.get("last_name")
     email = body.get("email")
@@ -45,7 +52,7 @@ def signup():
 
     new_user = User(
         first_name=first_name,
-        last_name=first_name,
+        last_name=last_name,
         email=email,
         is_active=True
     )
@@ -59,3 +66,54 @@ def signup():
         "message": "User created successfully",
         "user": new_user.serialize()
     }), 201
+
+
+@api.route('/login', methods=['POST'])
+def login():
+
+    body = request.get_json()
+
+    email = body.get("email")
+    password = body.get("password")
+
+    # validar campos
+    if not email or not password:
+        return jsonify({
+            "error": "Email and password are required"
+        }), 400
+
+    # buscar usuario
+    user = User.query.filter_by(email=email).first()
+
+    # verificar si usuario existe
+    if not user:
+        return jsonify({
+            "error": "Invalid email or password"
+        }), 401
+
+    # verificar password
+    if not user.check_password(password):
+        return jsonify({
+            "error": "Invalid email or password"
+        }), 401
+
+    # crear token JWT
+    access_token = create_access_token(identity=str(user.id))
+
+    return jsonify({
+        "token": access_token,
+        "user": user.serialize()
+    }), 200
+
+
+@api.route('/private', methods=['GET'])
+@jwt_required()
+def private():
+
+    user_id = get_jwt_identity()
+
+    user = User.query.get(user_id)
+
+    return jsonify({
+        "user": user.serialize()
+    }), 200

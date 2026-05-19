@@ -4,6 +4,7 @@ This module takes care of starting the API Server, Loading the DB and Adding the
 import os
 from flask import Flask, request, jsonify, url_for, send_from_directory
 from flask_migrate import Migrate
+from flask_jwt_extended import JWTManager
 from flask_swagger import swagger
 from api.utils import APIException, generate_sitemap
 from api.models import db
@@ -17,6 +18,10 @@ ENV = "development" if os.getenv("FLASK_DEBUG") == "1" else "production"
 static_file_dir = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), '../dist/')
 app = Flask(__name__)
+
+app.config["JWT_SECRET_KEY"] = "super-secret-key"
+
+jwt = JWTManager(app)
 app.url_map.strict_slashes = False
 
 # database condiguration
@@ -30,6 +35,7 @@ else:
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 MIGRATE = Migrate(app, db, compare_type=True)
 db.init_app(app)
+
 
 # add the admin
 setup_admin(app)
@@ -57,6 +63,8 @@ def sitemap():
     return send_from_directory(static_file_dir, 'index.html')
 
 # any other endpoint will try to serve it like a static file
+
+
 @app.route('/<path:path>', methods=['GET'])
 def serve_any_other_file(path):
     if not os.path.isfile(os.path.join(static_file_dir, path)):
