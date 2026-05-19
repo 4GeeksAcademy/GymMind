@@ -35,7 +35,6 @@ export const Login = () => {
         });
 
         navigate("/private");
-        alert("Login successful");
       } else {
         alert(data.error || "Login failed");
       }

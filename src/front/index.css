@@ -416,3 +416,88 @@
   height: 16px;
   cursor: pointer;
 }
+
+.private-page {
+  min-height: 100vh;
+  background: #050b10;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
+
+.private-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 80px 80px;
+}
+
+.private-navbar {
+  height: 70px;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  z-index: 2;
+}
+
+.private-logo {
+  color: #00e5ff;
+  font-weight: 900;
+  letter-spacing: 2px;
+  font-size: 18px;
+}
+
+.logout-btn {
+  margin-left: auto;
+  background: #19d9f3;
+  color: #021014;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.logout-btn:hover {
+  opacity: 0.85;
+}
+
+.private-card {
+  width: 500px;
+  background: #0b1419;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 50px 40px;
+  margin: 80px auto;
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+}
+
+.private-card h1 {
+  color: #00e5ff;
+  font-size: 42px;
+  font-weight: 900;
+  margin-bottom: 20px;
+  letter-spacing: 1px;
+}
+
+.private-card p {
+  color: #c4d0db;
+  font-size: 18px;
+  margin-bottom: 22px;
+}
+
+.private-status {
+  color: #00ff88;
+  font-weight: bold;
+  font-size: 15px;
+}

@@ -1,9 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 
 export const Private = () => {
   const navigate = useNavigate();
+  const { dispatch } = useGlobalReducer();
   const [message, setMessage] = useState("Loading...");
+  const handleLogout = () => {
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+
+    dispatch({ type: "logout" });
+
+    navigate("/login");
+  };
 
   useEffect(() => {
     const validateToken = async () => {
@@ -35,9 +45,6 @@ export const Private = () => {
           return;
         }
 
-
-        const data = await response.json();
-        setMessage(`Logged as user id: ${data.logged_in_as}`);
       } catch (error) {
         console.log(error);
         navigate("/login");
@@ -48,9 +55,24 @@ export const Private = () => {
   }, []);
 
   return (
-    <div className="container text-center mt-5">
-      <h1 className="display-4 text-success">Private Page</h1>
-      <p className="lead">{message}</p>
+    <div className="private-page">
+
+      <nav className="private-navbar">
+        <div className="private-logo">GYMMIND AI</div>
+
+        <button onClick={handleLogout} className="logout-btn">
+          Logout
+        </button>
+      </nav>
+
+      <div className="private-card">
+        <h1>WELCOME BACK</h1>
+
+        <span className="private-status">
+          Authenticated successfully
+        </span>
+      </div>
+
     </div>
   );
 };
