@@ -11,16 +11,28 @@ class User(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     first_name: Mapped[str] = mapped_column(String(80), nullable=False)
     last_name: Mapped[str] = mapped_column(String(80), nullable=False)
-    email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(
+        String(120), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=True)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean(), nullable=False, default=True)
+    nickname: Mapped[str] = mapped_column(String(80), nullable=True)
+    gender: Mapped[str] = mapped_column(String(20), nullable=True)
+    date_of_birth: Mapped[str] = mapped_column(String(20), nullable=True)
+    weight: Mapped[float] = mapped_column(Float, nullable=True)
+    height: Mapped[float] = mapped_column(Float, nullable=True)
+    phone_number: Mapped[str] = mapped_column(String(30), nullable=True)
 
     # Relationships
-    profile: Mapped["Profile"] = relationship(back_populates="user", uselist=False)
+    profile: Mapped["Profile"] = relationship(
+        back_populates="user", uselist=False)
     workouts: Mapped[list["Workout"]] = relationship(back_populates="user")
-    mood_checks: Mapped[list["MoodCheck"]] = relationship(back_populates="user")
-    progress_logs: Mapped[list["ProgressLog"]] = relationship(back_populates="user")
-    nutrition_logs: Mapped[list["NutritionLog"]] = relationship(back_populates="user")
+    mood_checks: Mapped[list["MoodCheck"]
+                        ] = relationship(back_populates="user")
+    progress_logs: Mapped[list["ProgressLog"]
+                          ] = relationship(back_populates="user")
+    nutrition_logs: Mapped[list["NutritionLog"]
+                           ] = relationship(back_populates="user")
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
@@ -34,20 +46,25 @@ class User(db.Model):
             "first_name": self.first_name,
             "last_name": self.last_name,
             "email": self.email,
-            # do not serialize the password, its a security breach
+            "nickname": self.nickname,
+            "gender": self.gender,
+            "date_of_birth": self.date_of_birth,
+            "weight": self.weight,
+            "height": self.height,
+            "phone_number": self.phone_number,
         }
 
 
 class Profile(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(db.ForeignKey("user.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        db.ForeignKey("user.id"), nullable=False)
     age: Mapped[int] = mapped_column(nullable=False)
-    weight: Mapped[float] = mapped_column(Float, nullable=False)        # en kg
-    height: Mapped[float] = mapped_column(Float, nullable=False)        # en cm
-    fitness_goal: Mapped[str] = mapped_column(String(50), nullable=False)  # 'lose_fat', 'gain_muscle', 'recomposition'
+    weight: Mapped[float] = mapped_column(Float, nullable=False)
+    height: Mapped[float] = mapped_column(Float, nullable=False)
+    fitness_goal: Mapped[str] = mapped_column(String(50), nullable=False)
     photo_url: Mapped[str] = mapped_column(String(300), nullable=True)
 
-    # Relationships
     user: Mapped["User"] = relationship(back_populates="profile")
 
     def serialize(self):
@@ -64,13 +81,15 @@ class Profile(db.Model):
 
 class Workout(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(db.ForeignKey("user.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        db.ForeignKey("user.id"), nullable=False)
     fitness_goal: Mapped[str] = mapped_column(String(50), nullable=False)
-    date: Mapped[date] = mapped_column(Date, nullable=False, default=datetime.utcnow)
+    date: Mapped[date] = mapped_column(
+        Date, nullable=False, default=datetime.utcnow)
 
-    # Relationships
     user: Mapped["User"] = relationship(back_populates="workouts")
-    exercises: Mapped[list["WorkoutExercise"]] = relationship(back_populates="workout")
+    exercises: Mapped[list["WorkoutExercise"]
+                      ] = relationship(back_populates="workout")
 
     def serialize(self):
         return {
@@ -84,13 +103,14 @@ class Workout(db.Model):
 
 class WorkoutExercise(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    workout_id: Mapped[int] = mapped_column(db.ForeignKey("workout.id"), nullable=False)
+    workout_id: Mapped[int] = mapped_column(
+        db.ForeignKey("workout.id"), nullable=False)
     name: Mapped[str] = mapped_column(String(150), nullable=False)
     muscle: Mapped[str] = mapped_column(String(100), nullable=False)
     image_url: Mapped[str] = mapped_column(String(300), nullable=True)
-    is_completed: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=False)
+    is_completed: Mapped[bool] = mapped_column(
+        Boolean(), nullable=False, default=False)
 
-    # Relationships
     workout: Mapped["Workout"] = relationship(back_populates="exercises")
 
     def serialize(self):
@@ -106,12 +126,13 @@ class WorkoutExercise(db.Model):
 
 class MoodCheck(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(db.ForeignKey("user.id"), nullable=False)
-    mood: Mapped[str] = mapped_column(String(50), nullable=False)  # 'great', 'good', 'okay', 'tired', 'unmotivated'
+    user_id: Mapped[int] = mapped_column(
+        db.ForeignKey("user.id"), nullable=False)
+    mood: Mapped[str] = mapped_column(String(50), nullable=False)
     ai_message: Mapped[str] = mapped_column(Text, nullable=True)
-    date: Mapped[date] = mapped_column(Date, nullable=False, default=datetime.utcnow)
+    date: Mapped[date] = mapped_column(
+        Date, nullable=False, default=datetime.utcnow)
 
-    # Relationships
     user: Mapped["User"] = relationship(back_populates="mood_checks")
 
     def serialize(self):
@@ -126,11 +147,12 @@ class MoodCheck(db.Model):
 
 class ProgressLog(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(db.ForeignKey("user.id"), nullable=False)
-    weight: Mapped[float] = mapped_column(Float, nullable=False)  # en kg
-    date: Mapped[date] = mapped_column(Date, nullable=False, default=datetime.utcnow)
+    user_id: Mapped[int] = mapped_column(
+        db.ForeignKey("user.id"), nullable=False)
+    weight: Mapped[float] = mapped_column(Float, nullable=False)
+    date: Mapped[date] = mapped_column(
+        Date, nullable=False, default=datetime.utcnow)
 
-    # Relationships
     user: Mapped["User"] = relationship(back_populates="progress_logs")
 
     def serialize(self):
@@ -144,15 +166,16 @@ class ProgressLog(db.Model):
 
 class NutritionLog(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(db.ForeignKey("user.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        db.ForeignKey("user.id"), nullable=False)
     food_name: Mapped[str] = mapped_column(String(200), nullable=False)
     calories: Mapped[float] = mapped_column(Float, nullable=False)
-    protein: Mapped[float] = mapped_column(Float, nullable=False)   # en gramos
-    carbs: Mapped[float] = mapped_column(Float, nullable=False)     # en gramos
-    fats: Mapped[float] = mapped_column(Float, nullable=False)      # en gramos
-    date: Mapped[date] = mapped_column(Date, nullable=False, default=datetime.utcnow)
+    protein: Mapped[float] = mapped_column(Float, nullable=False)
+    carbs: Mapped[float] = mapped_column(Float, nullable=False)
+    fats: Mapped[float] = mapped_column(Float, nullable=False)
+    date: Mapped[date] = mapped_column(
+        Date, nullable=False, default=datetime.utcnow)
 
-    # Relationships
     user: Mapped["User"] = relationship(back_populates="nutrition_logs")
 
     def serialize(self):
@@ -166,4 +189,3 @@ class NutritionLog(db.Model):
             "fats": self.fats,
             "date": self.date.isoformat()
         }
-    
