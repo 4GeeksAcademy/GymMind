@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export const Dashboard = () => {
+  const navigate = useNavigate();
   const [selectedMood, setSelectedMood] = useState("good");
   const [aiMessage, setAiMessage] = useState("Feeling good is the perfect foundation. Stay focused and consistent — every rep today brings you closer to your goal. Let's make it count!");
-  const navigate = useNavigate();
 
   const moods = [
     { id: "great", emoji: "🔥", label: "Great", message: "You're on fire today! Your AI Coach has an intense workout ready. Channel that energy and go all in — today is your day to set a new personal record!" },
@@ -127,7 +127,16 @@ export const Dashboard = () => {
             <a href="#" onClick={(e) => { e.preventDefault(); navigate("/profile"); }}>Profile</a>
           </div>
           <div className="db-nav-cta">
-            <button className="db-btn-danger">Sign out</button> {/* 👈 Solo queda Sign out */}
+            <button
+              className="db-btn-danger"
+              onClick={() => {
+                sessionStorage.removeItem("token");
+                sessionStorage.removeItem("user");
+                navigate("/login");
+              }}
+            >
+              Sign out
+            </button>
           </div>
         </nav>
 
@@ -136,7 +145,6 @@ export const Dashboard = () => {
           <div className="db-section-label">Welcome back</div>
           <div className="db-page-title">GOOD MORNING, JESSICA 👋</div>
 
-          {/* STATS */}
           <div className="db-stats-row">
             <div className="db-stat-card">
               <div className="db-stat-icon">🔥</div>
@@ -160,7 +168,6 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* WEEK TRACKER */}
           <div className="db-card">
             <div className="db-card-title">📅 This week</div>
             <div className="db-week-row">
@@ -175,7 +182,6 @@ export const Dashboard = () => {
 
           <div className="db-grid-2">
 
-            {/* MOOD CHECK */}
             <div className="db-card">
               <div className="db-card-title">😌 Daily Mood Check</div>
               <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "12px" }}>How are you feeling today?</p>
@@ -196,7 +202,6 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* TODAY'S WORKOUT */}
             <div className="db-card">
               <div className="db-card-title">
                 <span>🏋️ Today's Workout</span>
@@ -216,7 +221,6 @@ export const Dashboard = () => {
 
           </div>
 
-          {/* PROGRESS MINI */}
           <div className="db-card">
             <div className="db-card-title">
               <span>📈 Recent Progress</span>
