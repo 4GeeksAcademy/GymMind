@@ -667,12 +667,6 @@ html {
   font-size: 18px;
 }
 
-.signin-links {
-  display: flex;
-  gap: 28px;
-  margin-left: 55px;
-}
-
 .signin-actions {
   margin-left: auto;
   display: flex;
@@ -680,7 +674,8 @@ html {
 }
 
 .signin-card {
-  width: 430px;
+  width: 100%;
+  max-width: 430px;
   background: #0b1419;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 18px;
@@ -689,32 +684,6 @@ html {
   position: relative;
   z-index: 2;
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
-}
-
-.signin-btn {
-  width: 100%;
-  height: 46px;
-  background: #1ddff5;
-  border: none;
-  border-radius: 8px;
-  color: #021014;
-  font-weight: 900;
-  margin-bottom: 22px;
-}
-
-.google-btn {
-  width: 100%;
-  height: 42px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  color: white;
-  font-weight: bold;
-}
-
-.google-btn span {
-  color: #ff4b4b;
-  margin-right: 8px;
 }
 
 .signin-card h3 {
