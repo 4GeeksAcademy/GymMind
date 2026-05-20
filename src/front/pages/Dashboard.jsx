@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const Dashboard = () => {
+  const navigate = useNavigate();
   const [selectedMood, setSelectedMood] = useState("good");
   const [aiMessage, setAiMessage] = useState("Feeling good is the perfect foundation. Stay focused and consistent — every rep today brings you closer to your goal. Let's make it count!");
 
@@ -127,7 +129,16 @@ export const Dashboard = () => {
           </div>
           <div className="db-nav-cta">
             <button className="db-btn-ghost">Edit profile</button>
-            <button className="db-btn-danger">Sign out</button>
+            <button
+              className="db-btn-danger"
+              onClick={() => {
+                sessionStorage.removeItem("token");
+                sessionStorage.removeItem("user");
+                navigate("/login");
+              }}
+            >
+              Sign out
+            </button>
           </div>
         </nav>
 

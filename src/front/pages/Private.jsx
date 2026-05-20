@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
+import { Dashboard } from "./Dashboard";
 
 export const Private = () => {
   const navigate = useNavigate();
   const { dispatch } = useGlobalReducer();
-  const [message, setMessage] = useState("Loading...");
   const handleLogout = () => {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("user");
@@ -37,11 +37,10 @@ export const Private = () => {
         });
 
         if (!response.ok) {
-          setMessage("Session expired, redirecting...");
-          setTimeout(() => {
-            sessionStorage.removeItem("token");
-            navigate("/login");
-          }, 1500);
+          sessionStorage.removeItem("token");
+          sessionStorage.removeItem("user");
+
+          navigate("/login");
           return;
         }
 
@@ -54,25 +53,5 @@ export const Private = () => {
     validateToken();
   }, []);
 
-  return (
-    <div className="private-page">
-
-      <nav className="private-navbar">
-        <div className="private-logo">GYMMIND AI</div>
-
-        <button onClick={handleLogout} className="logout-btn">
-          Logout
-        </button>
-      </nav>
-
-      <div className="private-card">
-        <h1>WELCOME BACK</h1>
-
-        <span className="private-status">
-          Authenticated successfully
-        </span>
-      </div>
-
-    </div>
-  );
+return <Dashboard handleLogout={handleLogout} />;
 };
