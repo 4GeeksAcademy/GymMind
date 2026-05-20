@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const Dashboard = () => {
   const [selectedMood, setSelectedMood] = useState("good");
   const [aiMessage, setAiMessage] = useState("Feeling good is the perfect foundation. Stay focused and consistent — every rep today brings you closer to your goal. Let's make it count!");
+  const navigate = useNavigate();
 
   const moods = [
     { id: "great", emoji: "🔥", label: "Great", message: "You're on fire today! Your AI Coach has an intense workout ready. Channel that energy and go all in — today is your day to set a new personal record!" },
@@ -53,7 +55,6 @@ export const Dashboard = () => {
         .db-nav-links a { color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 500; white-space: nowrap; transition: color 0.2s; }
         .db-nav-links a.active { color: var(--accent); }
         .db-nav-cta { display: flex; gap: 8px; align-items: center; flex-shrink: 0; margin-left: 24px; }
-        .db-btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
         .db-btn-danger { background: transparent; border: 1px solid rgba(255,80,80,0.3); color: #ff6b6b; padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
 
         /* PAGE */
@@ -123,11 +124,10 @@ export const Dashboard = () => {
             <a href="#" className="active">Dashboard</a>
             <a href="#">My Workout</a>
             <a href="#">Progress</a>
-            <a href="#">Profile</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); navigate("/profile"); }}>Profile</a>
           </div>
           <div className="db-nav-cta">
-            <button className="db-btn-ghost">Edit profile</button>
-            <button className="db-btn-danger">Sign out</button>
+            <button className="db-btn-danger">Sign out</button> {/* 👈 Solo queda Sign out */}
           </div>
         </nav>
 
@@ -250,4 +250,4 @@ export const Dashboard = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

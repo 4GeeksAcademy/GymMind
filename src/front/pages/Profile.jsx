@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
+    const userId = 1;
     const [user, setUser] = useState(null);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
-    const userId = 1;
 
     useEffect(() => {
         fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`)
@@ -51,8 +51,12 @@ const Profile = () => {
                     ) : null)}
                 </div>
 
-                <button className="btn profile-btn w-100" onClick={() => navigate("/edit-profile")}>
+                <button className="btn profile-btn w-100 mb-2" onClick={() => navigate("/edit-profile")}>
                     Edit Profile
+                </button>
+
+                <button className="btn profile-btn-secondary w-100" onClick={() => navigate("/dashboard")}> {/* 👈 ESTE YA ESTABA */}
+                    Back to Dashboard
                 </button>
 
             </div>

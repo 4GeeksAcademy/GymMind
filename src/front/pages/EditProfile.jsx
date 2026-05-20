@@ -21,6 +21,7 @@ const isFakeDomain = (email) => {
 };
 
 const EditProfile = () => {
+    const userId = 1;
     const [form, setForm] = useState({
         first_name: "", last_name: "", email: "",
         nickname: "", gender: "", date_of_birth: "",
@@ -30,7 +31,6 @@ const EditProfile = () => {
     const [fieldErrors, setFieldErrors] = useState({});
     const [showSuccess, setShowSuccess] = useState(false);
     const navigate = useNavigate();
-    const userId = 1;
 
     const [dobDay, setDobDay] = useState("");
     const [dobMonth, setDobMonth] = useState("");
@@ -157,7 +157,7 @@ const EditProfile = () => {
                 if (data.error) setError(data.error);
                 else {
                     setShowSuccess(true);
-                    setTimeout(() => { setShowSuccess(false); navigate("/profile"); }, 1800);
+                    setTimeout(() => { setShowSuccess(false); navigate("/profile"); }, 1800); // 👈 CAMBIADO
                 }
             })
             .catch(() => setError("Could not connect to server"));
@@ -187,7 +187,6 @@ const EditProfile = () => {
         <div className="profile-page">
             <div className="profile-container">
 
-                {/* ── Encabezado igual que Profile.jsx ── */}
                 <div className="text-center mb-4">
                     <div className="profile-avatar mx-auto mb-3">{initials}</div>
                     <h2 className="profile-name">{form.first_name || "—"} {form.last_name || ""}</h2>
@@ -197,7 +196,6 @@ const EditProfile = () => {
                     </p>
                 </div>
 
-                {/* Animación de éxito */}
                 {showSuccess && (
                     <div style={{
                         display: "flex", flexDirection: "column", alignItems: "center",
@@ -241,7 +239,6 @@ const EditProfile = () => {
                     </div>
                 ))}
 
-                {/* Género: botones pill */}
                 <div className="mb-3">
                     <label className="profile-card-label mb-2">Gender</label>
                     <div className="d-flex gap-3">
@@ -266,7 +263,6 @@ const EditProfile = () => {
                     </div>
                 </div>
 
-                {/* Fecha de nacimiento */}
                 <div className="mb-3">
                     <label className="profile-card-label mb-2">
                         Date of Birth <span style={{ color: "#ff4d4d", marginLeft: "4px" }}>*</span>
@@ -305,7 +301,6 @@ const EditProfile = () => {
                     )}
                 </div>
 
-                {/* Peso */}
                 <div className="mb-3">
                     <label className="profile-card-label mb-2">
                         Weight — <span style={{ color: "white", fontWeight: "bold" }}>{form.weight || "—"} kg</span>
@@ -317,7 +312,6 @@ const EditProfile = () => {
                     />
                 </div>
 
-                {/* Altura */}
                 <div className="mb-4">
                     <label className="profile-card-label mb-2">
                         Height — <span style={{ color: "white", fontWeight: "bold" }}>{form.height || "—"} cm</span>
@@ -333,7 +327,7 @@ const EditProfile = () => {
                     Save Changes
                 </button>
 
-                <button className="btn profile-btn-secondary w-100" onClick={() => navigate("/profile")}>
+                <button className="btn profile-btn-secondary w-100" onClick={() => navigate("/profile")}> {/* 👈 CAMBIADO */}
                     Cancel
                 </button>
 
