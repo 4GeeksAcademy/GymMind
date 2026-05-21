@@ -829,3 +829,161 @@ html {
   text-decoration: none;
   font-weight: bold;
 }
+
+/* ===== MOOD CHECK PAGE ===== */
+.moodcheck-page {
+  min-height: 100vh;
+  background: #050b10; 
+  color: white;
+  font-family: Arial, sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.moodcheck-page::before {
+  pointer-events: none;
+  z-index: 0;
+}
+
+.moodcheck-navbar {
+  height: 70px;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: #0b1419;
+}
+
+.moodcheck-links a {
+  color: #7f8fa3;
+  text-decoration: none;
+  margin: 0 12px;
+  font-size: 14px;
+}
+
+.moodcheck-links a:hover {
+  color: #00e5ff;
+}
+
+.moodcheck-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.moodcheck-edit button {
+  background: #19d9f3;
+  color: #021014;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.moodcheck-edit button:hover {
+  opacity: 0.85;
+}
+
+.moodcheck-signout-btn {
+  background: #ff4b4b;
+  color: white;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.moodcheck-signout-btn:hover {
+  opacity: 0.85;
+}
+
+.moodcheck-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.moodcheck-header h2 {
+  color: #00e5ff;
+  letter-spacing: 2px;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.moodcheck-header h1 {
+  font-size: 28px;
+  font-weight: 900;
+  margin-bottom: 12px;
+}
+
+.moodcheck-header p {
+  color: #7e8c9c;
+  font-size: 14px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.page-container {
+  position: relative;
+  z-index: 2;
+}
+
+.mood-check {
+  background: #0b1419;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 30px;
+  max-width: 600px;
+  margin: 40px auto;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+}
+
+.mood-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.mood-options button {
+  background: #151f24;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.mood-options button.selected {
+  background: #19d9f3;
+  color: #021014;
+}
+
+.moodcheck-submit-btn {
+  width: 100%;
+  background: #1ddff5;
+  color: #021014;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.mood-check ul {
+  list-style: none;
+  padding: 0;
+}
+
+.mood-check li {
+  margin-bottom: 14px;
+  color: #ccc;
+}
+
+.mood-check li p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #7e8c9c;
+}
