@@ -151,8 +151,9 @@ const Profile = () => {
 
                     {/* HERO */}
                     <div className="pf-hero">
-                        <div className="pf-avatar">{initials}</div>
-                        <div className="pf-hero-info">
+                        <div className="pf-avatar">{user.photo_url? <img src={user.photo_url} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />: initials}
+                            </div>
+                        <div className="pf-hero-info">  
                             <div className="pf-hero-name">{user.first_name.toUpperCase()} {user.last_name.toUpperCase()}</div>
                             <div className="pf-hero-email">{user.email}</div>
                             <div className="pf-badges">
