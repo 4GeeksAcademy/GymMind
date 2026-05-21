@@ -55,7 +55,6 @@ export const Dashboard = () => {
         .db-nav-links a { color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 500; white-space: nowrap; transition: color 0.2s; }
         .db-nav-links a.active { color: var(--accent); }
         .db-nav-cta { display: flex; gap: 8px; align-items: center; flex-shrink: 0; margin-left: 24px; }
-        .db-btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
         .db-btn-danger { background: transparent; border: 1px solid rgba(255,80,80,0.3); color: #ff6b6b; padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
 
         /* PAGE */
@@ -125,10 +124,9 @@ export const Dashboard = () => {
             <a href="#" className="active">Dashboard</a>
             <a href="#">My Workout</a>
             <a href="#">Progress</a>
-            <a href="#">Profile</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); navigate("/profile"); }}>Profile</a>
           </div>
           <div className="db-nav-cta">
-            <button className="db-btn-ghost">Edit profile</button>
             <button
               className="db-btn-danger"
               onClick={() => {
@@ -147,7 +145,6 @@ export const Dashboard = () => {
           <div className="db-section-label">Welcome back</div>
           <div className="db-page-title">GOOD MORNING, JESSICA 👋</div>
 
-          {/* STATS */}
           <div className="db-stats-row">
             <div className="db-stat-card">
               <div className="db-stat-icon">🔥</div>
@@ -171,7 +168,6 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* WEEK TRACKER */}
           <div className="db-card">
             <div className="db-card-title">📅 This week</div>
             <div className="db-week-row">
@@ -186,7 +182,6 @@ export const Dashboard = () => {
 
           <div className="db-grid-2">
 
-            {/* MOOD CHECK */}
             <div className="db-card">
               <div className="db-card-title">😌 Daily Mood Check</div>
               <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "12px" }}>How are you feeling today?</p>
@@ -207,7 +202,6 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* TODAY'S WORKOUT */}
             <div className="db-card">
               <div className="db-card-title">
                 <span>🏋️ Today's Workout</span>
@@ -227,7 +221,6 @@ export const Dashboard = () => {
 
           </div>
 
-          {/* PROGRESS MINI */}
           <div className="db-card">
             <div className="db-card-title">
               <span>📈 Recent Progress</span>
@@ -261,4 +254,4 @@ export const Dashboard = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;
