@@ -7,12 +7,14 @@ export const MoodCheckPage = () => {
     return (
         <div className="moodcheck-page">
             <nav className="moodcheck-navbar">
+                 <div className="moodcheck-left">  
                 <div className="moodcheck-logo">GYMMIND AI</div>
                 <div className="moodcheck-links">
                     <Link to="/dashboard">Dashboard</Link>
                     <Link to="/myworkout">My Workout</Link>
                     <Link to="/progress">Progress</Link>
                     <Link to="/profile">Profile</Link>
+                </div>
                 </div>
                 <div className="moodcheck-actions">
                     <div className="moodcheck-edit">

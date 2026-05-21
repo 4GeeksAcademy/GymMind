@@ -833,7 +833,7 @@ html {
 /* ===== MOOD CHECK PAGE ===== */
 .moodcheck-page {
   min-height: 100vh;
-  background: #050b10; 
+  background: #050b10;
   color: white;
   font-family: Arial, sans-serif;
   position: relative;
@@ -845,6 +845,14 @@ html {
   z-index: 0;
 }
 
+.moodcheck-logo {
+  color: #00e5ff;
+  font-weight: 900;
+  letter-spacing: 2px;
+  font-size: 18px;
+  margin-right: 40px;
+}
+
 .moodcheck-navbar {
   height: 70px;
   padding: 0 28px;
@@ -853,6 +861,11 @@ html {
   justify-content: space-between;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   background-color: #0b1419;
+}
+
+.moodcheck-links {
+  display: flex;
+  gap: 28px;
 }
 
 .moodcheck-links a {
@@ -970,6 +983,11 @@ html {
   padding: 12px;
   font-weight: bold;
   margin-bottom: 20px;
+}
+
+.moodcheck-left {
+  display: flex;
+  align-items: center;
 }
 
 .mood-check ul {
