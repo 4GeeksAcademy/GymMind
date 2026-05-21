@@ -29,8 +29,7 @@ def signup():
     if User.query.filter_by(email=email).first():
         return jsonify({"error": "User already exists"}), 400
 
-    new_user = User(first_name=first_name, last_name=last_name,
-                    email=email, is_active=True)
+    new_user = User(first_name=first_name, last_name=last_name, email=email, is_active=True)
     new_user.set_password(password)
     db.session.add(new_user)
     db.session.commit()
@@ -102,3 +101,14 @@ def edit_user_profile(user_id):
 
     db.session.commit()
     return jsonify({"message": "Profile updated successfully", "user": user.serialize()}), 200
+
+
+@api.route('/user/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({"message": "Account deleted successfully"}), 200
