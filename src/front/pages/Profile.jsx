@@ -46,7 +46,7 @@ const Profile = () => {
 
     const initials = user.first_name[0].toUpperCase() + user.last_name[0].toUpperCase();
     const age = calculateAge(user.date_of_birth);
-    const memberSince = "May 2025"; // hardcodeado por ahora
+    const memberSince = "May 2025";
 
     return (
         <>
@@ -151,8 +151,9 @@ const Profile = () => {
 
                     {/* HERO */}
                     <div className="pf-hero">
-                        <div className="pf-avatar">{initials}</div>
-                        <div className="pf-hero-info">
+                        <div className="pf-avatar">{user.photo_url? <img src={user.photo_url} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />: initials}
+                            </div>
+                        <div className="pf-hero-info">  
                             <div className="pf-hero-name">{user.first_name.toUpperCase()} {user.last_name.toUpperCase()}</div>
                             <div className="pf-hero-email">{user.email}</div>
                             <div className="pf-badges">
@@ -229,7 +230,22 @@ const Profile = () => {
                             <div className="pf-danger-title">Danger zone</div>
                             <div className="pf-danger-sub">Once you delete your account, there is no going back.</div>
                         </div>
-                        <button className="pf-btn-delete">Delete account</button>
+                        <button className="pf-btn-delete" onClick={() => {  // 👈 CAMBIADO
+                            if (window.confirm("Are you sure you want to delete your account? This cannot be undone.")) {
+                                fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`, {
+                                    method: "DELETE"
+                                })
+                                .then(res => res.json())
+                                .then(() => {
+                                    sessionStorage.removeItem("token");
+                                    sessionStorage.removeItem("user");
+                                    navigate("/signup");
+                                })
+                                .catch(() => alert("Could not delete account. Try again."));
+                            }
+                        }}>
+                            Delete account
+                        </button>
                     </div>
 
                 </div>

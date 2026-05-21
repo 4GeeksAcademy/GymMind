@@ -30,6 +30,8 @@ const EditProfile = () => {
     const [error, setError] = useState(null);
     const [fieldErrors, setFieldErrors] = useState({});
     const [showSuccess, setShowSuccess] = useState(false);
+    const [photoFile, setPhotoFile] = useState(null);
+    const [photoPreview, setPhotoPreview] = useState(null);
     const navigate = useNavigate();
 
     const [dobDay, setDobDay] = useState("");
@@ -39,17 +41,20 @@ const EditProfile = () => {
     useEffect(() => {
         fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`)
             .then(res => res.json())
-            .then(data => setForm({
-                first_name: data.first_name || "",
-                last_name: data.last_name || "",
-                email: data.email || "",
-                nickname: data.nickname || "",
-                gender: data.gender || "",
-                date_of_birth: data.date_of_birth || "",
-                weight: data.weight || "",
-                height: data.height || "",
-                phone_number: data.phone_number || ""
-            }))
+            .then(data => {
+                setForm({
+                    first_name: data.first_name || "",
+                    last_name: data.last_name || "",
+                    email: data.email || "",
+                    nickname: data.nickname || "",
+                    gender: data.gender || "",
+                    date_of_birth: data.date_of_birth || "",
+                    weight: data.weight || "",
+                    height: data.height || "",
+                    phone_number: data.phone_number || ""
+                });
+                if (data.photo_url) setPhotoPreview(data.photo_url);
+            })
             .catch(() => setError("Could not connect to server"));
     }, []);
 
@@ -67,6 +72,13 @@ const EditProfile = () => {
         if (fieldErrors[e.target.name]) {
             setFieldErrors(prev => ({ ...prev, [e.target.name]: null }));
         }
+    };
+
+    const handlePhotoChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setPhotoFile(file);
+        setPhotoPreview(URL.createObjectURL(file));
     };
 
     const handleDobChange = (day, month, year) => {
@@ -137,7 +149,7 @@ const EditProfile = () => {
         return errors;
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         setError(null);
         const errors = validate();
         if (Object.keys(errors).length > 0) {
@@ -147,20 +159,40 @@ const EditProfile = () => {
         }
         setFieldErrors({});
 
-        fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(form)
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) setError(data.error);
-                else {
-                    setShowSuccess(true);
-                    setTimeout(() => { setShowSuccess(false); navigate("/profile"); }, 1800);
+        try {
+            // 1. Guardar datos del perfil
+            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(form)
+            });
+            const data = await res.json();
+            if (data.error) {
+                setError(data.error);
+                return;
+            }
+
+            // 2. Si hay foto nueva, subirla
+            if (photoFile) {
+                const formData = new FormData();
+                formData.append("photo", photoFile);
+                const photoRes = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}/photo`, {
+                    method: "POST",
+                    body: formData
+                });
+                const photoData = await photoRes.json();
+                if (photoData.error) {
+                    setError(photoData.error);
+                    return;
                 }
-            })
-            .catch(() => setError("Could not connect to server"));
+            }
+
+            setShowSuccess(true);
+            setTimeout(() => { setShowSuccess(false); navigate("/profile"); }, 1800);
+
+        } catch {
+            setError("Could not connect to server");
+        }
     };
 
     const days = Array.from({ length: 31 }, (_, i) => i + 1);
@@ -242,10 +274,14 @@ const EditProfile = () => {
                 .ep-page-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 2px; margin-bottom: 24px; }
 
                 .ep-hero { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 24px 28px; display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
-                .ep-avatar { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #0066ff, #00c6ff); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: white; flex-shrink: 0; border: 3px solid var(--accent); }
+                .ep-avatar { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #0066ff, #00c6ff); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: white; flex-shrink: 0; border: 3px solid var(--accent); overflow: hidden; }
+                .ep-avatar img { width: 100%; height: 100%; object-fit: cover; }
                 .ep-hero-name { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; }
                 .ep-hero-email { color: var(--muted); font-size: 13px; }
                 .ep-hero-tag { font-size: 12px; color: var(--accent); margin-top: 4px; }
+
+                .ep-photo-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 6px 14px; font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; margin-top: 8px; }
+                .ep-photo-btn:hover { border-color: var(--accent); color: var(--accent); }
 
                 .ep-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 16px; }
                 .ep-card-title { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px; margin-bottom: 18px; color: var(--text); }
@@ -299,12 +335,32 @@ const EditProfile = () => {
                     <div className="ep-section-label">My Account</div>
                     <div className="ep-page-title">EDIT PROFILE</div>
 
+                    {/* HERO con foto */}
                     <div className="ep-hero">
-                        <div className="ep-avatar">{initials}</div>
+                        <div className="ep-avatar">
+                            {photoPreview
+                                ? <img src={photoPreview} alt="avatar" />
+                                : initials
+                            }
+                        </div>
                         <div>
                             <div className="ep-hero-name">{form.first_name || "—"} {form.last_name || ""}</div>
                             <div className="ep-hero-email">{form.email || ""}</div>
                             <div className="ep-hero-tag">✏️ Editing your profile</div>
+                            {/* Input oculto + botón visible */}
+                            <input
+                                type="file"
+                                id="photo-input"
+                                accept="image/*"
+                                style={{ display: "none" }}
+                                onChange={handlePhotoChange}
+                            />
+                            <button
+                                className="ep-photo-btn"
+                                onClick={() => document.getElementById("photo-input").click()}
+                            >
+                                📷 {photoPreview ? "Change photo" : "Upload photo"}
+                            </button>
                         </div>
                     </div>
 

@@ -22,6 +22,7 @@ class User(db.Model):
     weight: Mapped[float] = mapped_column(Float, nullable=True)
     height: Mapped[float] = mapped_column(Float, nullable=True)
     phone_number: Mapped[str] = mapped_column(String(30), nullable=True)
+    photo_url: Mapped[str] = mapped_column(String(300), nullable=True)
 
     # Relationships
     profile: Mapped["Profile"] = relationship(
@@ -52,6 +53,8 @@ class User(db.Model):
             "weight": self.weight,
             "height": self.height,
             "phone_number": self.phone_number,
+            "photo_url": self.photo_url,
+
         }
 
 
