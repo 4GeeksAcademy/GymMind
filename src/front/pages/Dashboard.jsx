@@ -123,7 +123,8 @@ export const Dashboard = () => {
           <div className="db-nav-links">
             <a href="#" className="active">Dashboard</a>
             <a href="#">My Workout</a>
-            <a href="#">Progress</a>
+            <a href="/progress">Progress</a>
+            <a onClick={() => navigate("/moodcheck")}>Mood Check</a>
             <a href="#" onClick={(e) => { e.preventDefault(); navigate("/profile"); }}>Profile</a>
           </div>
           <div className="db-nav-cta">

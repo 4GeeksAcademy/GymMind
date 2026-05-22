@@ -648,7 +648,7 @@ html {
   color: white;
   position: relative;
   overflow: hidden;
-  font-family: Arial, sans-serif;
+  font-family: "DM Sans", sans-serif;
 }
 
 .signin-navbar {
@@ -663,9 +663,9 @@ html {
 
 .signin-logo {
   color: #00e5ff;
-  font-weight: 900;
+ font-family: 'Bebas Neue', sans-serif;
   letter-spacing: 2px;
-  font-size: 18px;
+  font-size: 22px;
 }
 
 .signin-actions {
@@ -690,15 +690,15 @@ html {
 .signin-card h3 {
   color: #00e5ff;
   text-align: center;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   margin-bottom: 12px;
 }
 
 .signin-card h1 {
   text-align: center;
   font-size: 31px;
-  font-weight: 900;
-  letter-spacing: 1px;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 2px;
   margin-bottom: 12px;
 }
 
@@ -894,17 +894,6 @@ html {
   display: flex;
   gap: 8px;
   align-items: center;
-}
-
-.moodcheck-edit button {
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.08);
-  color: #f0f4f8;
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
 }
 
 .moodcheck-signout-btn {

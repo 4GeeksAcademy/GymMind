@@ -18,10 +18,6 @@ export const MoodCheckPage = () => {
                 </div>
                 </div>
                 <div className="moodcheck-actions">
-                    <div className="moodcheck-edit">
-                        <button>Edit profile</button>
-                    </div>
-
                     <button
                         className="moodcheck-signout-btn"
                         onClick={() => {

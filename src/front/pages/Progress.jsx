@@ -117,7 +117,7 @@ export const Progress = () => {
           <div className="pr-nav-links">
             <a href="/dashboard">Dashboard</a>
             <a href="/workout">My Workout</a>
-            <a href="/mood">Mood Check</a>
+            <a href="/moodcheck">Mood Check</a>
             <a href="/progress" className="active">Progress</a>
             <a href="/profile">Profile</a>
           </div>
