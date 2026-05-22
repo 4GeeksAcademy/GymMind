@@ -13,6 +13,7 @@ export const MoodCheckPage = () => {
                     <Link to="/dashboard">Dashboard</Link>
                     <Link to="/myworkout">My Workout</Link>
                     <Link to="/progress">Progress</Link>
+                    <Link to="/moodcheck" className="active">Mood Check</Link>
                     <Link to="/profile">Profile</Link>
                 </div>
                 </div>

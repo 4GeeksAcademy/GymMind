@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
+
 .signup-page {
   min-height: 100vh;
   background: #050b10;
@@ -831,158 +833,24 @@ html {
 }
 
 /* ===== MOOD CHECK PAGE ===== */
+
 .moodcheck-page {
   min-height: 100vh;
-  background: #050b10;
-  color: white;
-  font-family: Arial, sans-serif;
-  position: relative;
-  overflow: hidden;
+  background: #080c10;
+  color: #f0f4f8;
+  font-family: 'DM Sans', sans-serif;
 }
 
-.moodcheck-page::before {
-  pointer-events: none;
-  z-index: 0;
-}
-
-.moodcheck-logo {
-  color: #00e5ff;
-  font-weight: 900;
-  letter-spacing: 2px;
-  font-size: 18px;
-  margin-right: 40px;
-}
+/* NAVBAR */
 
 .moodcheck-navbar {
-  height: 70px;
-  padding: 0 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background-color: #0b1419;
-}
-
-.moodcheck-links {
-  display: flex;
-  gap: 28px;
-}
-
-.moodcheck-links a {
-  color: #7f8fa3;
-  text-decoration: none;
-  margin: 0 12px;
-  font-size: 14px;
-}
-
-.moodcheck-links a:hover {
-  color: #00e5ff;
-}
-
-.moodcheck-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.moodcheck-edit button {
-  background: #19d9f3;
-  color: #021014;
-  border: none;
-  padding: 9px 18px;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.moodcheck-edit button:hover {
-  opacity: 0.85;
-}
-
-.moodcheck-signout-btn {
-  background: #ff4b4b;
-  color: white;
-  border: none;
-  padding: 9px 18px;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.moodcheck-signout-btn:hover {
-  opacity: 0.85;
-}
-
-.moodcheck-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.moodcheck-header h2 {
-  color: #00e5ff;
-  letter-spacing: 2px;
-  font-size: 18px;
-  margin-bottom: 8px;
-}
-
-.moodcheck-header h1 {
-  font-size: 28px;
-  font-weight: 900;
-  margin-bottom: 12px;
-}
-
-.moodcheck-header p {
-  color: #7e8c9c;
-  font-size: 14px;
-  max-width: 500px;
-  margin: 0 auto;
-}
-
-.page-container {
-  position: relative;
-  z-index: 2;
-}
-
-.mood-check {
-  background: #0b1419;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 18px;
-  padding: 30px;
-  max-width: 600px;
-  margin: 40px auto;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
-}
-
-.mood-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.mood-options button {
-  background: #151f24;
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 8px;
-  padding: 10px 16px;
-  cursor: pointer;
-}
-
-.mood-options button.selected {
-  background: #19d9f3;
-  color: #021014;
-}
-
-.moodcheck-submit-btn {
-  width: 100%;
-  background: #1ddff5;
-  color: #021014;
-  border: none;
-  border-radius: 8px;
-  padding: 12px;
-  font-weight: bold;
-  margin-bottom: 20px;
+  height: 56px;
+  background: rgba(8,12,16,0.97);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 0 20px;
 }
 
 .moodcheck-left {
@@ -990,18 +858,218 @@ html {
   align-items: center;
 }
 
+.moodcheck-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: #00e5ff;
+  margin-right: 28px;
+}
+
+.moodcheck-links {
+  display: flex;
+  gap: 24px;
+}
+
+.moodcheck-links a {
+  color: #6b7c8f;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+/* ACTIVE LINK */
+.moodcheck-links a.active {
+  color: #00e5ff;
+}
+
+.moodcheck-links a:hover {
+  color: #00e5ff;
+}
+
+/* ACTION BUTTONS */
+
+.moodcheck-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.moodcheck-edit button {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #f0f4f8;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.moodcheck-signout-btn {
+  background: transparent;
+  border: 1px solid rgba(255,80,80,0.3);
+  color: #ff6b6b;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* PAGE */
+
+.page-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 28px 24px;
+}
+
+.moodcheck-header {
+  margin-bottom: 24px;
+}
+
+.moodcheck-header h2 {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #00e5ff;
+  margin-bottom: 4px;
+}
+
+.moodcheck-header h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+.moodcheck-header p {
+  color: #6b7c8f;
+  font-size: 14px;
+  max-width: 520px;
+  line-height: 1.5;
+}
+
+/* CARD */
+
+.mood-check {
+  background: #0d1318;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 28px;
+  max-width: 650px;
+}
+
+.moodcheck-card-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.history-title {
+  margin-top: 34px;
+}
+
+/* MOOD OPTIONS */
+
+.mood-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.mood-options button {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #f0f4f8;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.mood-options button:hover {
+  border-color: #00e5ff;
+}
+
+.mood-options button.selected {
+  background: #00e5ff;
+  color: #000;
+  border-color: #00e5ff;
+}
+
+/* SUBMIT BUTTON */
+
+.moodcheck-submit-btn {
+  width: 100%;
+  background: #00e5ff;
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 11px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: opacity 0.2s;
+}
+
+.moodcheck-submit-btn:hover {
+  opacity: 0.85;
+}
+
+.mood-empty {
+  color: #6b7c8f;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 8px 0 18px;
+  opacity: 0.9;
+}
+
+/* RESULTS */
+
 .mood-check ul {
   list-style: none;
   padding: 0;
+  margin-top: 20px;
 }
 
 .mood-check li {
-  margin-bottom: 14px;
-  color: #ccc;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  color: #f0f4f8;
+}
+
+.mood-check li:last-child {
+  border-bottom: none;
+}
+
+.mood-history-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mood-date {
+  color: #6b7c8f;
+  font-size: 12px;
+  font-weight: 400;
 }
 
 .mood-check li p {
-  margin: 4px 0 0;
+  margin-top: 4px;
   font-size: 13px;
-  color: #7e8c9c;
+  color: #6b7c8f;
 }
