@@ -8,6 +8,9 @@ from flask_cors import CORS
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from werkzeug.security import check_password_hash
 
+import os
+import requests
+
 
 api = Blueprint('api', __name__)
 
@@ -151,3 +154,96 @@ def get_nutrition_tips(goal):
     tips = Nutrition.query.filter_by(goal=goal).all()
 
     return jsonify([tip.serialize() for tip in tips]), 200
+
+
+@api.route("/nutrition/search", methods=["POST"])
+def search_food():
+
+    body = request.get_json()
+
+    food = body.get("food")
+
+    if not food:
+        return jsonify({
+            "error": "Food is required"
+        }), 400
+
+
+    api_key = os.getenv(
+        "USDA_API_KEY"
+    )
+
+
+    response = requests.get(
+
+        "https://api.nal.usda.gov/fdc/v1/foods/search",
+
+        params={
+
+            "api_key": api_key,
+
+            "query": food,
+
+            "pageSize": 1
+
+        }
+
+    )
+
+
+    data = response.json()
+
+
+    if len(data["foods"]) == 0:
+
+        return jsonify({
+            "error": "Food not found"
+        }), 404
+
+
+    food_item = data["foods"][0]
+
+
+    nutrients = food_item["foodNutrients"]
+
+
+    def nutrient(name):
+
+        for item in nutrients:
+
+            if item["nutrientName"] == name:
+
+                return item.get(
+                    "value",
+                    0
+                )
+
+        return 0
+
+
+    return jsonify({
+
+        "name":
+        food_item["description"],
+
+        "calories":
+        nutrient(
+            "Energy"
+        ),
+
+        "protein":
+        nutrient(
+            "Protein"
+        ),
+
+        "carbs":
+        nutrient(
+            "Carbohydrate, by difference"
+        ),
+
+        "fats":
+        nutrient(
+            "Total lipid (fat)"
+        )
+
+    }), 200    
