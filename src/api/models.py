@@ -30,3 +30,47 @@ class User(db.Model):
             "email": self.email,
             # do not serialize the password, its a security breach
         }
+
+
+class Nutrition(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    goal: Mapped[str] = mapped_column(
+        String(80),
+        nullable=False
+    )
+    category: Mapped[str] = mapped_column(
+        String(120),
+        nullable=False
+    )
+    title: Mapped[str] = mapped_column(
+        String(120),
+        nullable=False
+    )
+    description: Mapped[str] = mapped_column(
+        nullable=False
+    )
+    calories: Mapped[int] = mapped_column(
+        nullable=True
+    )
+    protein: Mapped[int] = mapped_column(
+        nullable=True
+    )
+    carbs: Mapped[int] = mapped_column(
+        nullable=True
+    )
+    fats: Mapped[int] = mapped_column(
+        nullable=True
+    )
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "goal": self.goal,
+            "category": self.goal,
+            "title": self.category,
+            "description": self.descrition,
+            "calories": self.calories,
+            "protein": self.protein,
+            "carbs": self.carbs,
+            "fats": self.fats
+        }

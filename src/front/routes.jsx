@@ -11,6 +11,7 @@ import { Signup } from "./pages/Signup";
 import { Login } from "./pages/Login";
 import { Private } from "./pages/Private";   
 import { Dashboard } from "./pages/Dashboard";
+import { Nutrition } from "./pages/Nutrition";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -22,6 +23,7 @@ export const router = createBrowserRouter(
       <Route path="/login" element={<Login />} />
       <Route path="/private" element={<Private />} /> 
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/nutrition" element={<Nutrition />} />
     </Route>
   )
 );

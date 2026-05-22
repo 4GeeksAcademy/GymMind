@@ -2,7 +2,7 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User
+from api.models import db, User, Nutrition
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
@@ -82,3 +82,72 @@ def login():
 def protected():
     current_user = get_jwt_identity()
     return jsonify({"logged_in_as": current_user}), 200
+
+
+@api.route('/fitness-goals', methods=['GET'])
+def get_fitness_goals():
+    goals = [
+        {
+            "id": "fat_loss",
+            "name": "Fat Loss",
+            "description": "Reduce body fat while maintaining muscle."
+        },
+        {
+            "id": "muscle_gain",
+            "name": "Muscle Gain",
+            "description": "Build muscle with a calorie surplus."
+        },
+        {
+            "id": "recomposition",
+            "name": "Body Recomposition",
+            "description": "Lose fat and gain muscle at the same time."
+        }
+    ]
+
+    return jsonify(goals), 200
+
+
+@api.route('/nutrition/recommendations', methods=['POST'])
+def get_nutrition_recommendations():
+    body = request.get_json()
+
+    goal = body.get("goal")
+
+    if not goal:
+        return jsonify({"error": "Goal is required"}), 400
+
+    recommendations = {
+        "fat_loss": {
+            "calories": 1800,
+            "protein": 160,
+            "carbs": 180,
+            "fats": 55,
+            "message": "Focus on high protein and a calorie deficit."
+        },
+        "muscle_gain": {
+            "calories": 2500,
+            "protein": 190,
+            "carbs": 300,
+            "fats": 70,
+            "message": "Focus on a calorie surplus and strength training."
+        },
+        "recomposition": {
+            "calories": 2100,
+            "protein": 175,
+            "carbs": 220,
+            "fats": 60,
+            "message": "Balance calories and prioritize protein intake."
+        }
+    }
+
+    if goal not in recommendations:
+        return jsonify({"error": "Invalid goal"}), 400
+
+    return jsonify(recommendations[goal]), 200
+
+
+@api.route('/nutrition/tips/<goal>', methods=['GET'])
+def get_nutrition_tips(goal):
+    tips = Nutrition.query.filter_by(goal=goal).all()
+
+    return jsonify([tip.serialize() for tip in tips]), 200

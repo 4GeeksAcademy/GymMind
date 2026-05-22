@@ -367,8 +367,7 @@ html {
   font-weight: bold;
   padding: 6px 40px;
   transform: rotate(35deg);
-
-/* ===== PROFILE & EDIT PROFILE ===== */
+}
 
 .profile-page {
     background-color: #121212;
@@ -478,7 +477,6 @@ html {
     outline: none;
 }
 
-/* ===== PROFILE ===== */
 .profile-page {
     background-color: #0a0a0a;
     min-height: 100vh;
@@ -583,7 +581,6 @@ html {
     box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.25) !important;
 }
 
-/* ===== SLIDER ===== */
 .profile-slider {
     -webkit-appearance: none;
     appearance: none;
@@ -616,7 +613,7 @@ html {
     box-shadow: 0 0 6px rgba(0, 102, 255, 0.5);
 }
 
-/* ── ANIMACIÓN DE ÉXITO ── quita este bloque si no la quieres */
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-8px); }
     to { opacity: 1; transform: translateY(0); }
@@ -711,4 +708,104 @@ html {
   color: #00ff88;
   font-weight: bold;
   font-size: 15px;
+}
+
+.nutrition-grid{
+display:grid;
+
+grid-template-columns:
+repeat(
+2,
+1fr
+);
+
+gap:20px;
+
+margin-top:30px;
+}
+
+.nutrition-card {
+
+background:#071018;
+
+border:1px solid rgba(0,229,255,.15);
+
+padding:30px;
+
+border-radius:16px;
+
+text-align:center;
+
+color:white;
+
+}
+
+.nutrition-card h1{
+
+color:#00e5ff;
+
+font-size:42px;
+
+}
+
+.nutrition-card p{
+
+color:#7c8a99;
+
+}
+
+.nutrition-summary{
+
+background:#06141b;
+
+border:1px solid rgba(0,229,255,.15);
+
+padding:30px;
+
+border-radius:18px;
+
+margin-bottom:30px;
+
+}
+
+.nutrition-summary h3{
+
+color:#00e5ff;
+
+font-size:18px;
+
+margin-bottom:16px;
+
+}
+
+.nutrition-summary p{
+
+color:#d2d8df;
+
+margin-bottom:20px;
+
+}
+
+.macro-tags{
+
+display:flex;
+
+gap:14px;
+
+flex-wrap:wrap;
+
+}
+
+.macro-tags div{
+
+background:#101d25;
+
+padding:12px 18px;
+
+border-radius:10px;
+
+color:#00e5ff;
+
+font-weight:bold;
+
 }
