@@ -39,6 +39,7 @@
             ],
             "markers": "python_version >= '3.7'",
             "version": "==2026.5.20"
+<<<<<<< HEAD
         },
         "charset-normalizer": {
             "hashes": [
@@ -174,6 +175,8 @@
             ],
             "markers": "python_version >= '3.7'",
             "version": "==3.4.7"
+=======
+>>>>>>> d58ae859454e1fd1cb589c471b99d8c6d5bfab0c
         },
         "click": {
             "hashes": [
@@ -185,11 +188,11 @@
         },
         "cloudinary": {
             "hashes": [
-                "sha256:62d4374b79d5476de2a86cb6a1da709a5429e02aef474bfc5d99f3e38a1a62ff",
-                "sha256:b4785031179a5ec7010f46665e5c8fad2cae022c18405546f01d257e02f78b1c"
+                "sha256:6624d06014c33f50c0c9e740fde1dfe4579d03311025d8bb7183824b7443aa09",
+                "sha256:bc9139c68f2ef6996ba62a5d0300e63c711d4f6564644c0c82aa31bf641ef3c7"
             ],
             "index": "pypi",
-            "version": "==1.44.1"
+            "version": "==1.44.2"
         },
         "flask": {
             "hashes": [

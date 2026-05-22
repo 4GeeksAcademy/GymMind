@@ -14,13 +14,16 @@ psycopg2-binary = "*"
 python-dotenv = "*"
 flask-cors = "*"
 gunicorn = "*"
-cloudinary = "*"
 flask-admin = "==2.0.0"
 typing-extensions = "*"
 flask-jwt-extended = "==4.6.0"
 wtforms = "==3.1.2"
 sqlalchemy = "*"
+<<<<<<< HEAD
 requests = "*"
+=======
+cloudinary = "*"
+>>>>>>> d58ae859454e1fd1cb589c471b99d8c6d5bfab0c
 
 [requires]
 python_version = "3.13"
