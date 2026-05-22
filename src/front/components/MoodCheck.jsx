@@ -23,7 +23,10 @@ export const MoodCheck = () => {
 
   return (
     <div className="mood-check">
-      <h3>Select your mood</h3>
+
+      <div className="moodcheck-card-title">
+        😊 Select your mood
+      </div>
 
       <div className="mood-options">
         {moods.map((m) => (
@@ -37,15 +40,36 @@ export const MoodCheck = () => {
         ))}
       </div>
 
-      <button className="moodcheck-submit-btn" onClick={handleSubmit}>
+      <button
+        className="moodcheck-submit-btn"
+        onClick={handleSubmit}
+      >
         Submit mood check
       </button>
 
-      <h3>Recent Mood History</h3>
+      <div className="moodcheck-card-title history-title">
+        📋 Recent mood history
+      </div>
+
+      {history.length === 0 && (
+        <div className="mood-empty">
+          No mood check-ins yet.
+        </div>
+      )}
+
       <ul>
         {history.map((h, i) => (
           <li key={i}>
-            {h.emoji} {h.label} · {h.date.toLocaleDateString()}
+            <div className="mood-history-top">
+              <span>
+                {h.emoji} {h.label}
+              </span>
+
+              <span className="mood-date">
+                {h.date.toLocaleDateString()}
+              </span>
+            </div>
+
             <p>{h.message}</p>
           </li>
         ))}

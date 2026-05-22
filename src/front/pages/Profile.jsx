@@ -132,6 +132,7 @@ const Profile = () => {
                         <a onClick={() => navigate("/dashboard")}>Dashboard</a>
                         <a onClick={() => navigate("/dashboard")}>My Workout</a>
                         <a onClick={() => navigate("/dashboard")}>Progress</a>
+                        <a onClick={() => navigate("/moodcheck")}>Mood Check</a>
                         <a className="active">Profile</a>
                     </div>
                     <div className="pf-nav-cta">

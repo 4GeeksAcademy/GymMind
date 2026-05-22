@@ -13,14 +13,11 @@ export const MoodCheckPage = () => {
                     <Link to="/dashboard">Dashboard</Link>
                     <Link to="/myworkout">My Workout</Link>
                     <Link to="/progress">Progress</Link>
+                    <Link to="/moodcheck" className="active">Mood Check</Link>
                     <Link to="/profile">Profile</Link>
                 </div>
                 </div>
                 <div className="moodcheck-actions">
-                    <div className="moodcheck-edit">
-                        <button>Edit profile</button>
-                    </div>
-
                     <button
                         className="moodcheck-signout-btn"
                         onClick={() => {
