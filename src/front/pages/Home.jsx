@@ -1,6 +1,9 @@
 import React from "react";
+import { useNavigate } from "react-router-dom"; 
 
 export const Home = () => {
+  const navigate = useNavigate();
+
   return (
     <>
       <style>{`
@@ -14,20 +17,15 @@ export const Home = () => {
         .gm-body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
 
         /* NAV */
-        .gm-nav {
-          display: flex; align-items: center;
-          height: 56px; background: rgba(8,12,16,0.97);
-          border-bottom: 1px solid var(--border);
-          padding: 0 20px; width: 100%;
-        }
-        .gm-logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--accent); white-space: nowrap; flex-shrink: 0; margin-right: 24px; }
+        .gm-nav { display: flex; align-items: center; height: 56px; background: rgba(8,12,16,0.97); border-bottom: 1px solid var(--border); padding: 0 20px; width: 100%; position: sticky; top: 0; z-index: 100; }
+        .gm-logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--accent); white-space: nowrap; flex-shrink: 0; margin-right: 24px; cursor: pointer; }
         .gm-nav-links { display: flex; gap: 24px; flex: 1; }
         .gm-nav-links a { color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 500; white-space: nowrap; transition: color 0.2s; }
         .gm-nav-links a:hover { color: var(--text); }
         .gm-nav-cta { display: flex; gap: 8px; align-items: center; flex-shrink: 0; margin-left: 24px; }
-        .gm-btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: border-color 0.2s, color 0.2s; }
+        .gm-btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: border-color 0.2s, color 0.2s; text-decoration: none; display: inline-block; }
         .gm-btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-        .gm-btn-primary-nav { background: var(--accent); color: #000; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; transition: opacity 0.2s; }
+        .gm-btn-primary-nav { background: var(--accent); color: #000; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; transition: opacity 0.2s; text-decoration: none; display: inline-block; }
         .gm-btn-primary-nav:hover { opacity: 0.85; }
 
         /* HERO */
@@ -42,7 +40,7 @@ export const Home = () => {
         .gm-accent2 { color: var(--accent2); }
         .gm-hero p { max-width: 480px; font-size: 16px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; position: relative; z-index: 1; }
         .gm-hero-btns { display: flex; gap: 12px; justify-content: center; position: relative; z-index: 1; margin-bottom: 36px; }
-        .gm-btn-lg { padding: 12px 28px; font-size: 15px; font-weight: 600; border-radius: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+        .gm-btn-lg { padding: 12px 28px; font-size: 15px; font-weight: 600; border-radius: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; text-decoration: none; display: inline-block; }
         .gm-btn-accent-lg { background: var(--accent); color: #000; border: none; transition: transform 0.2s; }
         .gm-btn-accent-lg:hover { transform: translateY(-2px); }
         .gm-btn-outline-lg { background: transparent; border: 1px solid var(--border); color: var(--text); }
@@ -52,7 +50,7 @@ export const Home = () => {
         .gm-stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
         /* FEATURES */
-        .gm-features-wrap { background: var(--bg); padding: 40px 32px; max-width: 1200px; margin: 0 auto; }
+        .gm-features-wrap { background: var(--bg); padding: 40px 32px; max-width: 1200px; margin: 0 auto; scroll-margin-top: 56px; }
         .gm-section-label { font-size: 12px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
         .gm-section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(36px, 5vw, 64px); line-height: 1; letter-spacing: 2px; margin-bottom: 12px; }
         .gm-section-sub { font-size: 15px; color: var(--muted); max-width: 500px; line-height: 1.6; }
@@ -67,7 +65,7 @@ export const Home = () => {
         .gm-feature-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
         /* HOW IT WORKS */
-        .gm-how-section { background: var(--bg2); padding: 48px 0; }
+        .gm-how-section { background: var(--bg2); padding: 48px 0; scroll-margin-top: 56px; }
         .gm-how-inner { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
         .gm-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-top: 32px; }
         .gm-step { position: relative; }
@@ -93,8 +91,8 @@ export const Home = () => {
         .gm-test-role { font-size: 12px; color: var(--muted); }
         .gm-stars { color: var(--accent2); font-size: 12px; margin-bottom: 10px; }
 
-        /* CTA */
-        .gm-cta-section { text-align: center; padding: 64px 48px; background: linear-gradient(180deg, var(--bg) 0%, rgba(0,229,255,0.04) 50%, var(--bg) 100%); position: relative; overflow: hidden; }
+        /* CTA / PRICING */
+        .gm-cta-section { text-align: center; padding: 64px 48px; background: linear-gradient(180deg, var(--bg) 0%, rgba(0,229,255,0.04) 50%, var(--bg) 100%); position: relative; overflow: hidden; scroll-margin-top: 56px; }
         .gm-cta-section::before { content: 'GYMMIND'; position: absolute; font-family: 'Bebas Neue', sans-serif; font-size: 160px; color: rgba(255,255,255,0.02); letter-spacing: 10px; top: 50%; left: 50%; transform: translate(-50%, -50%); white-space: nowrap; }
         .gm-cta-section h2 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(44px, 7vw, 84px); letter-spacing: 3px; margin-bottom: 14px; position: relative; }
         .gm-cta-section p { font-size: 16px; color: var(--muted); margin-bottom: 28px; position: relative; }
@@ -106,6 +104,8 @@ export const Home = () => {
         .gm-footer-links a { font-size: 12px; color: var(--muted); text-decoration: none; }
         .gm-footer-copy { font-size: 12px; color: var(--muted); }
 
+        html { scroll-behavior: smooth; }
+
         @keyframes gm-fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .gm-hero > * { animation: gm-fadeUp 0.6s ease both; }
       `}</style>
@@ -114,15 +114,15 @@ export const Home = () => {
 
         {/* NAVBAR */}
         <nav className="gm-nav">
-          <div className="gm-logo">GymMind AI</div>
+          <div className="gm-logo" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>GymMind AI</div>
           <div className="gm-nav-links">
-            <a href="#">Features</a>
-            <a href="#">How it works</a>
-            <a href="#">Pricing</a>
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How it works</a>
+            <a href="#pricing">Pricing</a>
           </div>
           <div className="gm-nav-cta">
-            <button className="gm-btn-ghost">Login</button>
-            <button className="gm-btn-primary-nav">Get started free</button>
+            <a href="/login" className="gm-btn-ghost">Login</a>
+            <a href="/signup" className="gm-btn-primary-nav">Get started free</a>
           </div>
         </nav>
 
@@ -134,8 +134,8 @@ export const Home = () => {
           <h1>TRAIN.<br /><span className="gm-accent">EVOLVE.</span><br /><span className="gm-accent2">NO LIMITS.</span></h1>
           <p>Your personal AI fitness coach. Personalized workouts, progress tracking, and motivation whenever you need it most.</p>
           <div className="gm-hero-btns">
-            <button className="gm-btn-lg gm-btn-accent-lg">Get started free</button>
-            <button className="gm-btn-lg gm-btn-outline-lg">See how it works</button>
+            <a href="/signup" className="gm-btn-lg gm-btn-accent-lg">Get started free</a>
+            <a href="#how-it-works" className="gm-btn-lg gm-btn-outline-lg">See how it works</a>
           </div>
           <div className="gm-hero-stats">
             <div className="gm-stat"><div className="gm-stat-num">10K+</div><div className="gm-stat-label">Active users</div></div>
@@ -145,7 +145,7 @@ export const Home = () => {
         </div>
 
         {/* FEATURES */}
-        <div className="gm-features-wrap">
+        <div id="features" className="gm-features-wrap">
           <div className="gm-section-label">What GymMind AI does</div>
           <div className="gm-section-title">EVERYTHING<br />YOU NEED.</div>
           <div className="gm-section-sub">One app to train, track your emotional state, and watch your body evolve.</div>
@@ -169,7 +169,7 @@ export const Home = () => {
         </div>
 
         {/* HOW IT WORKS */}
-        <div className="gm-how-section">
+        <div id="how-it-works" className="gm-how-section">
           <div className="gm-how-inner">
             <div className="gm-section-label">The process</div>
             <div className="gm-section-title">AS SIMPLE<br />AS THIS.</div>
@@ -239,20 +239,20 @@ export const Home = () => {
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="gm-cta-section">
+        {/* CTA / PRICING */}
+        <div id="pricing" className="gm-cta-section">
           <h2>START<br /><span className="gm-accent">TODAY.</span></h2>
           <p>Your transformation begins with a single step. Create your free account.</p>
-          <button className="gm-btn-lg gm-btn-accent-lg">Create free account →</button>
+          <a href="/signup" className="gm-btn-lg gm-btn-accent-lg">Create free account →</a>
         </div>
 
         {/* FOOTER */}
         <footer className="gm-footer">
           <div className="gm-footer-logo">GymMind AI</div>
           <div className="gm-footer-links">
-            <a href="#">Terms</a>
-            <a href="#">Privacy</a>
-            <a href="#">Contact</a>
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How it works</a>
+            <a href="#pricing">Pricing</a>
           </div>
           <div className="gm-footer-copy">© 2025 GymMind AI</div>
         </footer>
@@ -262,3 +262,4 @@ export const Home = () => {
   );
 };
 
+export default Home;
