@@ -1,10 +1,30 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 
 export const Dashboard = () => {
   const navigate = useNavigate();
-  const [selectedMood, setSelectedMood] = useState("good");
-  const [aiMessage, setAiMessage] = useState("Feeling good is the perfect foundation. Stay focused and consistent — every rep today brings you closer to your goal. Let's make it count!");
+  const { store, dispatch } = useGlobalReducer();
+  const [selectedMood, setSelectedMood] = useState(null);
+  const [aiMessage, setAiMessage] = useState(null);
+
+  // Get user from store or sessionStorage
+  const user = store.user || JSON.parse(sessionStorage.getItem("user"));
+  const token = store.token || sessionStorage.getItem("token");
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!token) {
+      navigate("/login");
+    }
+  }, [token]);
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    dispatch({ type: "logout" });
+    navigate("/");
+  };
 
   const moods = [
     { id: "great", emoji: "🔥", label: "Great", message: "You're on fire today! Your AI Coach has an intense workout ready. Channel that energy and go all in — today is your day to set a new personal record!" },
@@ -36,6 +56,15 @@ export const Dashboard = () => {
     setAiMessage(mood.message);
   };
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "GOOD MORNING";
+    if (hour < 18) return "GOOD AFTERNOON";
+    return "GOOD EVENING";
+  };
+
+  const firstName = user?.first_name || user?.email?.split("@")[0] || "there";
+
   return (
     <>
       <style>{`
@@ -49,16 +78,20 @@ export const Dashboard = () => {
         .db-body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
 
         /* NAV */
-        .db-nav { display: flex; align-items: center; height: 56px; background: rgba(8,12,16,0.97); border-bottom: 1px solid var(--border); padding: 0 20px; width: 100%; }
-        .db-logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--accent); white-space: nowrap; flex-shrink: 0; margin-right: 24px; }
+        .db-nav { display: flex; align-items: center; height: 56px; background: rgba(8,12,16,0.97); border-bottom: 1px solid var(--border); padding: 0 20px; width: 100%; position: sticky; top: 0; z-index: 100; }
+        .db-logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--accent); white-space: nowrap; flex-shrink: 0; margin-right: 24px; cursor: pointer; }
         .db-nav-links { display: flex; gap: 24px; flex: 1; }
-        .db-nav-links a { color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 500; white-space: nowrap; transition: color 0.2s; }
+        .db-nav-links a { color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 500; white-space: nowrap; transition: color 0.2s; cursor: pointer; }
+        .db-nav-links a:hover { color: var(--text); }
         .db-nav-links a.active { color: var(--accent); }
-        .db-nav-cta { display: flex; gap: 8px; align-items: center; flex-shrink: 0; margin-left: 24px; }
-        .db-btn-danger { background: transparent; border: 1px solid rgba(255,80,80,0.3); color: #ff6b6b; padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+        .db-nav-cta { display: flex; gap: 10px; align-items: center; flex-shrink: 0; margin-left: 24px; }
+        .db-avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(0,229,255,0.1); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--accent); cursor: pointer; overflow: hidden; flex-shrink: 0; }
+        .db-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .db-btn-danger { background: transparent; border: 1px solid rgba(255,80,80,0.3); color: #ff6b6b; padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.2s; }
+        .db-btn-danger:hover { background: rgba(255,80,80,0.08); }
 
         /* PAGE */
-        .db-page { flex: 1; padding: 28px 24px; max-width: 1000px; margin: 0 auto; width: 100%; }
+        .db-page { padding: 28px 24px; max-width: 1000px; margin: 0 auto; width: 100%; }
         .db-section-label { font-size: 12px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
         .db-page-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 2px; margin-bottom: 24px; }
 
@@ -92,6 +125,7 @@ export const Dashboard = () => {
         .db-mood-chip.selected { border-color: var(--accent); background: rgba(0,229,255,0.08); color: var(--accent); }
         .db-ai-message { background: rgba(0,229,255,0.06); border: 1px solid rgba(0,229,255,0.2); border-radius: 10px; padding: 14px; font-size: 13px; color: var(--text); line-height: 1.6; }
         .db-ai-badge { font-size: 11px; color: var(--accent); font-weight: 600; margin-bottom: 6px; }
+        .db-mood-placeholder { font-size: 13px; color: var(--muted); font-style: italic; text-align: center; padding: 12px 0; }
 
         /* EXERCISES */
         .db-exercise-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
@@ -100,7 +134,7 @@ export const Dashboard = () => {
         .db-exercise-name { font-size: 13px; font-weight: 500; }
         .db-exercise-name.done { text-decoration: line-through; color: var(--muted); }
         .db-exercise-muscle { font-size: 11px; color: var(--muted); }
-        .db-exercise-check { margin-left: auto; accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+        .db-exercise-check { margin-left: auto; accent-color: var(--accent2); width: 16px; height: 16px; cursor: pointer; }
         .db-btn-sm { background: var(--accent); color: #000; padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; }
         .db-btn-sm-outline { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 5px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
 
@@ -111,41 +145,42 @@ export const Dashboard = () => {
         .db-progress-weight { color: var(--accent); font-weight: 600; }
 
         @keyframes db-fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-        .db-stats-row { animation: db-fadeUp 0.4s ease both; }
-        .db-grid-2 { animation: db-fadeUp 0.4s ease 0.1s both; }
+        .db-page > * { animation: db-fadeUp 0.4s ease both; }
       `}</style>
 
       <div className="db-body">
 
         {/* NAVBAR */}
         <nav className="db-nav">
-          <div className="db-logo">GymMind AI</div>
+          <div className="db-logo" onClick={() => navigate("/")}>GymMind AI</div>
           <div className="db-nav-links">
-            <a href="#" className="active">Dashboard</a>
-            <a href="#">My Workout</a>
-            <a href="/progress">Progress</a>
-            <a onClick={() => navigate("/moodcheck")}>Mood Check</a>
-            <a href="#" onClick={(e) => { e.preventDefault(); navigate("/profile"); }}>Profile</a>
+            <a className="active">Dashboard</a>
+            <a onClick={() => navigate("/workout")}>My Workout</a>
+            <a onClick={() => navigate("/mood")}>Mood Check</a>
+            <a onClick={() => navigate("/progress")}>Progress</a>
+            <a onClick={() => navigate("/profile")}>Profile</a>
           </div>
           <div className="db-nav-cta">
-            <button
-              className="db-btn-danger"
-              onClick={() => {
-                sessionStorage.removeItem("token");
-                sessionStorage.removeItem("user");
-                navigate("/login");
-              }}
+            <div
+              className="db-avatar"
+              onClick={() => navigate("/profile")}
+              title="Go to profile"
             >
-              Sign out
-            </button>
+              {user?.photo_url
+                ? <img src={user.photo_url} alt="profile" />
+                : (user?.first_name?.[0] || "U").toUpperCase()
+              }
+            </div>
+            <button className="db-btn-danger" onClick={handleLogout}>Sign out</button>
           </div>
         </nav>
 
         <div className="db-page">
 
           <div className="db-section-label">Welcome back</div>
-          <div className="db-page-title">GOOD MORNING, JESSICA 👋</div>
+          <div className="db-page-title">{getGreeting()}, {firstName.toUpperCase()} 👋</div>
 
+          {/* STATS */}
           <div className="db-stats-row">
             <div className="db-stat-card">
               <div className="db-stat-icon">🔥</div>
@@ -164,11 +199,14 @@ export const Dashboard = () => {
             </div>
             <div className="db-stat-card">
               <div className="db-stat-icon">🎯</div>
-              <div className="db-stat-num" style={{ fontSize: "18px", paddingTop: "4px" }}>Gain muscle</div>
+              <div className="db-stat-num" style={{ fontSize: "18px", paddingTop: "4px" }}>
+                {user?.fitness_goal || "Set your goal"}
+              </div>
               <div className="db-stat-label">Current goal</div>
             </div>
           </div>
 
+          {/* WEEK TRACKER */}
           <div className="db-card">
             <div className="db-card-title">📅 This week</div>
             <div className="db-week-row">
@@ -183,6 +221,7 @@ export const Dashboard = () => {
 
           <div className="db-grid-2">
 
+            {/* MOOD CHECK */}
             <div className="db-card">
               <div className="db-card-title">😌 Daily Mood Check</div>
               <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "12px" }}>How are you feeling today?</p>
@@ -197,16 +236,20 @@ export const Dashboard = () => {
                   </div>
                 ))}
               </div>
-              <div className="db-ai-message">
-                <div className="db-ai-badge">🤖 AI Coach</div>
-                {aiMessage}
-              </div>
+              {aiMessage
+                ? <div className="db-ai-message">
+                    <div className="db-ai-badge">🤖 AI Coach</div>
+                    {aiMessage}
+                  </div>
+                : <div className="db-mood-placeholder">Select your mood to get a message from your AI Coach</div>
+              }
             </div>
 
+            {/* TODAY'S WORKOUT */}
             <div className="db-card">
               <div className="db-card-title">
                 <span>🏋️ Today's Workout</span>
-                <button className="db-btn-sm">Start workout</button>
+                <button className="db-btn-sm" onClick={() => navigate("/workout")}>Start workout</button>
               </div>
               {exercises.map((ex) => (
                 <div key={ex.name} className="db-exercise-row">
@@ -222,10 +265,11 @@ export const Dashboard = () => {
 
           </div>
 
+          {/* PROGRESS MINI */}
           <div className="db-card">
             <div className="db-card-title">
               <span>📈 Recent Progress</span>
-              <button className="db-btn-sm-outline">View all</button>
+              <button className="db-btn-sm-outline" onClick={() => navigate("/progress")}>View all</button>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
               <div>
@@ -255,4 +299,4 @@ export const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Dashboard; 
