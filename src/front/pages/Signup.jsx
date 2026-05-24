@@ -49,6 +49,7 @@ export const Signup = () => {
 
             if (response.ok) {
                 alert("Account created successfully");
+                navigate("/login");
             } else {
                 alert(data.error);
             }
