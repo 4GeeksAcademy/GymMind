@@ -14,6 +14,8 @@ export const Signup = () => {
         confirm_password: ""
     });
 
+    const [termsAccepted, setTermsAccepted] = useState(false);
+
     const handleChange = (event) => {
         setFormData({
             ...formData,
@@ -29,6 +31,11 @@ export const Signup = () => {
             alert("Passwords do not match");
             return;
         }
+
+            if (!termsAccepted) {
+        alert("You must accept the Terms of Service and Privacy Policy to continue.");
+        return;
+    }
 
         try {
 
@@ -166,14 +173,15 @@ export const Signup = () => {
                     />
 
                     <div className="terms">
-
-                        <input type="checkbox" />
-
+                        <input
+                            type="checkbox"
+                            checked={termsAccepted}
+                            onChange={(e) => setTermsAccepted(e.target.checked)}
+                        />
                         <p>
                             I accept the <span>Terms of Service</span> and{" "}
                             <span>Privacy Policy</span>
                         </p>
-
                     </div>
 
                     <button
