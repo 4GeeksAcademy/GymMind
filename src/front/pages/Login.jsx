@@ -34,7 +34,7 @@ export const Login = () => {
           payload: { token, user: data.user },
         });
 
-        navigate("/private");
+        navigate("/dashboard");
       } else {
         alert(data.error || "Login failed");
       }
@@ -48,14 +48,14 @@ export const Login = () => {
     <div className="signin-page">
       <nav className="signin-navbar">
         <div className="signin-logo">GYMMIND AI</div>
-        <div className="signin-links">
-          <a href="#">Features</a>
-          <a href="#">How it Works</a>
-          <a href="#">Pricing</a>
-        </div>
         <div className="signin-actions">
           <button className="login-btn">Login</button>
-          <button className="start-btn">Start Free</button>
+          <button
+            className="start-btn"
+            onClick={() => navigate("/signup")}
+          >
+            Start Free
+          </button>
         </div>
       </nav>
 
