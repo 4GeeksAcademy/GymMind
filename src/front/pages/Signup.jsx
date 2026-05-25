@@ -49,6 +49,7 @@ export const Signup = () => {
 
             if (response.ok) {
                 alert("Account created successfully");
+                navigate("/dashboard");
             } else {
                 alert(data.error);
             }
@@ -244,7 +245,7 @@ export const Signup = () => {
             <section id="how-it-works" className="signup-section">
 
                 <h2>How it Works</h2>
-                
+
                 <div className="steps">
                     <p><strong>1.</strong>Create your account.</p>
                     <p><strong>2.</strong>Complete your fitness profile.</p>
@@ -277,7 +278,7 @@ export const Signup = () => {
 
                     <div className="pricing-card featured-plan">
                         <div className="popular-badge">
-                            MOST POPULAR 
+                            MOST POPULAR
                         </div>
                         <h3>Pro</h3>
                         <h1>$9.99</h1>
@@ -300,7 +301,7 @@ export const Signup = () => {
                         <h1>$19.99</h1>
 
                         <p className="price-subtitle">
-                             Full Premium Experience
+                            Full Premium Experience
                         </p>
 
                         <ul>
