@@ -7,6 +7,7 @@ from werkzeug.security import check_password_hash
 import cloudinary
 import cloudinary.uploader
 import os
+import requests
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -17,9 +18,11 @@ cloudinary.config(
 api = Blueprint('api', __name__)
 CORS(api)
 
+
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
     return jsonify({"message": "Hello! I'm a message that came from the backend"}), 200
+
 
 @api.route('/signup', methods=['POST'])
 def signup():
@@ -32,11 +35,13 @@ def signup():
         return jsonify({"error": "All fields are required"}), 400
     if User.query.filter_by(email=email).first():
         return jsonify({"error": "User already exists"}), 400
-    new_user = User(first_name=first_name, last_name=last_name, email=email, is_active=True)
+    new_user = User(first_name=first_name, last_name=last_name,
+                    email=email, is_active=True)
     new_user.set_password(password)
     db.session.add(new_user)
     db.session.commit()
     return jsonify({"message": "User created successfully", "user": new_user.serialize()}), 201
+
 
 @api.route("/login", methods=["POST"])
 def login():
@@ -50,11 +55,166 @@ def login():
         "user": user.serialize()
     }), 200
 
+
 @api.route("/protected", methods=["GET"])
 @jwt_required()
 def protected():
     current_user = get_jwt_identity()
     return jsonify({"logged_in_as": current_user}), 200
+
+
+def get_fitness_goals():
+    goals = [
+        {
+            "id": "fat_loss",
+            "name": "Fat Loss",
+            "description": "Reduce body fat while maintaining muscle."
+        },
+        {
+            "id": "muscle_gain",
+            "name": "Muscle Gain",
+            "description": "Build muscle with a calorie surplus."
+        },
+        {
+            "id": "recomposition",
+            "name": "Body Recomposition",
+            "description": "Lose fat and gain muscle at the same time."
+        }
+    ]
+
+    return jsonify(goals), 200
+
+
+@api.route('/nutrition/recommendations', methods=['POST'])
+def get_nutrition_recommendations():
+    body = request.get_json()
+
+    goal = body.get("goal")
+
+    if not goal:
+        return jsonify({"error": "Goal is required"}), 400
+
+    recommendations = {
+        "fat_loss": {
+            "calories": 1800,
+            "protein": 160,
+            "carbs": 180,
+            "fats": 55,
+            "message": "Focus on high protein and a calorie deficit."
+        },
+        "muscle_gain": {
+            "calories": 2500,
+            "protein": 190,
+            "carbs": 300,
+            "fats": 70,
+            "message": "Focus on a calorie surplus and strength training."
+        },
+        "recomposition": {
+            "calories": 2100,
+            "protein": 175,
+            "carbs": 220,
+            "fats": 60,
+            "message": "Balance calories and prioritize protein intake."
+        }
+    }
+
+    if goal not in recommendations:
+        return jsonify({"error": "Invalid goal"}), 400
+
+    return jsonify(recommendations[goal]), 200
+
+
+# @api.route('/nutrition/tips/<goal>', methods=['GET'])
+# def get_nutrition_tips(goal):
+#     tips = Nutrition.query.filter_by(goal=goal).all()
+
+#     return jsonify([tip.serialize() for tip in tips]), 200
+
+
+@api.route("/nutrition/search", methods=["POST"])
+def search_food():
+
+    body = request.get_json()
+
+    food = body.get("food")
+
+    if not food:
+        return jsonify({
+            "error": "Food is required"
+        }), 400
+
+    api_key = os.getenv(
+        "USDA_API_KEY"
+    )
+
+    response = requests.get(
+
+        "https://api.nal.usda.gov/fdc/v1/foods/search",
+
+        params={
+
+            "api_key": api_key,
+
+            "query": food,
+
+            "pageSize": 1
+
+        }
+
+    )
+
+    data = response.json()
+
+    if len(data["foods"]) == 0:
+
+        return jsonify({
+            "error": "Food not found"
+        }), 404
+
+    food_item = data["foods"][0]
+
+    nutrients = food_item["foodNutrients"]
+
+    def nutrient(name):
+
+        for item in nutrients:
+
+            if item["nutrientName"] == name:
+
+                return item.get(
+                    "value",
+                    0
+                )
+
+        return 0
+
+    return jsonify({
+
+        "name":
+        food_item["description"],
+
+        "calories":
+        nutrient(
+            "Energy"
+        ),
+
+        "protein":
+        nutrient(
+            "Protein"
+        ),
+
+        "carbs":
+        nutrient(
+            "Carbohydrate, by difference"
+        ),
+
+        "fats":
+        nutrient(
+            "Total lipid (fat)"
+        )
+
+    }), 200
+
 
 @api.route('/user/<int:user_id>', methods=['GET'])
 def get_user_profile(user_id):
@@ -62,6 +222,7 @@ def get_user_profile(user_id):
     if not user:
         return jsonify({"error": "User not found"}), 404
     return jsonify(user.serialize()), 200
+
 
 @api.route('/user/<int:user_id>', methods=['PUT'])
 def edit_user_profile(user_id):
@@ -95,6 +256,7 @@ def edit_user_profile(user_id):
     db.session.commit()
     return jsonify({"message": "Profile updated successfully", "user": user.serialize()}), 200
 
+
 @api.route('/user/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
     user = User.query.get(user_id)
@@ -103,6 +265,7 @@ def delete_user(user_id):
     db.session.delete(user)
     db.session.commit()
     return jsonify({"message": "Account deleted successfully"}), 200
+
 
 @api.route('/user/<int:user_id>/photo', methods=['POST'])
 def upload_user_photo(user_id):
@@ -124,12 +287,16 @@ def upload_user_photo(user_id):
     return jsonify({"message": "Photo uploaded successfully", "photo_url": user.photo_url}), 200
 
 # PROGRESS LOG ENDPOINTS
+
+
 @api.route('/progress/<int:user_id>', methods=['GET'])
 @jwt_required()
 def get_progress(user_id):
     from api.models import ProgressLog
-    logs = ProgressLog.query.filter_by(user_id=user_id).order_by(ProgressLog.date.desc()).all()
+    logs = ProgressLog.query.filter_by(
+        user_id=user_id).order_by(ProgressLog.date.desc()).all()
     return jsonify([log.serialize() for log in logs]), 200
+
 
 @api.route('/progress', methods=['POST'])
 @jwt_required()
@@ -141,7 +308,8 @@ def add_progress():
     weight = body.get("weight")
     if not user_id or not weight:
         return jsonify({"error": "user_id and weight are required"}), 400
-    existing = ProgressLog.query.filter_by(user_id=user_id, date=date.today()).first()
+    existing = ProgressLog.query.filter_by(
+        user_id=user_id, date=date.today()).first()
     if existing:
         return jsonify({"error": "You already logged your weight today"}), 400
     log = ProgressLog(user_id=user_id, weight=weight, date=date.today())
@@ -150,12 +318,16 @@ def add_progress():
     return jsonify(log.serialize()), 201
 
 # MOOD CHECK ENDPOINTS
+
+
 @api.route('/mood/<int:user_id>', methods=['GET'])
 @jwt_required()
 def get_moods(user_id):
     from api.models import MoodCheck
-    moods = MoodCheck.query.filter_by(user_id=user_id).order_by(MoodCheck.date.desc()).all()
+    moods = MoodCheck.query.filter_by(
+        user_id=user_id).order_by(MoodCheck.date.desc()).all()
     return jsonify([mood.serialize() for mood in moods]), 200
+
 
 @api.route('/mood', methods=['POST'])
 @jwt_required()
@@ -168,21 +340,27 @@ def add_mood():
     ai_message = body.get("ai_message")
     if not user_id or not mood:
         return jsonify({"error": "user_id and mood are required"}), 400
-    existing = MoodCheck.query.filter_by(user_id=user_id, date=date.today()).first()
+    existing = MoodCheck.query.filter_by(
+        user_id=user_id, date=date.today()).first()
     if existing:
         return jsonify({"error": "You already logged your mood today"}), 400
-    mood_check = MoodCheck(user_id=user_id, mood=mood, ai_message=ai_message, date=date.today())
+    mood_check = MoodCheck(user_id=user_id, mood=mood,
+                           ai_message=ai_message, date=date.today())
     db.session.add(mood_check)
     db.session.commit()
     return jsonify(mood_check.serialize()), 201
 
 # WORKOUT ENDPOINTS
+
+
 @api.route('/workout/<int:user_id>', methods=['GET'])
 @jwt_required()
 def get_workouts(user_id):
     from api.models import Workout
-    workouts = Workout.query.filter_by(user_id=user_id).order_by(Workout.date.desc()).all()
+    workouts = Workout.query.filter_by(
+        user_id=user_id).order_by(Workout.date.desc()).all()
     return jsonify([w.serialize() for w in workouts]), 200
+
 
 @api.route('/workout', methods=['POST'])
 @jwt_required()
@@ -195,7 +373,8 @@ def add_workout():
     exercises = body.get("exercises", [])
     if not user_id or not fitness_goal:
         return jsonify({"error": "user_id and fitness_goal are required"}), 400
-    workout = Workout(user_id=user_id, fitness_goal=fitness_goal, date=date.today())
+    workout = Workout(
+        user_id=user_id, fitness_goal=fitness_goal, date=date.today())
     db.session.add(workout)
     db.session.flush()
     for ex in exercises:
@@ -208,4 +387,4 @@ def add_workout():
         )
         db.session.add(exercise)
     db.session.commit()
-    return jsonify(workout.serialize()), 201 
+    return jsonify(workout.serialize()), 201

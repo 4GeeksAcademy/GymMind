@@ -15,6 +15,7 @@ import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import { Progress } from "./pages/Progress";
 import { MoodCheckPage } from "./pages/MoodCheckPage";
+import { Nutrition } from "./pages/Nutrition";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -30,6 +31,7 @@ export const router = createBrowserRouter(
       <Route path="/edit-profile" element={<EditProfile />} />
       <Route path="/progress" element={<Progress />} />
       <Route path="/moodcheck" element={<MoodCheckPage />} />
+      <Route path="/nutrition" element={<Nutrition />} />
     </Route>
   )
 );
