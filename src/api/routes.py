@@ -9,6 +9,7 @@ import cloudinary.uploader
 import os
 import requests
 import random
+from datetime import date
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -19,6 +20,7 @@ cloudinary.config(
 api = Blueprint('api', __name__)
 CORS(api)
 
+# AI MOTIVATIONAL MESSAGES FOR MOOD CHECK
 motivations = {
     "great": [
         "You're unstoppable today!",
@@ -349,15 +351,6 @@ def add_progress():
 # MOOD CHECK ENDPOINTS
 
 
-@api.route('/mood/<int:user_id>', methods=['GET'])
-@jwt_required()
-def get_moods(user_id):
-    from api.models import MoodCheck
-    moods = MoodCheck.query.filter_by(
-        user_id=user_id).order_by(MoodCheck.date.desc()).all()
-    return jsonify([mood.serialize() for mood in moods]), 200
-
-
 @api.route('/mood', methods=['POST'])
 @jwt_required()
 def add_mood():
@@ -378,14 +371,18 @@ def add_mood():
             "error": "Invalid mood"
         }), 400
 
-    existing = MoodCheck.query.filter_by(
-        user_id=current_user,
-        date=date.today()
-    ).first()
+    # LIMIT TO 3 MOODS PER DAY
 
-    if existing:
+    today = date.today()
+
+    todays_moods = MoodCheck.query.filter(
+        MoodCheck.user_id == current_user,
+        db.func.date(MoodCheck.date) == today
+    ).count()
+
+    if todays_moods >= 3:
         return jsonify({
-            "error": "You already logged your mood today"
+            "error": "Daily mood check limit reached"
         }), 400
 
     ai_message = random.choice(motivations[mood])
@@ -395,18 +392,22 @@ def add_mood():
             "training_intensity": "High",
             "recommended_focus": "Strength & PR Training"
         },
+
         "good": {
             "training_intensity": "Medium-High",
             "recommended_focus": "Balanced Workout"
         },
+
         "okay": {
             "training_intensity": "Medium",
             "recommended_focus": "Consistency Training"
         },
+
         "tired": {
             "training_intensity": "Low",
             "recommended_focus": "Recovery & Stretching"
         },
+
         "low": {
             "training_intensity": "Low",
             "recommended_focus": "Light Movement & Motivation"
@@ -421,7 +422,7 @@ def add_mood():
         user_id=current_user,
         mood=mood,
         ai_message=ai_message,
-        date=date.today()
+        date=today
     )
 
     db.session.add(mood_check)

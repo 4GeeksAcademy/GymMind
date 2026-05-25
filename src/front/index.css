@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap");
 
 .signup-page {
   min-height: 100vh;
@@ -663,7 +663,7 @@ html {
 
 .signin-logo {
   color: #00e5ff;
- font-family: 'Bebas Neue', sans-serif;
+  font-family: "Bebas Neue", sans-serif;
   letter-spacing: 2px;
   font-size: 22px;
 }
@@ -697,7 +697,7 @@ html {
 .signin-card h1 {
   text-align: center;
   font-size: 31px;
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: "Bebas Neue", sans-serif;
   letter-spacing: 2px;
   margin-bottom: 12px;
 }
@@ -838,7 +838,7 @@ html {
   min-height: 100vh;
   background: #080c10;
   color: #f0f4f8;
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
 }
 
 /* NAVBAR */
@@ -848,8 +848,8 @@ html {
   align-items: center;
   justify-content: space-between;
   height: 56px;
-  background: rgba(8,12,16,0.97);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: rgba(8, 12, 16, 0.97);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding: 0 20px;
 }
 
@@ -859,7 +859,7 @@ html {
 }
 
 .moodcheck-logo {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: "Bebas Neue", sans-serif;
   font-size: 22px;
   letter-spacing: 2px;
   color: #00e5ff;
@@ -898,13 +898,13 @@ html {
 
 .moodcheck-signout-btn {
   background: transparent;
-  border: 1px solid rgba(255,80,80,0.3);
+  border: 1px solid rgba(255, 80, 80, 0.3);
   color: #ff6b6b;
   padding: 6px 14px;
   border-radius: 6px;
   font-size: 13px;
   cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
 }
 
 /* PAGE */
@@ -929,7 +929,7 @@ html {
 }
 
 .moodcheck-header h1 {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: "Bebas Neue", sans-serif;
   font-size: 36px;
   letter-spacing: 2px;
   margin-bottom: 10px;
@@ -946,14 +946,14 @@ html {
 
 .mood-check {
   background: #0d1318;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   padding: 28px;
   max-width: 650px;
 }
 
 .moodcheck-card-title {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: "Bebas Neue", sans-serif;
   font-size: 18px;
   letter-spacing: 1px;
   margin-bottom: 16px;
@@ -975,25 +975,31 @@ html {
 }
 
 .mood-options button {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: #f0f4f8;
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 13px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   cursor: pointer;
-  transition: 0.2s;
+  transition:
+    transform 0.2s,
+    background 0.2s,
+    border-color 0.2s;
 }
 
 .mood-options button:hover {
   border-color: #00e5ff;
+  transform: translateY(-2px);
 }
 
 .mood-options button.selected {
   background: #00e5ff;
   color: #000;
   border-color: #00e5ff;
+  font-weight: 700;
+  transform: scale(1.03);
 }
 
 
@@ -1008,12 +1014,15 @@ html {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-  transition: opacity 0.2s;
+  font-family: "DM Sans", sans-serif;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
 }
 
 .moodcheck-submit-btn:hover {
   opacity: 0.85;
+  transform: translateY(-1px);
 }
 
 .mood-empty {
@@ -1032,7 +1041,7 @@ html {
 
 .mood-check li {
   padding: 14px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   color: #f0f4f8;
 }
 
@@ -1055,10 +1064,524 @@ html {
   font-weight: 400;
 }
 
-.mood-check li p {
-  margin-top: 4px;
+.history-message {
+  margin-top: 8px;
   font-size: 13px;
   color: #6b7c8f;
+  line-height: 1.5;
+  opacity: 0.92;
+}
+
+.ai-recommendation-card {
+  margin-top: 18px;
+  margin-bottom: 28px;
+
+  background: linear-gradient(
+    135deg,
+    rgba(0, 229, 255, 0.12),
+    rgba(0, 229, 255, 0.04)
+  );
+
+  border: 1px solid rgba(0, 229, 255, 0.18);
+  border-radius: 12px;
+  padding: 18px;
+
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.05);
+}
+
+.ai-recommendation-card h3 {
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 1px;
+  font-size: 20px;
+  color: #00e5ff;
+  margin-bottom: 14px;
+}
+
+.recommendation-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 13px;
+}
+
+.recommendation-row:last-child {
+  border-bottom: none;
+}
+
+.recommendation-row span {
+  color: #6b7c8f;
+}
+
+.recommendation-row strong {
+  color: #f0f4f8;
+  font-weight: 600;
+}
+
+.mood-today-card {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 229, 255, 0.08),
+    rgba(255, 255, 255, 0.03)
+  );
+
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 24px;
+
+  backdrop-filter: blur(6px);
+
+  transition: 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.mood-today-card.great {
+  border-left: 5px solid #ff7b00;
+}
+
+.mood-today-card.good {
+  border-left: 5px solid #4caf50;
+}
+
+.mood-today-card.okay {
+  border-left: 5px solid #9e9e9e;
+}
+
+.mood-today-card.tired {
+  border-left: 5px solid #7e57c2;
+}
+
+.mood-today-card.low {
+  border-left: 5px solid #e53935;
+}
+
+.mood-today-card:hover {
+  transform: translateY(-2px);
+}
+
+.mood-today-top {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.mood-big-emoji {
+  font-size: 48px;
+}
+
+.mood-today-card h3 {
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 1px;
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.mood-today-card p {
+  color: #9fb0c0;
+  font-size: 14px;
+}
+
+.mood-date-label {
+  display: inline-block;
+  margin-top: 16px;
+  color: #00e5ff;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ===== MOOD TRENDS ===== */
+
+.mood-trends {
+  margin-top: 30px;
+  margin-bottom: 34px;
+}
+
+.trend-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.trend-label {
+  width: 90px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.trend-bar-wrapper {
+  flex: 1;
+  height: 10px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.trend-bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* COLORS */
+
+.trend-bar.great {
+  background: #ff7b00;
+}
+
+.trend-bar.good {
+  background: #4caf50;
+}
+
+.trend-bar.okay {
+  background: #9e9e9e;
+}
+
+.trend-bar.tired {
+  background: #7e57c2;
+}
+
+.trend-bar.low {
+  background: #e53935;
+}
+
+.trend-count {
+  width: 20px;
+  text-align: right;
+  font-size: 13px;
+  color: #9fb0c0;
+}
+
+.nutrition-page {
+    min-height: 100vh;
+    background: #050b10;
+    color: white;
+    padding: 40px 0;
+}
+
+.nutrition-container {
+    width: 85%;
+    max-width: 1400px;
+    margin: auto;
+}
+
+.nutrition-summary {
+    background: linear-gradient(180deg, #08131a, #091018);
+
+    border: 1px solid rgba(0, 229, 255, .2);
+
+    border-radius: 18px;
+
+    padding: 30px;
+
+    margin-bottom: 30px;
+}
+
+.nutrition-summary h2 {
+    color: #00e5ff;
+    font-size: 20px;
+    margin-bottom: 12px;
+}
+
+.nutrition-summary p {
+    color: #cfd8dc;
+}
+
+.macro-tags {
+    display: flex;
+
+    gap: 15px;
+
+    flex-wrap: wrap;
+
+    margin-top: 20px;
+}
+
+.macro-tag {
+    background: #08141c;
+
+    border: 1px solid rgba(0, 229, 255, .15);
+
+    padding: 14px 18px;
+
+    border-radius: 12px;
+
+    font-weight: bold;
+
+    color: #00e5ff;
+}
+
+.nutrition-grid {
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 20px;
+
+    margin-bottom: 30px;
+}
+
+.nutrition-card {
+    background: #08131b;
+
+    border-radius: 18px;
+
+    padding: 35px;
+
+    text-align: center;
+
+    border: 1px solid rgba(0, 229, 255, .15);
+}
+
+.nutrition-card h1 {
+    color: #00e5ff;
+
+    font-size: 48px;
+
+    margin-bottom: 8px;
+}
+
+.nutrition-card p {
+    color: #cfd8dc;
+}
+
+.progress-line {
+    width: 100%;
+
+    height: 8px;
+
+    margin-top: 18px;
+
+    background: #1d2c34;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+
+    background: linear-gradient(
+        90deg,
+        #00e5ff,
+        #00ffa3
+    );
+
+    border-radius: 10px;
+}
+
+.food-layout {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 22px;
+}
+
+.food-search,
+.food-log {
+    background: #08131b;
+
+    border-radius: 18px;
+
+    padding: 30px;
+
+    min-height: 550px;
+
+    border: 1px solid rgba(0, 229, 255, .15);
+}
+
+.food-search h2,
+.food-log h2 {
+    color: white;
+
+    margin-bottom: 20px;
+}
+
+.search-bar {
+    display: flex;
+
+    gap: 12px;
+}
+
+.search-bar input {
+
+    flex: 1;
+
+    height: 55px;
+
+    background: #0d1a22;
+
+    border: none;
+
+    border-radius: 12px;
+
+    padding-left: 20px;
+
+    color: white;
+
+    outline: none;
+}
+
+.search-btn {
+
+    width: 160px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #00d7ff;
+
+    color: black;
+
+    font-weight: bold;
+
+    transition: .3s;
+}
+
+.search-btn:hover {
+    transform: scale(1.03);
+
+    background: #00e5ff;
+}
+
+.food-results {
+
+    margin-top: 25px;
+}
+
+.food-item {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 18px;
+
+    border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.food-name {
+
+    font-size: 18px;
+
+    color: white;
+}
+
+.food-macros {
+
+    color: #8ca3ad;
+
+    font-size: 14px;
+}
+
+.add-btn {
+
+    background: transparent;
+
+    color: #00e5ff;
+
+    border: none;
+
+    font-size: 24px;
+
+    cursor: pointer;
+}
+
+.food-log-item {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 16px 0;
+
+    border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.food-actions {
+    display: flex;
+
+    gap: 12px;
+
+    align-items: center;
+}
+
+.delete-food-btn {
+
+    border: none;
+
+    background: transparent;
+
+    color: #ff5f5f;
+
+    font-size: 22px;
+
+    cursor: pointer;
+}
+
+.delete-food-btn:hover {
+    color: red;
+}
+
+@media(max-width:900px){
+
+.nutrition-grid{
+grid-template-columns:1fr 1fr;
+}
+
+.food-layout{
+grid-template-columns:1fr;
+}
+
+}
+
+@media(max-width:600px){
+
+.nutrition-grid{
+grid-template-columns:1fr;
+}
+
+}
+
+.progress-line{
+width:85%;
+height:8px;
+
+background:#1c2930;
+
+margin:15px auto;
+
+border-radius:20px;
+
+overflow:hidden;
+}
+
+.progress-fill{
+
+height:100%;
+
+background:linear-gradient(
+90deg,
+#ff8f1f,
+#00e5ff
+);
+
+transition:width .4s ease;
+
+border-radius:20px;
 }
 
 .nutrition-page {
