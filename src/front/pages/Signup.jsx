@@ -32,10 +32,10 @@ export const Signup = () => {
             return;
         }
 
-            if (!termsAccepted) {
-        alert("You must accept the Terms of Service and Privacy Policy to continue.");
-        return;
-    }
+        if (!termsAccepted) {
+            alert("You must accept the Terms of Service and Privacy Policy to continue.");
+            return;
+        }
 
         try {
 
@@ -208,7 +208,11 @@ export const Signup = () => {
                     </button>
 
                     <p className="signin-text">
-                        Already have an account? <span>Sign In</span>
+                        Already have an account?
+                        <span onClick={() => navigate("/login")}
+                            className="signin-link">
+                            Sign In
+                        </span>
                     </p>
 
                 </form>
