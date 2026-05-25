@@ -8,6 +8,7 @@ import cloudinary
 import cloudinary.uploader
 import os
 import requests
+import random
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -18,6 +19,32 @@ cloudinary.config(
 api = Blueprint('api', __name__)
 CORS(api)
 
+motivations = {
+    "great": [
+        "You're unstoppable today!",
+        "Push your limits today!"
+    ],
+
+    "good": [
+        "Stay consistent and trust the process.",
+        "Small progress is still progress."
+    ],
+
+    "okay": [
+        "Showing up matters more than perfection.",
+        "Keep moving forward one step at a time."
+    ],
+
+    "tired": [
+        "Recovery is part of growth.",
+        "Take care of your body today."
+    ],
+
+    "low": [
+        "You are stronger than you think.",
+        "Even difficult days help you grow."
+    ]
+}
 
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
@@ -332,23 +359,49 @@ def get_moods(user_id):
 @api.route('/mood', methods=['POST'])
 @jwt_required()
 def add_mood():
+
     from api.models import MoodCheck
     from datetime import date
+
+    current_user = get_jwt_identity()
+
     body = request.get_json()
-    user_id = body.get("user_id")
+
     mood = body.get("mood")
-    ai_message = body.get("ai_message")
-    if not user_id or not mood:
-        return jsonify({"error": "user_id and mood are required"}), 400
+
+    valid_moods = ["great", "good", "okay", "tired", "low"]
+
+    if mood not in valid_moods:
+        return jsonify({
+            "error": "Invalid mood"
+        }), 400
+
     existing = MoodCheck.query.filter_by(
-        user_id=user_id, date=date.today()).first()
+        user_id=current_user,
+        date=date.today()
+    ).first()
+
     if existing:
-        return jsonify({"error": "You already logged your mood today"}), 400
-    mood_check = MoodCheck(user_id=user_id, mood=mood,
-                           ai_message=ai_message, date=date.today())
+        return jsonify({
+            "error": "You already logged your mood today"
+        }), 400
+
+    ai_message = random.choice(motivations[mood])
+
+    mood_check = MoodCheck(
+        user_id=current_user,
+        mood=mood,
+        ai_message=ai_message,
+        date=date.today()
+    )
+
     db.session.add(mood_check)
     db.session.commit()
-    return jsonify(mood_check.serialize()), 201
+
+    return jsonify({
+        "message": "Mood saved successfully",
+        "mood_check": mood_check.serialize()
+    }), 201
 
 # WORKOUT ENDPOINTS
 
