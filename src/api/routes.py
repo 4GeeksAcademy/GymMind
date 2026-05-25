@@ -1,5 +1,5 @@
 from flask import request, jsonify, Blueprint
-from api.models import db, User, Nutrition
+from api.models import db, User
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
@@ -124,11 +124,11 @@ def get_nutrition_recommendations():
     return jsonify(recommendations[goal]), 200
 
 
-@api.route('/nutrition/tips/<goal>', methods=['GET'])
-def get_nutrition_tips(goal):
-    tips = Nutrition.query.filter_by(goal=goal).all()
+# @api.route('/nutrition/tips/<goal>', methods=['GET'])
+# def get_nutrition_tips(goal):
+#     tips = Nutrition.query.filter_by(goal=goal).all()
 
-    return jsonify([tip.serialize() for tip in tips]), 200
+#     return jsonify([tip.serialize() for tip in tips]), 200
 
 
 @api.route("/nutrition/search", methods=["POST"])
