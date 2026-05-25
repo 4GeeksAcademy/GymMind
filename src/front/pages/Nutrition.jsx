@@ -96,6 +96,18 @@ export const Nutrition = () => {
 
     };
 
+    const handleDeleteFood = (indexToDelete) => {
+
+    const updatedFoods =
+        foodResults.filter(
+            (food, index) =>
+                index !== indexToDelete
+        );
+
+    setFoodResults(updatedFoods);
+
+     };
+
     const totalCalories =
         foodResults.reduce(
             (total, food) =>
@@ -125,7 +137,7 @@ export const Nutrition = () => {
         );
 
     return (
-        <div>
+        <div className="nutrition-page">
 
             <h1>Nutrition</h1>
 
@@ -277,9 +289,22 @@ export const Nutrition = () => {
 
                                     </div>
 
+                                   <div className="food-actions">
+
                                     <span>
                                         {food.calories} kcal
                                     </span>
+
+                                    <button
+                                        className="delete-food-btn"
+                                        onClick={() =>
+                                            handleDeleteFood(index)
+                                        }
+                                    >
+                                        ✕
+                                    </button>
+
+</div>
 
                                 </div>
 
