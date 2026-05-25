@@ -46,9 +46,11 @@ motivations = {
     ]
 }
 
+
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
     return jsonify({"message": "Hello! I'm a message that came from the backend"}), 200
+
 
 
 @api.route('/signup', methods=['POST'])
@@ -388,6 +390,33 @@ def add_mood():
 
     ai_message = random.choice(motivations[mood])
 
+    recommendations = {
+        "great": {
+            "training_intensity": "High",
+            "recommended_focus": "Strength & PR Training"
+        },
+        "good": {
+            "training_intensity": "Medium-High",
+            "recommended_focus": "Balanced Workout"
+        },
+        "okay": {
+            "training_intensity": "Medium",
+            "recommended_focus": "Consistency Training"
+        },
+        "tired": {
+            "training_intensity": "Low",
+            "recommended_focus": "Recovery & Stretching"
+        },
+        "low": {
+            "training_intensity": "Low",
+            "recommended_focus": "Light Movement & Motivation"
+        }
+    }
+
+    training_intensity = recommendations[mood]["training_intensity"]
+
+    recommended_focus = recommendations[mood]["recommended_focus"]
+
     mood_check = MoodCheck(
         user_id=current_user,
         mood=mood,
@@ -400,7 +429,9 @@ def add_mood():
 
     return jsonify({
         "message": "Mood saved successfully",
-        "mood_check": mood_check.serialize()
+        "mood_check": mood_check.serialize(),
+        "training_intensity": training_intensity,
+        "recommended_focus": recommended_focus
     }), 201
 
 # WORKOUT ENDPOINTS
