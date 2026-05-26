@@ -457,3 +457,32 @@ def add_workout():
         db.session.add(exercise)
     db.session.commit()
     return jsonify(workout.serialize()), 201
+
+    import google.generativeai as genai
+
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+@api.route('/chat', methods=['POST'])
+@jwt_required()
+def chat_with_ai():
+    body = request.get_json()
+    message = body.get("message")
+    context = body.get("context", "")
+    
+    if not message:
+        return jsonify({"error": "Message is required"}), 400
+    
+    try:
+        model = genai.GenerativeModel("gemini-2.5-flash-lite")
+        
+        system_prompt = f"""You are GymMind AI Coach, a personal fitness and wellness assistant. 
+        You help users with workout advice, nutrition tips, motivation, and emotional support.
+        Keep responses concise, friendly and motivational.
+        {f'User context: {context}' if context else ''}"""
+        
+        response = model.generate_content(f"{system_prompt}\n\nUser: {message}")
+        
+        return jsonify({"response": response.text}), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500 
