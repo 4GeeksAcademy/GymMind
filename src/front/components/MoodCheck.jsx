@@ -62,22 +62,25 @@ export const MoodCheck = () => {
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
   const token = sessionStorage.getItem("token");
   if (!user?.id || !token) {
-  return <div>Unauthorized</div>;
-}
+    return <div>Unauthorized</div>;
+  }
 
   // GET HISTORY
   const fetchMoodHistory = async () => {
     try {
+      console.log("TOKEN:", token);
+      console.log("USER:", user);
+
       const response = await fetch(
-        `${backendUrl}/api/mood/${user.id}`,
+        `${backendUrl}/api/mood`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-
       const data = await response.json();
+
 
       if (response.ok) {
         setHistory(data);
@@ -105,7 +108,6 @@ export const MoodCheck = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          user_id: user.id,
           mood: selectedMood,
         }),
       });

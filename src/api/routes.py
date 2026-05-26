@@ -354,24 +354,18 @@ def add_progress():
 @api.route('/mood', methods=['POST'])
 @jwt_required()
 def add_mood():
-
     from api.models import MoodCheck
     from datetime import date
+    import random
 
-    current_user = get_jwt_identity()
-
+    current_user = int(get_jwt_identity())
     body = request.get_json()
 
     mood = body.get("mood")
 
     valid_moods = ["great", "good", "okay", "tired", "low"]
-
     if mood not in valid_moods:
-        return jsonify({
-            "error": "Invalid mood"
-        }), 400
-
-    # LIMIT TO 3 MOODS PER DAY
+        return jsonify({"error": "Invalid mood"}), 400
 
     today = date.today()
 
@@ -381,42 +375,17 @@ def add_mood():
     ).count()
 
     if todays_moods >= 3:
-        return jsonify({
-            "error": "Daily mood check limit reached"
-        }), 400
+        return jsonify({"error": "Daily mood check limit reached"}), 400
 
     ai_message = random.choice(motivations[mood])
 
     recommendations = {
-        "great": {
-            "training_intensity": "High",
-            "recommended_focus": "Strength & PR Training"
-        },
-
-        "good": {
-            "training_intensity": "Medium-High",
-            "recommended_focus": "Balanced Workout"
-        },
-
-        "okay": {
-            "training_intensity": "Medium",
-            "recommended_focus": "Consistency Training"
-        },
-
-        "tired": {
-            "training_intensity": "Low",
-            "recommended_focus": "Recovery & Stretching"
-        },
-
-        "low": {
-            "training_intensity": "Low",
-            "recommended_focus": "Light Movement & Motivation"
-        }
+        "great": {"training_intensity": "High", "recommended_focus": "Strength & PR Training"},
+        "good": {"training_intensity": "Medium-High", "recommended_focus": "Balanced Workout"},
+        "okay": {"training_intensity": "Medium", "recommended_focus": "Consistency Training"},
+        "tired": {"training_intensity": "Low", "recommended_focus": "Recovery & Stretching"},
+        "low": {"training_intensity": "Low", "recommended_focus": "Light Movement & Motivation"}
     }
-
-    training_intensity = recommendations[mood]["training_intensity"]
-
-    recommended_focus = recommendations[mood]["recommended_focus"]
 
     mood_check = MoodCheck(
         user_id=current_user,
@@ -431,9 +400,24 @@ def add_mood():
     return jsonify({
         "message": "Mood saved successfully",
         "mood_check": mood_check.serialize(),
-        "training_intensity": training_intensity,
-        "recommended_focus": recommended_focus
+        "training_intensity": recommendations[mood]["training_intensity"],
+        "recommended_focus": recommendations[mood]["recommended_focus"]
     }), 201
+
+
+@api.route('/mood', methods=['GET'])
+@jwt_required()
+def get_mood_history():
+    from api.models import MoodCheck
+
+    user_id = int(get_jwt_identity())
+
+    moods = MoodCheck.query.filter_by(
+        user_id=user_id
+    ).order_by(MoodCheck.date.desc()).all()
+
+    return jsonify([m.serialize() for m in moods]), 200
+
 
 # WORKOUT ENDPOINTS
 
