@@ -21,6 +21,7 @@ wtforms = "==3.1.2"
 sqlalchemy = "*"
 cloudinary = "*"
 requests = "*"
+google-generativeai = "*"
 
 [requires]
 python_version = "3.13"
