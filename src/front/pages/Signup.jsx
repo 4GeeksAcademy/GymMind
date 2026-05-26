@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
+
 
 
 export const Signup = () => {
@@ -200,12 +202,34 @@ export const Signup = () => {
                         <span></span>
                     </div>
 
-                    <button
-                        type="button"
-                        className="google-btn"
-                    >
-                        <span>G</span> Continue with Google
-                    </button>
+                    <GoogleLogin
+                        onSuccess={(credentialResponse) => {
+
+                            const payload =
+                                JSON.parse(
+                                    atob(
+                                        credentialResponse.credential
+                                            .split(".")[1]
+                                    )
+                                );
+
+                            console.log(payload);
+
+                            localStorage.setItem(
+                                "user",
+                                JSON.stringify(payload)
+                            );
+
+                            navigate("/dashboard");
+
+                        }}
+
+                        onError={() => {
+
+                            alert("Google login failed");
+
+                        }}
+                    />
 
                     <p className="signin-text">
                         Already have an account?
