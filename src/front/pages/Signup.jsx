@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
+
 
 
 export const Signup = () => {
@@ -32,10 +34,10 @@ export const Signup = () => {
             return;
         }
 
-            if (!termsAccepted) {
-        alert("You must accept the Terms of Service and Privacy Policy to continue.");
-        return;
-    }
+        if (!termsAccepted) {
+            alert("You must accept the Terms of Service and Privacy Policy to continue.");
+            return;
+        }
 
         try {
 
@@ -200,15 +202,41 @@ export const Signup = () => {
                         <span></span>
                     </div>
 
-                    <button
-                        type="button"
-                        className="google-btn"
-                    >
-                        <span>G</span> Continue with Google
-                    </button>
+                    <GoogleLogin
+                        onSuccess={(credentialResponse) => {
+
+                            const payload =
+                                JSON.parse(
+                                    atob(
+                                        credentialResponse.credential
+                                            .split(".")[1]
+                                    )
+                                );
+
+                            console.log(payload);
+
+                            localStorage.setItem(
+                                "user",
+                                JSON.stringify(payload)
+                            );
+
+                            navigate("/dashboard");
+
+                        }}
+
+                        onError={() => {
+
+                            alert("Google login failed");
+
+                        }}
+                    />
 
                     <p className="signin-text">
-                        Already have an account? <span>Sign In</span>
+                        Already have an account?
+                        <span onClick={() => navigate("/login")}
+                            className="signin-link">
+                            Sign In
+                        </span>
                     </p>
 
                 </form>
