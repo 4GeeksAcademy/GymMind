@@ -156,7 +156,7 @@ export const Dashboard = () => {
           <div className="db-nav-links">
             <a className="active">Dashboard</a>
             <a onClick={() => navigate("/workout")}>My Workout</a>
-            <a onClick={() => navigate("/mood")}>Mood Check</a>
+            <a onClick={() => navigate("/moodcheck")}>Mood Check</a>
             <a onClick={() => navigate("/progress")}>Progress</a>
             <a onClick={() => navigate("/profile")}>Profile</a>
           </div>
@@ -238,9 +238,9 @@ export const Dashboard = () => {
               </div>
               {aiMessage
                 ? <div className="db-ai-message">
-                    <div className="db-ai-badge">🤖 AI Coach</div>
-                    {aiMessage}
-                  </div>
+                  <div className="db-ai-badge">🤖 AI Coach</div>
+                  {aiMessage}
+                </div>
                 : <div className="db-mood-placeholder">Select your mood to get a message from your AI Coach</div>
               }
             </div>
