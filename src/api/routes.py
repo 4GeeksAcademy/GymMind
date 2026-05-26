@@ -8,6 +8,8 @@ import cloudinary
 import cloudinary.uploader
 import os
 import requests
+import random
+from datetime import date
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -18,10 +20,39 @@ cloudinary.config(
 api = Blueprint('api', __name__)
 CORS(api)
 
+# AI MOTIVATIONAL MESSAGES FOR MOOD CHECK
+motivations = {
+    "great": [
+        "You're unstoppable today!",
+        "Push your limits today!"
+    ],
+
+    "good": [
+        "Stay consistent and trust the process.",
+        "Small progress is still progress."
+    ],
+
+    "okay": [
+        "Showing up matters more than perfection.",
+        "Keep moving forward one step at a time."
+    ],
+
+    "tired": [
+        "Recovery is part of growth.",
+        "Take care of your body today."
+    ],
+
+    "low": [
+        "You are stronger than you think.",
+        "Even difficult days help you grow."
+    ]
+}
+
 
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
     return jsonify({"message": "Hello! I'm a message that came from the backend"}), 200
+
 
 
 @api.route('/signup', methods=['POST'])
@@ -320,35 +351,73 @@ def add_progress():
 # MOOD CHECK ENDPOINTS
 
 
-@api.route('/mood/<int:user_id>', methods=['GET'])
-@jwt_required()
-def get_moods(user_id):
-    from api.models import MoodCheck
-    moods = MoodCheck.query.filter_by(
-        user_id=user_id).order_by(MoodCheck.date.desc()).all()
-    return jsonify([mood.serialize() for mood in moods]), 200
-
-
 @api.route('/mood', methods=['POST'])
 @jwt_required()
 def add_mood():
     from api.models import MoodCheck
     from datetime import date
+    import random
+
+    current_user = int(get_jwt_identity())
     body = request.get_json()
-    user_id = body.get("user_id")
+
     mood = body.get("mood")
-    ai_message = body.get("ai_message")
-    if not user_id or not mood:
-        return jsonify({"error": "user_id and mood are required"}), 400
-    existing = MoodCheck.query.filter_by(
-        user_id=user_id, date=date.today()).first()
-    if existing:
-        return jsonify({"error": "You already logged your mood today"}), 400
-    mood_check = MoodCheck(user_id=user_id, mood=mood,
-                           ai_message=ai_message, date=date.today())
+
+    valid_moods = ["great", "good", "okay", "tired", "low"]
+    if mood not in valid_moods:
+        return jsonify({"error": "Invalid mood"}), 400
+
+    today = date.today()
+
+    todays_moods = MoodCheck.query.filter(
+        MoodCheck.user_id == current_user,
+        db.func.date(MoodCheck.date) == today
+    ).count()
+
+    if todays_moods >= 3:
+        return jsonify({"error": "Daily mood check limit reached"}), 400
+
+    ai_message = random.choice(motivations[mood])
+
+    recommendations = {
+        "great": {"training_intensity": "High", "recommended_focus": "Strength & PR Training"},
+        "good": {"training_intensity": "Medium-High", "recommended_focus": "Balanced Workout"},
+        "okay": {"training_intensity": "Medium", "recommended_focus": "Consistency Training"},
+        "tired": {"training_intensity": "Low", "recommended_focus": "Recovery & Stretching"},
+        "low": {"training_intensity": "Low", "recommended_focus": "Light Movement & Motivation"}
+    }
+
+    mood_check = MoodCheck(
+        user_id=current_user,
+        mood=mood,
+        ai_message=ai_message,
+        date=today
+    )
+
     db.session.add(mood_check)
     db.session.commit()
-    return jsonify(mood_check.serialize()), 201
+
+    return jsonify({
+        "message": "Mood saved successfully",
+        "mood_check": mood_check.serialize(),
+        "training_intensity": recommendations[mood]["training_intensity"],
+        "recommended_focus": recommendations[mood]["recommended_focus"]
+    }), 201
+
+
+@api.route('/mood', methods=['GET'])
+@jwt_required()
+def get_mood_history():
+    from api.models import MoodCheck
+
+    user_id = int(get_jwt_identity())
+
+    moods = MoodCheck.query.filter_by(
+        user_id=user_id
+    ).order_by(MoodCheck.date.desc()).all()
+
+    return jsonify([m.serialize() for m in moods]), 200
+
 
 # WORKOUT ENDPOINTS
 
