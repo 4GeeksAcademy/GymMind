@@ -11,6 +11,7 @@ import requests
 import random
 from datetime import date
 
+
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
     api_key=os.getenv("CLOUDINARY_API_KEY"),
@@ -52,7 +53,6 @@ motivations = {
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
     return jsonify({"message": "Hello! I'm a message that came from the backend"}), 200
-
 
 
 @api.route('/signup', methods=['POST'])
@@ -364,6 +364,7 @@ def add_mood():
     mood = body.get("mood")
 
     valid_moods = ["great", "good", "okay", "tired", "low"]
+
     if mood not in valid_moods:
         return jsonify({"error": "Invalid mood"}), 400
 
@@ -377,14 +378,46 @@ def add_mood():
     if todays_moods >= 3:
         return jsonify({"error": "Daily mood check limit reached"}), 400
 
-    ai_message = random.choice(motivations[mood])
+    try:
+        model = genai.GenerativeModel("gemini-1.5-flash")
+
+        prompt = f"""
+        The user is feeling '{mood}' today.
+        Give a short motivational fitness message.
+        Keep it positive, supportive, and fitness-focused.
+        Maximum 2 sentences.
+        """
+
+        response = model.generate_content(prompt)
+
+        ai_message = response.text
+
+    except Exception as e:
+        print("Gemini error:", e)
+
+        ai_message = random.choice(motivations[mood])
 
     recommendations = {
-        "great": {"training_intensity": "High", "recommended_focus": "Strength & PR Training"},
-        "good": {"training_intensity": "Medium-High", "recommended_focus": "Balanced Workout"},
-        "okay": {"training_intensity": "Medium", "recommended_focus": "Consistency Training"},
-        "tired": {"training_intensity": "Low", "recommended_focus": "Recovery & Stretching"},
-        "low": {"training_intensity": "Low", "recommended_focus": "Light Movement & Motivation"}
+        "great": {
+            "training_intensity": "High",
+            "recommended_focus": "Strength & PR Training"
+        },
+        "good": {
+            "training_intensity": "Medium-High",
+            "recommended_focus": "Balanced Workout"
+        },
+        "okay": {
+            "training_intensity": "Medium",
+            "recommended_focus": "Consistency Training"
+        },
+        "tired": {
+            "training_intensity": "Low",
+            "recommended_focus": "Recovery & Stretching"
+        },
+        "low": {
+            "training_intensity": "Low",
+            "recommended_focus": "Light Movement & Motivation"
+        }
     }
 
     mood_check = MoodCheck(
@@ -460,7 +493,9 @@ def add_workout():
 
     import google.generativeai as genai
 
+
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
 
 @api.route('/chat', methods=['POST'])
 @jwt_required()
@@ -468,21 +503,22 @@ def chat_with_ai():
     body = request.get_json()
     message = body.get("message")
     context = body.get("context", "")
-    
+
     if not message:
         return jsonify({"error": "Message is required"}), 400
-    
+
     try:
         model = genai.GenerativeModel("gemini-2.5-flash-lite")
-        
+
         system_prompt = f"""You are GymMind AI Coach, a personal fitness and wellness assistant. 
         You help users with workout advice, nutrition tips, motivation, and emotional support.
         Keep responses concise, friendly and motivational.
         {f'User context: {context}' if context else ''}"""
-        
-        response = model.generate_content(f"{system_prompt}\n\nUser: {message}")
-        
+
+        response = model.generate_content(
+            f"{system_prompt}\n\nUser: {message}")
+
         return jsonify({"response": response.text}), 200
-    
+
     except Exception as e:
-        return jsonify({"error": str(e)}), 500 
+        return jsonify({"error": str(e)}), 500
