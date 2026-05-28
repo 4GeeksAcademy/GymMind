@@ -527,50 +527,47 @@ def chat_with_ai():
         return jsonify({"error": str(e)}), 500 
 
 
-    @api.route("/google-login", methods=["POST"])
-    def google_login():
-        body = request.get_json()
-        credential = body.get("credential")
+@api.route("/google-login", methods=["POST"])
+def google_login():
+    body = request.get_json()
+    credential = body.get("credential")
 
-        if not credential:
-            return jsonify({"error": "Google credential is required"}), 400
+    if not credential:
+        return jsonify({"error": "Google credential is required"}), 400
 
-        try:
-            google_user = id_token.verify_oauth2_token(
-                credential,
-                google_requests.Request(),
-                os.getenv("GOOGLE_CLIENT_ID")
+    try:
+        google_user = id_token.verify_oauth2_token(
+            credential,
+            google_requests.Request(),
+            os.getenv("GOOGLE_CLIENT_ID")
+        )
+
+        email = google_user.get("email")
+        first_name = google_user.get("given_name", "")
+        last_name = google_user.get("family_name", "")
+
+        if not email:
+            return jsonify({"error": "Google account email not found"}), 400
+
+        user = User.query.filter_by(email=email).first()
+
+        if not user:
+            user = User(
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                is_active=True
             )
+            db.session.add(user)
+            db.session.commit()
 
-            email = google_user.get("email")
-            first_name = google_user.get("given_name", "")
-            last_name = google_user.get("family_name", "")
+        access_token = create_access_token(identity=str(user.id))
 
-            if not email:
-                return jsonify({"error": "Google account email not found"}), 400
+        return jsonify({
+            "token": access_token,
+            "user": user.serialize()
+        }), 200
 
-            user = User.query.filter_by(email=email).first()
-
-            if not user:
-                user = User(
-                    first_name=first_name,
-                    last_name=last_name,
-                    email=email,
-                    is_active=True
-                )
-
-                db.session.add(user)
-                db.session.commit()
-
-            access_token = create_access_token(
-                identity=str(user.id)
-            )
-
-            return jsonify({
-                "token": access_token,
-                "user": user.serialize()
-            }), 200
-
-        except Exception as error:
-            print(error)
-            return jsonify({"error": "Invalid Google credential"}), 401    
+    except Exception as error:
+        print(error)
+        return jsonify({"error": "Invalid Google credential"}), 401   
