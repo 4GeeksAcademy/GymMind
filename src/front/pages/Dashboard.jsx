@@ -158,6 +158,7 @@ export const Dashboard = () => {
             <a onClick={() => navigate("/workout")}>My Workout</a>
             <a onClick={() => navigate("/moodcheck")}>Mood Check</a>
             <a onClick={() => navigate("/progress")}>Progress</a>
+            <a onClick={() => navigate("/nutrition")}>Nutrition</a>
             <a onClick={() => navigate("/profile")}>Profile</a>
           </div>
           <div className="db-nav-cta">

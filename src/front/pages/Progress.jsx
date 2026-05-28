@@ -119,6 +119,7 @@ export const Progress = () => {
             <a href="/workout">My Workout</a>
             <a href="/moodcheck">Mood Check</a>
             <a href="/progress" className="active">Progress</a>
+            <a href="/nutrition">Nutrition</a>
             <a href="/profile">Profile</a>
           </div>
           <div className="pr-nav-cta">

@@ -15,6 +15,8 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 import random
 
+import google.generativeai as genai
+from google import genai
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -573,3 +575,79 @@ def google_login():
     except Exception as error:
         print(error)
         return jsonify({"error": "Invalid Google credential"}), 401
+@api.route('/youtube/search', methods=['GET'])
+@jwt_required()
+def search_youtube():
+    import requests
+    query = request.args.get("q")
+    if not query:
+        return jsonify({"error": "Query is required"}), 400
+
+    youtube_api_key = os.getenv("YOUTUBE_API_KEY")
+    url = "https://www.googleapis.com/youtube/v3/search"
+    params = {
+        "part": "snippet",
+        "q": f"{query} exercise tutorial",
+        "type": "video",
+        "maxResults": 1,
+        "key": youtube_api_key
+    }
+
+    response = requests.get(url, params=params)
+    data = response.json()
+
+    if "items" in data and len(data["items"]) > 0:
+        video_id = data["items"][0]["id"]["videoId"]
+        return jsonify({"video_id": video_id}), 200
+
+    return jsonify({"error": "No video found"}), 404
+
+
+@api.route('/workout/generate', methods=['POST'])
+@jwt_required()
+def generate_workout():
+    body = request.get_json()
+    fitness_goal = body.get("fitness_goal")
+    user_id = body.get("user_id")
+
+    if not fitness_goal or not user_id:
+        return jsonify({"error": "fitness_goal and user_id are required"}), 400
+
+    try:
+        prompt = f"""You are a professional fitness coach. Generate a workout routine for someone with the goal: {fitness_goal}.
+
+Return ONLY a valid JSON object with this exact structure, no extra text:
+{{
+    "workout_name": "string",
+    "description": "string",
+    "exercises": [
+        {{
+            "name": "string",
+            "muscle": "string",
+            "sets": number,
+            "reps": number,
+            "instructions": "string"
+        }}
+    ]
+}}
+
+Generate 5-6 exercises. Keep exercise names simple and searchable on YouTube."""
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite",
+            contents=prompt
+        )
+
+        import json
+        text = response.text.strip()
+        if text.startswith("```"):
+            text = text.split("```")[1]
+            if text.startswith("json"):
+                text = text[4:]
+        text = text.strip()
+
+        workout_data = json.loads(text)
+        return jsonify(workout_data), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

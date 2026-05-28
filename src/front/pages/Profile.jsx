@@ -131,8 +131,10 @@ const Profile = () => {
                     <div className="pf-nav-links">
                         <a onClick={() => navigate("/dashboard")}>Dashboard</a>
                         <a onClick={() => navigate("/dashboard")}>My Workout</a>
-                        <a onClick={() => navigate("/dashboard")}>Progress</a>
                         <a onClick={() => navigate("/moodcheck")}>Mood Check</a>
+                        <a onClick={() => navigate("/progress")}>Progress</a>
+                        <a onClick={() => navigate("/nutrition")}>Nutrition</a>
+                        
                         <a className="active">Profile</a>
                     </div>
                     <div className="pf-nav-cta">
