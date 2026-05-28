@@ -130,7 +130,7 @@ const Profile = () => {
                     <div className="pf-logo">GymMind AI</div>
                     <div className="pf-nav-links">
                         <a onClick={() => navigate("/dashboard")}>Dashboard</a>
-                        <a onClick={() => navigate("/dashboard")}>My Workout</a>
+                        <a onClick={() => navigate("/workout")}>My Workout</a>
                         <a onClick={() => navigate("/moodcheck")}>Mood Check</a>
                         <a onClick={() => navigate("/progress")}>Progress</a>
                         <a onClick={() => navigate("/nutrition")}>Nutrition</a>
