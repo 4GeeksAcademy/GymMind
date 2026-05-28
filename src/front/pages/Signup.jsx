@@ -203,31 +203,32 @@ export const Signup = () => {
                     </div>
 
                     <GoogleLogin
-                        onSuccess={(credentialResponse) => {
-
-                            const payload =
-                                JSON.parse(
-                                    atob(
-                                        credentialResponse.credential
-                                            .split(".")[1]
-                                    )
-                                );
-
-                            console.log(payload);
-
-                            localStorage.setItem(
-                                "user",
-                                JSON.stringify(payload)
+                        onSuccess={async (credentialResponse) => {
+                            const response = await fetch(
+                                import.meta.env.VITE_BACKEND_URL + "/api/google-login",
+                                {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json"
+                                    },
+                                    body: JSON.stringify({
+                                        credential: credentialResponse.credential
+                                    })
+                                }
                             );
 
-                            navigate("/dashboard");
+                            const data = await response.json();
 
+                            if (response.ok) {
+                                sessionStorage.setItem("token", data.token);
+                                sessionStorage.setItem("user", JSON.stringify(data.user));
+                                navigate("/dashboard");
+                            } else {
+                                alert(data.error);
+                            }
                         }}
-
                         onError={() => {
-
                             alert("Google login failed");
-
                         }}
                     />
 
