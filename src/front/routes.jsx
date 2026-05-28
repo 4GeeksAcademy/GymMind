@@ -16,6 +16,7 @@ import EditProfile from "./pages/EditProfile";
 import { Progress } from "./pages/Progress";
 import { MoodCheckPage } from "./pages/MoodCheckPage";
 import { Nutrition } from "./pages/Nutrition";
+import { MyWorkout } from "./pages/MyWorkout";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -32,6 +33,7 @@ export const router = createBrowserRouter(
       <Route path="/progress" element={<Progress />} />
       <Route path="/moodcheck" element={<MoodCheckPage />} />
       <Route path="/nutrition" element={<Nutrition />} />
+      <Route path="/workout" element={<MyWorkout />} /> 
     </Route>
   )
 );
