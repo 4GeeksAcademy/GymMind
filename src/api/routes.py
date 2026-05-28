@@ -10,9 +10,10 @@ import os
 import requests
 import random
 from datetime import date
-from google import genai 
+from google import genai
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
+import random
 
 
 cloudinary.config(
@@ -497,7 +498,7 @@ def add_workout():
     import google.generativeai as genai
 
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY")) 
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
 @api.route('/chat', methods=['POST'])
@@ -524,7 +525,7 @@ def chat_with_ai():
         return jsonify({"response": response.text}), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500 
+        return jsonify({"error": str(e)}), 500
 
 
 @api.route("/google-login", methods=["POST"])
@@ -558,6 +559,7 @@ def google_login():
                 email=email,
                 is_active=True
             )
+            user.set_password("google-oauth-user")
             db.session.add(user)
             db.session.commit()
 
@@ -570,4 +572,4 @@ def google_login():
 
     except Exception as error:
         print(error)
-        return jsonify({"error": "Invalid Google credential"}), 401   
+        return jsonify({"error": "Invalid Google credential"}), 401
