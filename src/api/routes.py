@@ -10,6 +10,7 @@ import os
 import requests
 import random
 from datetime import date
+from google import genai 
 
 
 cloudinary.config(
@@ -494,7 +495,7 @@ def add_workout():
     import google.generativeai as genai
 
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY")) 
 
 
 @api.route('/chat', methods=['POST'])
@@ -508,17 +509,17 @@ def chat_with_ai():
         return jsonify({"error": "Message is required"}), 400
 
     try:
-        model = genai.GenerativeModel("gemini-2.5-flash-lite")
-
         system_prompt = f"""You are GymMind AI Coach, a personal fitness and wellness assistant. 
         You help users with workout advice, nutrition tips, motivation, and emotional support.
         Keep responses concise, friendly and motivational.
         {f'User context: {context}' if context else ''}"""
 
-        response = model.generate_content(
-            f"{system_prompt}\n\nUser: {message}")
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite",
+            contents=f"{system_prompt}\n\nUser: {message}"
+        )
 
         return jsonify({"response": response.text}), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500 
