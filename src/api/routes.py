@@ -10,7 +10,7 @@ import os
 import requests
 import random
 from datetime import date
-
+import google.generativeai as genai
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
