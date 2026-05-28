@@ -119,7 +119,7 @@ export const Nutrition = () => {
 
                     <div className="nutrition-navbar-links">
                         <Link to="/dashboard">Dashboard</Link>
-                        <Link to="/myworkout">My Workout</Link>
+                        <Link to="/workout">My Workout</Link>
                         <Link to="/moodcheck">Mood Check</Link>
                         <Link to="/progress">Progress</Link>
                         <Link to="/nutrition" className="active">Nutrition</Link>

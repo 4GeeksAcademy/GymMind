@@ -171,6 +171,7 @@ export const MyWorkout = () => {
             <a className="active">My Workout</a>
             <a onClick={() => navigate("/moodcheck")}>Mood Check</a>
             <a onClick={() => navigate("/progress")}>Progress</a>
+            <a onClick={() => navigate("/nutrition")}>Nutrition</a>
             <a onClick={() => navigate("/profile")}>Profile</a>
           </div>
           <div className="wk-nav-cta">

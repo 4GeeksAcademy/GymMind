@@ -11,7 +11,7 @@ export const MoodCheckPage = () => {
                     <div className="moodcheck-logo">GYMMIND AI</div>
                     <div className="moodcheck-links">
                         <Link to="/dashboard">Dashboard</Link>
-                        <Link to="/myworkout">My Workout</Link>
+                        <Link to="/workout">My Workout</Link>
                         <Link to="/moodcheck" className="active">Mood Check</Link>
                         <Link to="/progress">Progress</Link>
                         <Link to="/nutrition">Nutrition</Link>
