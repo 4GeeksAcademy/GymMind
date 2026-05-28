@@ -11,8 +11,7 @@ import requests
 import random
 from datetime import date
 import google.generativeai as genai
-from google import genai 
-
+from google import genai
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -496,7 +495,7 @@ def add_workout():
     import google.generativeai as genai
 
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY")) 
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
 @api.route('/chat', methods=['POST'])
@@ -523,8 +522,9 @@ def chat_with_ai():
         return jsonify({"response": response.text}), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500 
-    
+        return jsonify({"error": str(e)}), 500
+
+
 @api.route('/youtube/search', methods=['GET'])
 @jwt_required()
 def search_youtube():
@@ -532,7 +532,7 @@ def search_youtube():
     query = request.args.get("q")
     if not query:
         return jsonify({"error": "Query is required"}), 400
-    
+
     youtube_api_key = os.getenv("YOUTUBE_API_KEY")
     url = "https://www.googleapis.com/youtube/v3/search"
     params = {
@@ -542,15 +542,16 @@ def search_youtube():
         "maxResults": 1,
         "key": youtube_api_key
     }
-    
+
     response = requests.get(url, params=params)
     data = response.json()
-    
+
     if "items" in data and len(data["items"]) > 0:
         video_id = data["items"][0]["id"]["videoId"]
         return jsonify({"video_id": video_id}), 200
-    
+
     return jsonify({"error": "No video found"}), 404
+
 
 @api.route('/workout/generate', methods=['POST'])
 @jwt_required()
@@ -599,5 +600,4 @@ Generate 5-6 exercises. Keep exercise names simple and searchable on YouTube."""
         return jsonify(workout_data), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500 
-    
+        return jsonify({"error": str(e)}), 500
