@@ -2,12 +2,6 @@ from flask import request, jsonify, Blueprint
 from api.models import db, User
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
-from flask_jwt_extended import (
-    create_access_token,
-    jwt_required,
-    get_jwt_identity
-)
-
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from werkzeug.security import check_password_hash
 import cloudinary
@@ -18,11 +12,7 @@ import random
 from datetime import date
 from google import genai
 from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
-import random
-
-import google.generativeai as genai
-from google import genai
+from google.auth.transport import requests as google_requests 
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -86,19 +76,6 @@ def signup():
     db.session.add(new_user)
     db.session.commit()
     return jsonify({"message": "User created successfully", "user": new_user.serialize()}), 201
-
-
-@api.route("/login", methods=["POST"])
-def login():
-    data = request.get_json()
-    user = User.query.filter_by(email=data.get("email")).first()
-    if not user or not user.check_password(data.get("password")):
-        return jsonify({"msg": "Invalid email or password"}), 401
-    access_token = create_access_token(identity=str(user.id))
-    return jsonify({
-        "token": access_token,
-        "user": user.serialize()
-    }), 200
 
 
 @api.route("/protected", methods=["GET"])
@@ -238,6 +215,7 @@ def search_food():
         last_name=last_name,
         email=email,
         is_active=True
+    )
     return jsonify({
 
         "name":

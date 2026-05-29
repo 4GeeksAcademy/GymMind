@@ -25,7 +25,7 @@ export const Private = () => {
         </div>
     );
 };
-import React, { useEffect } from "react";
+
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import { Dashboard } from "./Dashboard";
