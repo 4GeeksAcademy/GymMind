@@ -1,166 +1,26 @@
-import React, { useState, useContext } from "react";
-import { Context } from "../hooks/useGlobalReducer";
-import { useNavigate, Link } from "react-router-dom";
-
-export const Login = () => {
-
-    const { dispatch } = useContext(Context);
-
-    const navigate = useNavigate();
-
-    const [formData, setFormData] = useState({
-        email: "",
-        password: ""
-    });
-
-    const handleChange = (event) => {
-
-        setFormData({
-            ...formData,
-            [event.target.name]: event.target.value
-        });
-    };
-
-    const handleSubmit = async (event) => {
-
-        event.preventDefault();
-
-        try {
-
-            const response = await fetch(
-                import.meta.env.VITE_BACKEND_URL + "/api/login",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(formData)
-                }
-            );
-
-            const data = await response.json();
-
-            if(response.ok){
-
-                localStorage.setItem("token", data.token);
-
-                dispatch({
-                    type: "set_token",
-                    payload: data.token
-                });
-
-                dispatch({
-                    type: "set_user",
-                    payload: data.user
-                });
-
-                navigate("/private");
-
-            } else {
-                alert(data.error);
-            }
-
-        } catch(error){
-            console.log(error);
-        }
-    };
-
-    return (
-
-        <div className="container mt-5">
-
-            <div className="row justify-content-center">
-
-                <div className="col-md-6">
-
-                    <div className="card shadow p-4">
-
-                        <h1 className="text-center mb-4">
-                            Login
-                        </h1>
-
-                        <form onSubmit={handleSubmit}>
-
-                            <input
-                                className="form-control mb-3"
-                                type="email"
-                                name="email"
-                                placeholder="Email"
-                                onChange={handleChange}
-                            />
-
-                            <input
-                                className="form-control mb-3"
-                                type="password"
-                                name="password"
-                                placeholder="Password"
-                                onChange={handleChange}
-                            />
-
-                            <button
-                                className="btn btn-dark w-100"
-                                type="submit"
-                            >
-                                Login
-                            </button>
-
-                        </form>
-
-                        <p className="mt-3 text-center">
-
-                            Don't have an account?
-
-                            <Link to="/signup">
-                                Signup
-                            </Link>
-
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-    );
-};
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
-import { Link } from "react-router-dom";
 
 export const Login = () => {
   const navigate = useNavigate();
   const { dispatch } = useGlobalReducer();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL;
-      const response = await fetch(`${backendUrl}/api/login`, {
+      const response = await fetch(`/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
       const data = await response.json();
-      console.log("Login response:", data);
-
       if (response.ok) {
-        const token = data.token;
         sessionStorage.setItem("token", data.token);
         sessionStorage.setItem("user", JSON.stringify(data.user));
-
-        dispatch({
-          type: "login",
-          payload: { token, user: data.user },
-        });
-
+        dispatch({ type: "login", payload: { token: data.token, user: data.user } });
         navigate("/dashboard");
       } else {
         alert(data.error || "Login failed");
@@ -177,60 +37,33 @@ export const Login = () => {
         <div className="signin-logo">GYMMIND AI</div>
         <div className="signin-actions">
           <button className="login-btn">Login</button>
-          <button
-            className="start-btn"
-            onClick={() => navigate("/signup")}
-          >
-            Start Free
-          </button>
+          <button className="start-btn" onClick={() => navigate("/signup")}>Start Free</button>
         </div>
       </nav>
-
       <div className="signin-card">
         <h3>GYMMIND AI</h3>
         <h1>WELCOME BACK</h1>
         <p>Sign in to continue your progress</p>
-
         <form onSubmit={handleSubmit}>
           <label>Email</label>
-          <input
-            type="email"
-            placeholder="you@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-
+          <input type="email" placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           <label>Password</label>
-          <input
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-
+          <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
           <div className="options">
-            <label>
-              <input type="checkbox" /> Remember me
-            </label>
+            <label><input type="checkbox" /> Remember me</label>
             <a href="#">Forgot your password?</a>
           </div>
-
-          <button type="submit" className="signin-btn">
-            Sign In
-          </button>
-
+          <button type="submit" className="signin-btn">Sign In</button>
           <div className="divider">
             <span></span>
             <p>or continue with</p>
             <span></span>
           </div>
-
           <button type="button" className="google-btn">
             <span>G</span> Continue with Google
           </button>
-
           <p className="signup-text">
-            Don’t have an account? <Link to="/signup">Sign up for free</Link>
+            Don't have an account? <Link to="/signup">Sign up for free</Link>
           </p>
         </form>
       </div>
