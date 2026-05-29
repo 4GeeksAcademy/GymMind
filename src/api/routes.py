@@ -222,9 +222,11 @@ def add_mood():
     if todays_moods >= 3:
         return jsonify({"error": "Daily mood check limit reached"}), 400
     try:
-        model = genai.GenerativeModel("gemini-1.5-flash")
         prompt = f"The user is feeling '{mood}' today. Give a short motivational fitness message. Keep it positive, supportive, and fitness-focused. Maximum 2 sentences."
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite",
+            contents=prompt
+        )
         ai_message = response.text
     except Exception as e:
         print("Gemini error:", e)
@@ -345,7 +347,14 @@ def search_youtube():
         return jsonify({"error": "Query is required"}), 400
     youtube_api_key = os.getenv("YOUTUBE_API_KEY")
     url = "https://www.googleapis.com/youtube/v3/search"
-    params = {"part": "snippet", "q": f"{query} exercise tutorial", "type": "video", "maxResults": 1, "key": youtube_api_key}
+    params = {
+        "part": "snippet",
+        "q": f"{query} exercise tutorial",
+        "type": "video",
+        "maxResults": 1,
+        "videoEmbeddable": "true",
+        "key": youtube_api_key
+    }
     response = requests.get(url, params=params)
     data = response.json()
     if "items" in data and len(data["items"]) > 0:
@@ -384,4 +393,4 @@ Generate 5-6 exercises. Keep exercise names simple and searchable on YouTube."""
         workout_data = json.loads(text)
         return jsonify(workout_data), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500 
