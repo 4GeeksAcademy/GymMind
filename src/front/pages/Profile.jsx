@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 
 const Profile = () => {
-    const userId = 1;
+    const { store } = useGlobalReducer();
+    const userId = store.user?.id || JSON.parse(sessionStorage.getItem("user") || "{}").id;
     const [user, setUser] = useState(null);
     const [error, setError] = useState(null);
     const [selectedGoal, setSelectedGoal] = useState("Gain muscle");
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`)
+        fetch(`/api/user/${userId}`)
             .then(res => res.json())
             .then(data => {
                 if (data.error) setError(data.error);
@@ -235,7 +237,7 @@ const Profile = () => {
                         </div>
                         <button className="pf-btn-delete" onClick={() => {  // 👈 CAMBIADO
                             if (window.confirm("Are you sure you want to delete your account? This cannot be undone.")) {
-                                fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`, {
+                                fetch(`/api/user/${userId}`, {
                                     method: "DELETE"
                                 })
                                 .then(res => res.json())
