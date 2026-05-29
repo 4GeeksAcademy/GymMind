@@ -11,7 +11,7 @@ const Profile = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetch(`/api/user/${userId}`)
+        fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`)
             .then(res => res.json())
             .then(data => {
                 if (data.error) setError(data.error);
@@ -237,7 +237,7 @@ const Profile = () => {
                         </div>
                         <button className="pf-btn-delete" onClick={() => {  // 👈 CAMBIADO
                             if (window.confirm("Are you sure you want to delete your account? This cannot be undone.")) {
-                                fetch(`/api/user/${userId}`, {
+                                fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`, {
                                     method: "DELETE"
                                 })
                                 .then(res => res.json())
