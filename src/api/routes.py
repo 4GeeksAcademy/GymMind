@@ -535,10 +535,11 @@ def search_youtube():
     youtube_api_key = os.getenv("YOUTUBE_API_KEY")
     url = "https://www.googleapis.com/youtube/v3/search"
     params = {
-        "part": "snippet",
-        "q": f"{query} exercise tutorial",
+        "part": "snippet,contentDetails",
+        "q": f"how to do {query} exercise form",
         "type": "video",
-        "maxResults": 1,
+        "maxResults": 5,
+        "videoEmbeddable": "true",
         "key": youtube_api_key
     }
     
@@ -546,8 +547,8 @@ def search_youtube():
     data = response.json()
     
     if "items" in data and len(data["items"]) > 0:
-        video_id = data["items"][0]["id"]["videoId"]
-        return jsonify({"video_id": video_id}), 200
+        video_ids = [item["id"]["videoId"] for item in data["items"]]
+        return jsonify({"video_id": video_ids[0], "alternatives": video_ids}), 200
     
     return jsonify({"error": "No video found"}), 404
 
