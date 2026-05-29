@@ -1,5 +1,6 @@
 import React, { createContext, useReducer } from "react";
 import storeReducer, { initialStore } from "../store";
+import { useContext } from "react";
 
 export const Context = createContext(null);
 
@@ -19,3 +20,8 @@ export const StoreProvider = ({ children }) => {
         </Context.Provider>
     );
 };
+
+export default function useGlobalReducer() {
+    const { store, dispatch } = useContext(Context);
+    return { store, dispatch };
+}
