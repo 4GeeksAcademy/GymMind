@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+import { Link } from "react-router-dom";
 
 
 
@@ -18,6 +19,8 @@ export const Signup = () => {
 
     const [termsAccepted, setTermsAccepted] = useState(false);
 
+    const [submitAttempted, setSubmitAttempted] = useState(false);
+
     const handleChange = (event) => {
         setFormData({
             ...formData,
@@ -28,6 +31,7 @@ export const Signup = () => {
     const handleSubmit = async (event) => {
 
         event.preventDefault();
+        setSubmitAttempted(true);
 
         if (formData.password !== formData.confirm_password) {
             alert("Passwords do not match");
@@ -35,9 +39,8 @@ export const Signup = () => {
         }
 
         if (!termsAccepted) {
-            alert("You must accept the Terms of Service and Privacy Policy to continue.");
-            return;
-        }
+                return;
+            }
 
         try {
 
@@ -187,9 +190,20 @@ export const Signup = () => {
                             onChange={(e) => setTermsAccepted(e.target.checked)}
                         />
                         <p>
-                            I accept the <span>Terms of Service</span> and{" "}
-                            <span>Privacy Policy</span>
+                            I accept the{" "}
+                            <Link to="/terms" target="_blank">
+                                Terms of Service
+                            </Link>
+                            {" "}and{" "}
+                            <Link to="/privacy" target="_blank">
+                                Privacy Policy
+                            </Link>
                         </p>
+                        {!termsAccepted && submitAttempted && (
+                            <p className="terms-error">
+                                You must accept the Terms of Service and Privacy Policy.
+                            </p>
+                        )}
                     </div>
 
                     <button
