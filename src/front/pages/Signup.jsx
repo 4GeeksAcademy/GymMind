@@ -65,6 +65,8 @@ export const Signup = () => {
             console.log(data);
 
             if (response.ok) {
+                sessionStorage.setItem("token", data.token);
+                sessionStorage.setItem("user", JSON.stringify(data.user));
                 alert("Account created successfully");
                 navigate("/dashboard");
             } else {
