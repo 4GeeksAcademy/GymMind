@@ -39,8 +39,8 @@ export const Signup = () => {
         }
 
         if (!termsAccepted) {
-                return;
-            }
+            return;
+        }
 
         try {
 
