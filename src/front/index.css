@@ -1931,3 +1931,128 @@ html {
     letter-spacing: 2px;
     color: #00e5ff;
 }
+
+.legal-page {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top left, rgba(0, 229, 255, 0.08), transparent 35%),
+        radial-gradient(circle at bottom right, rgba(0, 255, 163, 0.06), transparent 35%),
+        #050b10;
+    color: #ffffff;
+    padding: 90px 20px;
+}
+
+.legal-container {
+    max-width: 980px;
+    margin: 0 auto;
+    background: rgba(8, 19, 27, 0.92);
+    border: 1px solid rgba(0, 229, 255, 0.18);
+    border-radius: 22px;
+    padding: 55px;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.45);
+}
+
+.legal-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 35px;
+    color: #00e5ff;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.legal-label {
+    color: #00e5ff;
+    letter-spacing: 4px;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+.legal-container h1 {
+    font-size: 46px;
+    line-height: 1.1;
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+.legal-date {
+    color: #8ca3ad;
+    margin-bottom: 35px;
+}
+
+.legal-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.45), transparent);
+    margin: 35px 0;
+}
+
+.legal-container h2 {
+    margin-top: 30px;
+    margin-bottom: 12px;
+    color: #00e5ff;
+    font-size: 22px;
+}
+
+.legal-container p {
+    color: #cbd5df;
+    line-height: 1.85;
+    font-size: 16px;
+}
+
+.legal-note {
+    background: rgba(0, 229, 255, 0.08);
+    border: 1px solid rgba(0, 229, 255, 0.18);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin: 25px 0;
+    color: #dcefff;
+}
+
+@media (max-width: 768px) {
+    .legal-container {
+        padding: 32px 24px;
+    }
+
+    .legal-container h1 {
+        font-size: 34px;
+    }
+}
+
+.terms-error {
+    color: #ff5f5f;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.show-password-btn {
+    background: transparent;
+    border: none;
+    color: #00e5ff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: -10px;
+    margin-bottom: 14px;
+}
+
+.show-password-btn:hover {
+    text-decoration: underline;
+}
+
+.show-confirm-password-btn {
+    background: transparent;
+    border: none;
+    color: #00e5ff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: -10px;
+    margin-bottom: 14px;
+}
+.show-confirm-password-btn:hover {
+    text-decoration: underline;
+}

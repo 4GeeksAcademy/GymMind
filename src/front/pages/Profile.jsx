@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 
 const Profile = () => {
-    const userId = 1;
+    const { store } = useGlobalReducer();
+    const userId = store.user?.id || JSON.parse(sessionStorage.getItem("user") || "{}").id;
     const [user, setUser] = useState(null);
     const [error, setError] = useState(null);
     const [selectedGoal, setSelectedGoal] = useState("Gain muscle");

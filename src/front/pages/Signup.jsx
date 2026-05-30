@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+import { Link } from "react-router-dom";
 
 
 
@@ -18,6 +19,11 @@ export const Signup = () => {
 
     const [termsAccepted, setTermsAccepted] = useState(false);
 
+    const [submitAttempted, setSubmitAttempted] = useState(false);
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
     const handleChange = (event) => {
         setFormData({
             ...formData,
@@ -28,6 +34,7 @@ export const Signup = () => {
     const handleSubmit = async (event) => {
 
         event.preventDefault();
+        setSubmitAttempted(true);
 
         if (formData.password !== formData.confirm_password) {
             alert("Passwords do not match");
@@ -35,7 +42,6 @@ export const Signup = () => {
         }
 
         if (!termsAccepted) {
-            alert("You must accept the Terms of Service and Privacy Policy to continue.");
             return;
         }
 
@@ -62,6 +68,9 @@ export const Signup = () => {
             console.log(data);
 
             if (response.ok) {
+                sessionStorage.setItem("token", data.token);
+                sessionStorage.setItem("user", JSON.stringify(data.user));
+
                 alert("Account created successfully");
                 navigate("/dashboard");
             } else {
@@ -156,12 +165,20 @@ export const Signup = () => {
                     <label>Password</label>
 
                     <input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         name="password"
                         placeholder="Minimum 8 characters"
                         value={formData.password}
                         onChange={handleChange}
                     />
+
+                    <button
+                        type="button"
+                        className="show-password-btn"
+                        onClick={() => setShowPassword(!showPassword)}
+                    >
+                        {showPassword ? "Hide" : "Show"}
+                    </button>
 
                     <div className="password-lines">
                         <span></span>
@@ -173,13 +190,19 @@ export const Signup = () => {
                     <label>Confirm Password</label>
 
                     <input
-                        type="password"
+                        type={showConfirmPassword ? "text" : "password"}
                         name="confirm_password"
                         placeholder="••••••••"
                         value={formData.confirm_password}
                         onChange={handleChange}
                     />
-
+                    <button
+                        type="button"
+                        className="show-confirm-password-btn"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                        {showConfirmPassword ? "Hide" : "Show"}
+                    </button>
                     <div className="terms">
                         <input
                             type="checkbox"
@@ -187,9 +210,20 @@ export const Signup = () => {
                             onChange={(e) => setTermsAccepted(e.target.checked)}
                         />
                         <p>
-                            I accept the <span>Terms of Service</span> and{" "}
-                            <span>Privacy Policy</span>
+                            I accept the{" "}
+                            <Link to="/terms" >
+                                Terms of Service
+                            </Link>
+                            {" "}and{" "}
+                            <Link to="/privacy" >
+                                Privacy Policy
+                            </Link>
                         </p>
+                        {!termsAccepted && submitAttempted && (
+                            <p className="terms-error">
+                                You must accept the Terms of Service and Privacy Policy.
+                            </p>
+                        )}
                     </div>
 
                     <button

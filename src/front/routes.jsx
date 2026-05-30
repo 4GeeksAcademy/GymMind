@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 // Import necessary components and functions from react-router-dom.
+=======
+>>>>>>> 605d260fb33cd029f8725a9ce95175d4c6f61f1d
 import {
   createBrowserRouter,
   createRoutesFromElements,
@@ -6,15 +9,26 @@ import {
 } from "react-router-dom";
 import { Layout } from "./pages/Layout";
 import { Home } from "./pages/Home";
+<<<<<<< HEAD
 import { Login } from "./pages/Login";
 import { Signup } from "./pages/Signup";
+=======
+import { Signup } from "./pages/Signup";
+import { Login } from "./pages/Login";
+>>>>>>> 605d260fb33cd029f8725a9ce95175d4c6f61f1d
 import { Dashboard } from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import { Progress } from "./pages/Progress";
 import { MoodCheckPage } from "./pages/MoodCheckPage";
 import { Nutrition } from "./pages/Nutrition";
+<<<<<<< HEAD
 import { MyWorkout } from "./pages/MyWorkout"; 
+=======
+import { MyWorkout } from "./pages/MyWorkout";
+import { Terms } from "./pages/Terms";
+import { Privacy } from "./pages/Privacy";
+>>>>>>> 605d260fb33cd029f8725a9ce95175d4c6f61f1d
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -28,7 +42,13 @@ export const router = createBrowserRouter(
       <Route path="/progress" element={<Progress />} />
       <Route path="/moodcheck" element={<MoodCheckPage />} />
       <Route path="/nutrition" element={<Nutrition />} />
+<<<<<<< HEAD
       <Route path="/workout" element={<MyWorkout />} />
+=======
+      <Route path="/workout" element={<MyWorkout />} /> 
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/privacy" element={<Privacy />} />
+>>>>>>> 605d260fb33cd029f8725a9ce95175d4c6f61f1d
     </Route>
   )
 );

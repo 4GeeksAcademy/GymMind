@@ -27,4 +27,9 @@ export default function storeReducer(store, action = {}) {
     default:
       throw Error("Unknown action.");
   }
+<<<<<<< HEAD
 } 
+=======
+}
+
+>>>>>>> 605d260fb33cd029f8725a9ce95175d4c6f61f1d
