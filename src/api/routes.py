@@ -377,21 +377,33 @@ def generate_workout():
     body = request.get_json()
     fitness_goal = body.get("fitness_goal")
     user_id = body.get("user_id")
+    muscle_group = body.get("muscle_group", "full body")
     if not fitness_goal or not user_id:
         return jsonify({"error": "fitness_goal and user_id are required"}), 400
     try:
-        prompt = f"""You are a professional fitness coach. Generate a workout routine for someone with the goal: {fitness_goal}.
+        prompt = f"""You are a professional fitness coach. Generate a workout routine for someone with the goal: {fitness_goal} focusing on muscle group: {muscle_group}.
+
 Return ONLY a valid JSON object with this exact structure, no extra text:
 {{
     "workout_name": "string",
     "description": "string",
+    "muscle_group": "{muscle_group}",
     "exercises": [
-        {{"name": "string", "muscle": "string", "sets": number, "reps": number, "instructions": "string"}}
+        {{"name": "string", "muscle": "string", "equipment": "machine or free weight", "sets": number, "reps": number, "instructions": "string"}}
     ]
 }}
-Generate 5-6 exercises. Keep exercise names simple and searchable on YouTube."""
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-lite", contents=prompt)
+
+Generate 5-6 exercises. Use real gym exercises with specific names like:
+- For chest: Press de banca con barra, Press inclinado con mancuernas, Aperturas en máquina, Fondos en paralelas
+- For back: Jalón al pecho, Remo con barra, Dominadas, Peso muerto
+- For shoulders: Press militar, Elevaciones laterales, Face pulls
+- For biceps: Curl con barra, Curl martillo, Curl concentrado
+- For triceps: Extensiones en polea, Press francés, Fondos en paralelas
+- For legs: Sentadilla con barra, Prensa de piernas, Curl femoral, Extensión de cuádriceps
+- For glutes: Hip Thrust, Sentadilla suma, Abducción en máquina
+- For core: Plancha, Crunch con disco, Elevación de piernas
+Mix machines and free weights. Keep exercise names specific and searchable on YouTube."""
+        response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
         import json
         text = response.text.strip()
         if text.startswith("```"):
@@ -402,8 +414,8 @@ Generate 5-6 exercises. Keep exercise names simple and searchable on YouTube."""
         workout_data = json.loads(text)
         return jsonify(workout_data), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
+        return jsonify({"error": str(e)}), 500 
+
 # EXERCISE LOG ENDPOINTS
 @api.route('/exercise-log', methods=['POST'])
 @jwt_required()
@@ -484,3 +496,77 @@ Give a short recommendation for the next workout weight. Be specific with the kg
         return jsonify({"recommendation": response.text}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500 
+    
+@api.route('/workout/recommend', methods=['GET'])
+@jwt_required()
+def recommend_workout():
+    from api.models import ExerciseLog, Workout
+    current_user_id = int(get_jwt_identity())
+    user = User.query.get(current_user_id)
+    
+    # Get last 7 days of workouts
+    from datetime import timedelta
+    week_ago = date.today() - timedelta(days=7)
+    recent_workouts = Workout.query.filter(
+        Workout.user_id == current_user_id,
+        Workout.date >= week_ago
+    ).order_by(Workout.date.desc()).all()
+    
+    # Get recent exercise logs to know which muscles were worked
+    recent_logs = ExerciseLog.query.filter(
+        ExerciseLog.user_id == current_user_id,
+        ExerciseLog.date >= week_ago
+    ).order_by(ExerciseLog.date.desc()).all()
+    
+    # Build history string
+    history = ""
+    if recent_logs:
+        history = "\n".join([
+            f"- {log.date}: {log.exercise_name} ({log.weight}kg, difficulty: {log.difficulty})"
+            for log in recent_logs[:15]
+        ])
+    
+    # User profile info
+    age = None
+    if user.date_of_birth:
+        from datetime import datetime
+        birth = datetime.strptime(user.date_of_birth, "%Y-%m-%d")
+        age = (datetime.now() - birth).days // 365
+    
+    prompt = f"""You are a professional fitness coach. Based on this user's profile and recent training history, recommend which muscle group they should train today.
+
+User profile:
+- Gender: {user.gender or "not specified"}
+- Age: {age or "not specified"}
+- Weight: {user.weight or "not specified"} kg
+- Height: {user.height or "not specified"} cm
+- Fitness goal: {user.fitness_goal or "general fitness"}
+
+Recent training history (last 7 days):
+{history if history else "No recent workouts - this is their first session"}
+
+Available muscle groups: Chest, Back, Shoulders, Biceps, Triceps, Legs, Glutes, Core, Full Body
+
+Return ONLY a valid JSON object:
+{{
+    "recommended_group": "string (one of the available groups)",
+    "reason": "string (2-3 sentences explaining why, considering rest days and muscle recovery)"
+}}"""
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
+        )
+        import json
+        text = response.text.strip()
+        if text.startswith("```"):
+            text = text.split("```")[1]
+            if text.startswith("json"):
+                text = text[4:]
+        text = text.strip()
+        data = json.loads(text)
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
