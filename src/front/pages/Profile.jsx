@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 
 const Profile = () => {
-    const userId = 1;
+    const { store } = useGlobalReducer();
+    const userId = store.user?.id || JSON.parse(sessionStorage.getItem("user") || "{}").id;
     const [user, setUser] = useState(null);
     const [error, setError] = useState(null);
     const [selectedGoal, setSelectedGoal] = useState("Gain muscle");
@@ -131,8 +133,10 @@ const Profile = () => {
                     <div className="pf-nav-links">
                         <a onClick={() => navigate("/dashboard")}>Dashboard</a>
                         <a onClick={() => navigate("/workout")}>My Workout</a>
-                        <a onClick={() => navigate("/progress")}>Progress</a>
                         <a onClick={() => navigate("/moodcheck")}>Mood Check</a>
+                        <a onClick={() => navigate("/progress")}>Progress</a>
+                        <a onClick={() => navigate("/nutrition")}>Nutrition</a>
+                        
                         <a className="active">Profile</a>
                     </div>
                     <div className="pf-nav-cta">

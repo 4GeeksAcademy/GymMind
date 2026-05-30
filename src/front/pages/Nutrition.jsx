@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 export const Nutrition = () => {
+    const navigate = useNavigate();
     const [nutritionData, setNutritionData] = useState(null);
     const [goal, setGoal] = useState("muscle_gain");
     const [foodSearch, setFoodSearch] = useState("");
@@ -111,7 +113,33 @@ export const Nutrition = () => {
 
     return (
         <div className="nutrition-page">
+            <nav className="nutrition-navbar">
+                <div className="nutrition-navbar-left">
+                    <div className="nutrition-logo">GYMMIND AI</div>
 
+                    <div className="nutrition-navbar-links">
+                        <Link to="/dashboard">Dashboard</Link>
+                        <Link to="/workout">My Workout</Link>
+                        <Link to="/moodcheck">Mood Check</Link>
+                        <Link to="/progress">Progress</Link>
+                        <Link to="/nutrition" className="active">Nutrition</Link>
+                        <Link to="/profile">Profile</Link>
+                    </div>
+                </div>
+
+                <div className="nutrition-navbar-actions">
+                    <button
+                        className="nutrition-signout-btn"
+                        onClick={() => {
+                            sessionStorage.removeItem("token");
+                            sessionStorage.removeItem("user");
+                            navigate("/login");
+                        }}
+                    >
+                        Sign out
+                    </button>
+                </div>
+            </nav>
             <div className="nutrition-container">
 
                 <select
@@ -172,78 +200,78 @@ export const Nutrition = () => {
                         </div>
 
                         <div className="nutrition-grid">
-                        <div className="nutrition-card calories-card">
-                            <h2>🔥</h2>
-                            <h1>{totalCalories.toLocaleString()}</h1>
-                            <p>Calories today</p>
-                           <div className="progress-line">
-                            <div
-                                className="progress-fill"
-                                style={{
-                                    width: `${Math.min(
-                                        (totalCalories / nutritionData.calories) * 100,
-                                        100
-                                    )}%`
-                                }}
-                            />
-                        </div>
-                            <small>Target: {nutritionData.calories.toLocaleString()} kcal</small>
-                        </div>
+                            <div className="nutrition-card calories-card">
+                                <h2>🔥</h2>
+                                <h1>{totalCalories.toLocaleString()}</h1>
+                                <p>Calories today</p>
+                                <div className="progress-line">
+                                    <div
+                                        className="progress-fill"
+                                        style={{
+                                            width: `${Math.min(
+                                                (totalCalories / nutritionData.calories) * 100,
+                                                100
+                                            )}%`
+                                        }}
+                                    />
+                                </div>
+                                <small>Target: {nutritionData.calories.toLocaleString()} kcal</small>
+                            </div>
 
-                        <div className="nutrition-card protein-card">
-                            <h2>💪</h2>
-                            <h1>{totalProtein.toFixed(1)}G</h1>
-                            <p>Protein</p>
-                            <div className="progress-line">
-                            <div
-                                className="progress-fill"
-                                style={{
-                                    width: `${Math.min(
-                                        (totalCalories / nutritionData.calories) * 100,
-                                        100
-                                    )}%`
-                                }}
-                            />
-                        </div>
-                            <small>Target: {nutritionData.protein}g</small>
-                        </div>
+                            <div className="nutrition-card protein-card">
+                                <h2>💪</h2>
+                                <h1>{totalProtein.toFixed(1)}G</h1>
+                                <p>Protein</p>
+                                <div className="progress-line">
+                                    <div
+                                        className="progress-fill"
+                                        style={{
+                                            width: `${Math.min(
+                                                (totalCalories / nutritionData.calories) * 100,
+                                                100
+                                            )}%`
+                                        }}
+                                    />
+                                </div>
+                                <small>Target: {nutritionData.protein}g</small>
+                            </div>
 
-                        <div className="nutrition-card carbs-card">
-                            <h2>🍚</h2>
-                            <h1>{totalCarbs.toFixed(1)}G</h1>
-                            <p>Carbs</p>
-                           <div className="progress-line">
-                            <div
-                                className="progress-fill"
-                                style={{
-                                    width: `${Math.min(
-                                        (totalCalories / nutritionData.calories) * 100,
-                                        100
-                                    )}%`
-                                }}
-                            />
-                        </div>
-                            <small>Target: {nutritionData.carbs}g</small>
-                        </div>
+                            <div className="nutrition-card carbs-card">
+                                <h2>🍚</h2>
+                                <h1>{totalCarbs.toFixed(1)}G</h1>
+                                <p>Carbs</p>
+                                <div className="progress-line">
+                                    <div
+                                        className="progress-fill"
+                                        style={{
+                                            width: `${Math.min(
+                                                (totalCalories / nutritionData.calories) * 100,
+                                                100
+                                            )}%`
+                                        }}
+                                    />
+                                </div>
+                                <small>Target: {nutritionData.carbs}g</small>
+                            </div>
 
-                        <div className="nutrition-card fats-card">
-                            <h2>🥑</h2>
-                            <h1>{totalFats.toFixed(1)}G</h1>
-                            <p>Fats</p>
-                           <div className="progress-line">
-                            <div
-                                className="progress-fill"
-                                style={{
-                                    width: `${Math.min(
-                                        (totalCalories / nutritionData.calories) * 100,
-                                        100
-                                    )}%`
-                                }}
-                            />
+                            <div className="nutrition-card fats-card">
+                                <h2>🥑</h2>
+                                <h1>{totalFats.toFixed(1)}G</h1>
+                                <p>Fats</p>
+                                <div className="progress-line">
+                                    <div
+                                        className="progress-fill"
+                                        style={{
+                                            width: `${Math.min(
+                                                (totalCalories / nutritionData.calories) * 100,
+                                                100
+                                            )}%`
+                                        }}
+                                    />
+                                </div>
+                                <small>Target: {nutritionData.fats}g</small>
+                            </div>
                         </div>
-                            <small>Target: {nutritionData.fats}g</small>
-                        </div>
-                    </div>
 
                     </>
 
