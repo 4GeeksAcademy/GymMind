@@ -403,3 +403,84 @@ Generate 5-6 exercises. Keep exercise names simple and searchable on YouTube."""
         return jsonify(workout_data), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+# EXERCISE LOG ENDPOINTS
+@api.route('/exercise-log', methods=['POST'])
+@jwt_required()
+def add_exercise_log():
+    from api.models import ExerciseLog
+    current_user = int(get_jwt_identity())
+    body = request.get_json()
+    
+    exercise_name = body.get("exercise_name")
+    weight = body.get("weight")
+    sets = body.get("sets")
+    reps = body.get("reps")
+    difficulty = body.get("difficulty")
+    
+    if not all([exercise_name, weight, sets, reps, difficulty]):
+        return jsonify({"error": "All fields are required"}), 400
+    
+    log = ExerciseLog(
+        user_id=current_user,
+        exercise_name=exercise_name,
+        weight=weight,
+        sets=sets,
+        reps=reps,
+        difficulty=difficulty,
+        date=date.today()
+    )
+    db.session.add(log)
+    db.session.commit()
+    return jsonify(log.serialize()), 201
+
+
+@api.route('/exercise-log/<string:exercise_name>', methods=['GET'])
+@jwt_required()
+def get_exercise_logs(exercise_name):
+    from api.models import ExerciseLog
+    current_user = int(get_jwt_identity())
+    logs = ExerciseLog.query.filter_by(
+        user_id=current_user,
+        exercise_name=exercise_name
+    ).order_by(ExerciseLog.date.desc()).limit(5).all()
+    return jsonify([log.serialize() for log in logs]), 200
+
+
+@api.route('/exercise-log/recommend', methods=['POST'])
+@jwt_required()
+def recommend_weight():
+    from api.models import ExerciseLog
+    current_user = int(get_jwt_identity())
+    body = request.get_json()
+    exercise_name = body.get("exercise_name")
+    
+    if not exercise_name:
+        return jsonify({"error": "exercise_name is required"}), 400
+    
+    logs = ExerciseLog.query.filter_by(
+        user_id=current_user,
+        exercise_name=exercise_name
+    ).order_by(ExerciseLog.date.desc()).limit(5).all()
+    
+    if not logs:
+        return jsonify({"recommendation": f"Start with a comfortable weight for {exercise_name} and focus on form first."}), 200
+    
+    history = "\n".join([
+        f"- Date: {log.date}, Weight: {log.weight}kg, Sets: {log.sets}, Reps: {log.reps}, Difficulty: {log.difficulty}"
+        for log in logs
+    ])
+    
+    prompt = f"""Based on this exercise history for {exercise_name}:
+{history}
+
+Give a short recommendation for the next workout weight. Be specific with the kg amount. Maximum 2 sentences."""
+    
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite",
+            contents=prompt
+        )
+        return jsonify({"recommendation": response.text}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500 
