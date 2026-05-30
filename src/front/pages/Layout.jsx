@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from "react-router-dom"
 import ScrollToTop from "../components/ScrollToTop"
-import { Navbar } from "../components/Navbar"
+import Navbar from "../components/Navbar";
 import { Footer } from "../components/Footer"
 import AIChat from "../components/AIChat";
 
