@@ -5,7 +5,6 @@ import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 export const Progress = () => {
   const navigate = useNavigate();
   const { store, dispatch } = useGlobalReducer();
-
   const [weightInput, setWeightInput] = useState("");
   const [dateInput, setDateInput] = useState(new Date().toISOString().split("T")[0]);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -238,6 +237,7 @@ export const Progress = () => {
             <a onClick={() => navigate("/profile")}>Profile</a>
           </div>
           <div className="pr-nav-cta">
+
             <button className="pr-btn-ghost" onClick={() => navigate("/profile")}>Edit profile</button>
             <button className="pr-btn-danger" onClick={handleLogout}>Sign out</button>
           </div>
