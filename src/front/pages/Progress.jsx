@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const Progress = () => {
+  const navigate = useNavigate();
   const [weightInput, setWeightInput] = useState("");
   const [dateInput, setDateInput] = useState("2026-05-20");
   const [showSuccess, setShowSuccess] = useState(false);
@@ -124,7 +126,16 @@ export const Progress = () => {
           </div>
           <div className="pr-nav-cta">
             <button className="pr-btn-ghost">Edit profile</button>
-            <button className="pr-btn-danger">Sign out</button>
+            <button
+              className="pr-btn-danger"
+              onClick={() => {
+                sessionStorage.removeItem("token");
+                sessionStorage.removeItem("user");
+                navigate("/login");
+              }}
+            >
+              Sign out
+            </button>
           </div>
         </nav>
 
