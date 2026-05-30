@@ -193,11 +193,11 @@ export const Signup = () => {
                         />
                         <p>
                             I accept the{" "}
-                            <Link to="/terms" target="_blank">
+                            <Link to="/terms" >
                                 Terms of Service
                             </Link>
                             {" "}and{" "}
-                            <Link to="/privacy" target="_blank">
+                            <Link to="/privacy" >
                                 Privacy Policy
                             </Link>
                         </p>
