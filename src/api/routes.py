@@ -53,7 +53,14 @@ def signup():
     new_user.set_password(password)
     db.session.add(new_user)
     db.session.commit()
-    return jsonify({"message": "User created successfully", "user": new_user.serialize()}), 201
+
+    access_token = create_access_token(identity=str(new_user.id))
+
+    return jsonify({
+        "message": "User created successfully",
+        "token": access_token,
+        "user": new_user.serialize()
+    }), 201
 
 
 @api.route("/login", methods=["POST"])
