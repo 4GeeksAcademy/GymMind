@@ -15,6 +15,9 @@ export const MyWorkout = () => {
   const [recommendations, setRecommendations] = useState({});
   const [activeLog, setActiveLog] = useState(null);
   const [savingLog, setSavingLog] = useState({});
+  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState(null);
+  const [aiRecommendation, setAiRecommendation] = useState(null);
+  const [loadingRecommendation, setLoadingRecommendation] = useState(true);
 
   const user = store.user || JSON.parse(sessionStorage.getItem("user") || "{}");
   const token = store.token || sessionStorage.getItem("token");
@@ -24,6 +27,37 @@ export const MyWorkout = () => {
     if (!token) navigate("/login");
   }, [token]);
 
+  useEffect(() => {
+    if (!token) return;
+    fetchAiRecommendation();
+  }, [token]);
+
+  const fetchAiRecommendation = async () => {
+    setLoadingRecommendation(true);
+    try {
+      const response = await fetch(`${backendUrl}/api/workout/recommend`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setAiRecommendation(data);
+        // Auto-select recommended group
+        const groupMap = {
+          "Chest": "chest", "Back": "back", "Shoulders": "shoulders",
+          "Biceps": "biceps", "Triceps": "triceps", "Legs": "legs",
+          "Glutes": "glutes", "Core": "core", "Full Body": "full body"
+        };
+        if (data.recommended_group && groupMap[data.recommended_group]) {
+          setSelectedMuscleGroup(groupMap[data.recommended_group]);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching AI recommendation:", error);
+    } finally {
+      setLoadingRecommendation(false);
+    }
+  };
+
   const handleLogout = () => {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("user");
@@ -31,7 +65,23 @@ export const MyWorkout = () => {
     navigate("/");
   };
 
+  const muscleGroups = [
+    { id: "chest", label: "Chest" },
+    { id: "back", label: "Back" },
+    { id: "shoulders", label: "Shoulders" },
+    { id: "biceps", label: "Biceps" },
+    { id: "triceps", label: "Triceps" },
+    { id: "legs", label: "Legs" },
+    { id: "glutes", label: "Glutes" },
+    { id: "core", label: "Core" },
+    { id: "full body", label: "Full Body" },
+  ];
+
   const generateWorkout = async () => {
+    if (!selectedMuscleGroup) {
+      alert("Please select a muscle group first.");
+      return;
+    }
     setLoading(true);
     setWorkout(null);
     setVideoIds({});
@@ -50,15 +100,15 @@ export const MyWorkout = () => {
         body: JSON.stringify({
           fitness_goal: user?.fitness_goal || "general fitness",
           user_id: user?.id,
+          muscle_group: selectedMuscleGroup,
         }),
       });
 
       const data = await response.json();
-
       if (response.ok) {
         setWorkout(data);
         fetchVideos(data.exercises);
-        fetchRecommendations(data.exercises);
+        fetchWeightRecommendations(data.exercises);
       } else {
         alert(data.error || "Failed to generate workout");
       }
@@ -87,15 +137,12 @@ export const MyWorkout = () => {
     }
   };
 
-  const fetchRecommendations = async (exercises) => {
+  const fetchWeightRecommendations = async (exercises) => {
     for (const exercise of exercises) {
       try {
         const response = await fetch(`${backendUrl}/api/exercise-log/recommend`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify({ exercise_name: exercise.name }),
         });
         const data = await response.json();
@@ -108,27 +155,18 @@ export const MyWorkout = () => {
     }
   };
 
-  const toggleExercise = (name) => {
-    setCompletedExercises((prev) => ({ ...prev, [name]: !prev[name] }));
-  };
-
   const handleLogWeight = async (exerciseName) => {
     const log = exerciseLogs[exerciseName];
     if (!log?.weight || !log?.difficulty) {
       alert("Please enter weight and select difficulty.");
       return;
     }
-
     setSavingLog((prev) => ({ ...prev, [exerciseName]: true }));
-
     try {
       const exercise = workout.exercises.find(e => e.name === exerciseName);
       const response = await fetch(`${backendUrl}/api/exercise-log`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           exercise_name: exerciseName,
           weight: parseFloat(log.weight),
@@ -137,11 +175,9 @@ export const MyWorkout = () => {
           difficulty: log.difficulty,
         }),
       });
-
       if (response.ok) {
         setActiveLog(null);
         setCompletedExercises((prev) => ({ ...prev, [exerciseName]: true }));
-        // Refresh recommendation
         const recRes = await fetch(`${backendUrl}/api/exercise-log/recommend`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -166,22 +202,19 @@ export const MyWorkout = () => {
   const progress = totalExercises > 0 ? Math.round((completedCount / totalExercises) * 100) : 0;
 
   const difficultyOptions = [
-    { id: "very_easy", label: "😴 Very Easy", color: "#60a5fa" },
-    { id: "easy", label: "😊 Easy", color: "#00ff88" },
-    { id: "hard", label: "😤 Hard", color: "#f97316" },
-    { id: "very_hard", label: "🔥 Very Hard", color: "#ef4444" },
+    { id: "very_easy", label: "Very Easy", color: "#60a5fa" },
+    { id: "easy", label: "Easy", color: "#00ff88" },
+    { id: "hard", label: "Hard", color: "#f97316" },
+    { id: "very_hard", label: "Very Hard", color: "#ef4444" },
   ];
+
+  const selectedGroup = muscleGroups.find(g => g.id === selectedMuscleGroup);
 
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
-
-        :root {
-          --bg: #080c10; --bg2: #0d1318; --accent: #00e5ff; --accent2: #00ff88;
-          --text: #f0f4f8; --muted: #6b7c8f; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08);
-        }
-
+        :root { --bg: #080c10; --bg2: #0d1318; --accent: #00e5ff; --accent2: #00ff88; --text: #f0f4f8; --muted: #6b7c8f; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08); }
         .wk-body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
         .wk-nav { display: flex; align-items: center; height: 56px; background: rgba(8,12,16,0.97); border-bottom: 1px solid var(--border); padding: 0 20px; width: 100%; position: sticky; top: 0; z-index: 100; }
         .wk-logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--accent); white-space: nowrap; flex-shrink: 0; margin-right: 24px; cursor: pointer; }
@@ -197,16 +230,33 @@ export const MyWorkout = () => {
         .wk-page-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 2px; margin-bottom: 24px; }
         .wk-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
         .wk-card-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; margin-bottom: 14px; }
-        .wk-generate-btn { background: var(--accent); color: #000; padding: 12px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; transition: opacity 0.2s, transform 0.2s; }
-        .wk-generate-btn:hover { opacity: 0.85; transform: translateY(-2px); }
-        .wk-generate-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+        /* AI RECOMMENDATION */
+        .wk-ai-rec { background: rgba(0,229,255,0.04); border: 1px solid rgba(0,229,255,0.2); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
+        .wk-ai-rec-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .wk-ai-rec-badge { font-size: 11px; color: var(--accent); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+        .wk-ai-rec-group { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--accent2); letter-spacing: 1px; margin-bottom: 6px; }
+        .wk-ai-rec-reason { font-size: 13px; color: var(--muted); line-height: 1.6; }
+        .wk-ai-rec-loading { font-size: 13px; color: var(--muted); font-style: italic; }
+
+        /* MUSCLE GROUP SELECTOR */
+        .wk-muscle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+        .wk-muscle-btn { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 8px; text-align: center; cursor: pointer; transition: all 0.2s; font-size: 13px; font-weight: 500; color: var(--muted); font-family: 'DM Sans', sans-serif; }
+        .wk-muscle-btn:hover { border-color: var(--accent); color: var(--text); }
+        .wk-muscle-btn.selected { border-color: var(--accent); background: rgba(0,229,255,0.08); color: var(--accent); font-weight: 600; }
+        .wk-muscle-btn.recommended { border-color: var(--accent2); background: rgba(0,255,136,0.06); color: var(--accent2); }
+        .wk-muscle-btn.recommended.selected { border-color: var(--accent); background: rgba(0,229,255,0.08); color: var(--accent); }
+
+        .wk-generate-btn { background: var(--accent); color: #000; padding: 12px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; transition: opacity 0.2s; width: 100%; }
+        .wk-generate-btn:hover { opacity: 0.85; }
+        .wk-generate-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
         .wk-progress-wrap { margin-bottom: 20px; }
         .wk-progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
         .wk-progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
         .wk-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; transition: width 0.5s ease; }
 
-        /* EXERCISE CARD */
-        .wk-exercise-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; transition: background 0.2s; }
+        .wk-exercise-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
         .wk-exercise-card.done { background: rgba(0,255,136,0.04); border-color: rgba(0,255,136,0.2); }
         .wk-exercise-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
         .wk-exercise-info { flex: 1; }
@@ -214,22 +264,15 @@ export const MyWorkout = () => {
         .wk-exercise-name.done { text-decoration: line-through; color: var(--muted); }
         .wk-exercise-meta { font-size: 12px; color: var(--muted); }
         .wk-exercise-sets { color: var(--accent); font-weight: 500; }
+        .wk-equipment-tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; background: rgba(255,255,255,0.06); color: var(--muted); }
         .wk-exercise-actions { display: flex; gap: 8px; flex-shrink: 0; }
-
-        .wk-btn-sm { background: var(--accent); color: #000; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; transition: opacity 0.2s; white-space: nowrap; }
-        .wk-btn-sm:hover { opacity: 0.85; }
-        .wk-btn-sm-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; white-space: nowrap; }
+        .wk-btn-sm { background: var(--accent); color: #000; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
+        .wk-btn-sm-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
         .wk-btn-sm-outline:hover { border-color: #ff0000; color: #ff0000; }
         .wk-btn-sm-outline.loading { opacity: 0.5; cursor: default; }
-
-        /* INSTRUCTIONS */
         .wk-instructions { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 6px; }
-
-        /* AI RECOMMENDATION */
-        .wk-recommendation { background: rgba(0,229,255,0.04); border: 1px solid rgba(0,229,255,0.15); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; font-size: 12px; color: var(--text); line-height: 1.5; }
-        .wk-recommendation-label { font-size: 11px; color: var(--accent); font-weight: 600; margin-bottom: 4px; }
-
-        /* WEIGHT LOG */
+        .wk-weight-rec { background: rgba(0,229,255,0.04); border: 1px solid rgba(0,229,255,0.15); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; font-size: 12px; color: var(--text); line-height: 1.5; }
+        .wk-weight-rec-label { font-size: 11px; color: var(--accent); font-weight: 600; margin-bottom: 4px; }
         .wk-log-panel { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 10px; }
         .wk-log-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--accent); }
         .wk-log-row { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 10px; }
@@ -242,16 +285,8 @@ export const MyWorkout = () => {
         .wk-difficulty-btn.selected { color: #000; border-color: transparent; }
         .wk-save-btn { background: var(--accent2); color: #000; padding: 7px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; }
         .wk-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        /* VIDEO */
         .wk-video-wrap { margin-top: 10px; border-radius: 8px; overflow: hidden; }
         .wk-video-wrap iframe { width: 100%; height: 220px; border: none; }
-
-        /* EMPTY STATE */
-        .wk-empty { text-align: center; padding: 48px 24px; }
-        .wk-empty-icon { font-size: 48px; margin-bottom: 16px; }
-        .wk-empty-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; margin-bottom: 8px; }
-        .wk-empty-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; max-width: 400px; margin-left: auto; margin-right: auto; }
         .wk-loading { text-align: center; padding: 48px; }
         .wk-spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: wk-spin 0.8s linear infinite; margin: 0 auto; }
         .wk-loading-text { font-size: 14px; color: var(--muted); margin-top: 16px; }
@@ -262,8 +297,6 @@ export const MyWorkout = () => {
       `}</style>
 
       <div className="wk-body">
-
-        {/* NAVBAR */}
         <nav className="wk-nav">
           <div className="wk-logo" onClick={() => navigate("/")}>GymMind AI</div>
           <div className="wk-nav-links">
@@ -281,7 +314,6 @@ export const MyWorkout = () => {
         </nav>
 
         <div className="wk-page">
-
           <div className="wk-section-label">AI-powered training</div>
           <div className="wk-page-title">MY WORKOUT</div>
 
@@ -289,29 +321,57 @@ export const MyWorkout = () => {
             <div className="wk-goal-tag">🎯 Goal: {user.fitness_goal}</div>
           )}
 
-          {!workout && !loading && (
-            <div className="wk-empty">
-              <div className="wk-empty-icon">🏋️</div>
-              <div className="wk-empty-title">READY TO TRAIN?</div>
-              <div className="wk-empty-sub">
-                Your AI Coach will generate a personalized workout. Log your weights and track your progress over time.
-              </div>
-              <button className="wk-generate-btn" onClick={generateWorkout}>
-                Generate my workout
-              </button>
+          {/* AI RECOMMENDATION */}
+          <div className="wk-ai-rec">
+            <div className="wk-ai-rec-badge">🤖 AI Coach — Today's recommendation</div>
+            {loadingRecommendation ? (
+              <div className="wk-ai-rec-loading">Analyzing your training history...</div>
+            ) : aiRecommendation ? (
+              <>
+                <div className="wk-ai-rec-group">→ {aiRecommendation.recommended_group}</div>
+                <div className="wk-ai-rec-reason">{aiRecommendation.reason}</div>
+              </>
+            ) : (
+              <div className="wk-ai-rec-reason">Select a muscle group below to get started.</div>
+            )}
+          </div>
+
+          {/* MUSCLE GROUP SELECTOR */}
+          <div className="wk-card">
+            <div className="wk-card-title">Select muscle group</div>
+            <div className="wk-muscle-grid">
+              {muscleGroups.map(group => {
+                const isRecommended = aiRecommendation?.recommended_group?.toLowerCase() === group.label.toLowerCase();
+                return (
+                  <div
+                    key={group.id}
+                    className={`wk-muscle-btn ${selectedMuscleGroup === group.id ? "selected" : ""} ${isRecommended && selectedMuscleGroup !== group.id ? "recommended" : ""}`}
+                    onClick={() => setSelectedMuscleGroup(group.id)}
+                  >
+                    {group.label}
+                    {isRecommended && <div style={{ fontSize: "10px", marginTop: "2px", opacity: 0.8 }}>AI pick</div>}
+                  </div>
+                );
+              })}
             </div>
-          )}
+            <button
+              className="wk-generate-btn"
+              onClick={generateWorkout}
+              disabled={loading || !selectedMuscleGroup}
+            >
+              {loading ? "Generating..." : selectedMuscleGroup ? `Generate ${selectedGroup?.label} workout` : "Select a muscle group"}
+            </button>
+          </div>
 
           {loading && (
             <div className="wk-loading">
               <div className="wk-spinner"></div>
-              <div className="wk-loading-text">Your AI Coach is generating your workout...</div>
+              <div className="wk-loading-text">Generating your {selectedGroup?.label} workout...</div>
             </div>
           )}
 
           {workout && !loading && (
             <>
-              {/* WORKOUT HEADER */}
               <div className="wk-card">
                 <div className="wk-card-title">{workout.workout_name}</div>
                 <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "16px", lineHeight: "1.6" }}>
@@ -326,34 +386,27 @@ export const MyWorkout = () => {
                     <div className="wk-progress-fill" style={{ width: `${progress}%` }}></div>
                   </div>
                 </div>
-                <button className="wk-generate-btn" onClick={generateWorkout} style={{ fontSize: "13px", padding: "8px 20px" }}>
-                  Generate new workout
-                </button>
               </div>
 
-              {/* EXERCISES */}
               <div className="wk-card">
                 <div className="wk-card-title">📋 Exercises</div>
-
                 {workout.exercises.map((exercise, i) => (
                   <div key={i} className={`wk-exercise-card ${completedExercises[exercise.name] ? "done" : ""}`}>
-
-                    {/* HEADER */}
                     <div className="wk-exercise-header">
                       <div className="wk-exercise-info">
                         <div className={`wk-exercise-name ${completedExercises[exercise.name] ? "done" : ""}`}>
                           {exercise.name}
+                          {exercise.equipment && (
+                            <span className="wk-equipment-tag">{exercise.equipment}</span>
+                          )}
                         </div>
                         <div className="wk-exercise-meta">
-                          💪 {exercise.muscle} &nbsp;·&nbsp;
+                          {exercise.muscle} &nbsp;·&nbsp;
                           <span className="wk-exercise-sets">{exercise.sets} sets × {exercise.reps} reps</span>
                         </div>
                       </div>
                       <div className="wk-exercise-actions">
-                        <button
-                          className="wk-btn-sm"
-                          onClick={() => setActiveLog(activeLog === exercise.name ? null : exercise.name)}
-                        >
+                        <button className="wk-btn-sm" onClick={() => setActiveLog(activeLog === exercise.name ? null : exercise.name)}>
                           {completedExercises[exercise.name] ? "✅ Done" : "📝 Log"}
                         </button>
                         <button
@@ -365,23 +418,20 @@ export const MyWorkout = () => {
                       </div>
                     </div>
 
-                    {/* INSTRUCTIONS */}
                     {exercise.instructions && (
-                      <div className="wk-instructions">📝 {exercise.instructions}</div>
+                      <div className="wk-instructions">{exercise.instructions}</div>
                     )}
 
-                    {/* AI RECOMMENDATION */}
                     {recommendations[exercise.name] && (
-                      <div className="wk-recommendation">
-                        <div className="wk-recommendation-label">🤖 AI Weight Recommendation</div>
+                      <div className="wk-weight-rec">
+                        <div className="wk-weight-rec-label">🤖 AI Weight Recommendation</div>
                         {recommendations[exercise.name]}
                       </div>
                     )}
 
-                    {/* WEIGHT LOG PANEL */}
                     {activeLog === exercise.name && (
                       <div className="wk-log-panel">
-                        <div className="wk-log-title">📊 Log this exercise</div>
+                        <div className="wk-log-title">Log this exercise</div>
                         <div className="wk-log-row">
                           <div className="wk-log-input-group">
                             <label className="wk-log-label">Weight (kg)</label>
@@ -424,7 +474,6 @@ export const MyWorkout = () => {
                       </div>
                     )}
 
-                    {/* VIDEO */}
                     {activeVideo === exercise.name && videoIds[exercise.name] && (
                       <div className="wk-video-wrap">
                         <iframe
@@ -434,12 +483,10 @@ export const MyWorkout = () => {
                         />
                       </div>
                     )}
-
                   </div>
                 ))}
               </div>
 
-              {/* COMPLETED */}
               {progress === 100 && (
                 <div className="wk-card" style={{ textAlign: "center", padding: "32px", background: "rgba(0,255,136,0.04)", borderColor: "rgba(0,255,136,0.2)" }}>
                   <div style={{ fontSize: "40px", marginBottom: "12px" }}>🎉</div>
@@ -447,17 +494,16 @@ export const MyWorkout = () => {
                     WORKOUT COMPLETE!
                   </div>
                   <p style={{ fontSize: "13px", color: "var(--muted)" }}>
-                    Amazing work! Your weights have been logged. Check back next time for AI recommendations.
+                    Great work! Your weights have been logged. The AI Coach will use this data for future recommendations.
                   </p>
                 </div>
               )}
             </>
           )}
-
         </div>
       </div>
     </>
   );
 };
 
-export default MyWorkout; 
+export default MyWorkout;
