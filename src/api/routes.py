@@ -355,9 +355,10 @@ def search_youtube():
     youtube_api_key = os.getenv("YOUTUBE_API_KEY")
     url = "https://www.googleapis.com/youtube/v3/search"
     params = {
-        "part": "snippet",
-        "q": f"{query} exercise tutorial",
+        "part": "snippet,contentDetails",
+        "q": f"how to do {query} exercise form",
         "type": "video",
+
         "maxResults": 1,
         "videoEmbeddable": "true",
         "key": youtube_api_key
@@ -367,7 +368,7 @@ def search_youtube():
     if "items" in data and len(data["items"]) > 0:
         video_id = data["items"][0]["id"]["videoId"]
         return jsonify({"video_id": video_id}), 200
-    return jsonify({"error": "No video found"}), 404
+    return jsonify({"error": "No video found"}), 404 
 
 
 @api.route('/workout/generate', methods=['POST'])
@@ -389,7 +390,8 @@ Return ONLY a valid JSON object with this exact structure, no extra text:
     ]
 }}
 Generate 5-6 exercises. Keep exercise names simple and searchable on YouTube."""
-        response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite", contents=prompt)
         import json
         text = response.text.strip()
         if text.startswith("```"):
@@ -400,4 +402,4 @@ Generate 5-6 exercises. Keep exercise names simple and searchable on YouTube."""
         workout_data = json.loads(text)
         return jsonify(workout_data), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500 
+        return jsonify({"error": str(e)}), 500
