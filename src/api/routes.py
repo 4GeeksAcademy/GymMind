@@ -1,5 +1,5 @@
 from flask import request, jsonify, Blueprint
-from api.models import db, User
+from api.models import db, User, ProgressPhoto
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
@@ -358,7 +358,6 @@ def search_youtube():
         "part": "snippet,contentDetails",
         "q": f"how to do {query} exercise form",
         "type": "video",
-
         "maxResults": 1,
         "videoEmbeddable": "true",
         "key": youtube_api_key
@@ -368,7 +367,7 @@ def search_youtube():
     if "items" in data and len(data["items"]) > 0:
         video_id = data["items"][0]["id"]["videoId"]
         return jsonify({"video_id": video_id}), 200
-    return jsonify({"error": "No video found"}), 404 
+    return jsonify({"error": "No video found"}), 404
 
 
 @api.route('/workout/generate', methods=['POST'])
@@ -414,25 +413,22 @@ Mix machines and free weights. Keep exercise names specific and searchable on Yo
         workout_data = json.loads(text)
         return jsonify(workout_data), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500 
+        return jsonify({"error": str(e)}), 500
 
-# EXERCISE LOG ENDPOINTS
+
 @api.route('/exercise-log', methods=['POST'])
 @jwt_required()
 def add_exercise_log():
     from api.models import ExerciseLog
     current_user = int(get_jwt_identity())
     body = request.get_json()
-    
     exercise_name = body.get("exercise_name")
     weight = body.get("weight")
     sets = body.get("sets")
     reps = body.get("reps")
     difficulty = body.get("difficulty")
-    
     if not all([exercise_name, weight, sets, reps, difficulty]):
         return jsonify({"error": "All fields are required"}), 400
-    
     log = ExerciseLog(
         user_id=current_user,
         exercise_name=exercise_name,
@@ -466,28 +462,22 @@ def recommend_weight():
     current_user = int(get_jwt_identity())
     body = request.get_json()
     exercise_name = body.get("exercise_name")
-    
     if not exercise_name:
         return jsonify({"error": "exercise_name is required"}), 400
-    
     logs = ExerciseLog.query.filter_by(
         user_id=current_user,
         exercise_name=exercise_name
     ).order_by(ExerciseLog.date.desc()).limit(5).all()
-    
     if not logs:
         return jsonify({"recommendation": f"Start with a comfortable weight for {exercise_name} and focus on form first."}), 200
-    
     history = "\n".join([
         f"- Date: {log.date}, Weight: {log.weight}kg, Sets: {log.sets}, Reps: {log.reps}, Difficulty: {log.difficulty}"
         for log in logs
     ])
-    
     prompt = f"""Based on this exercise history for {exercise_name}:
 {history}
 
 Give a short recommendation for the next workout weight. Be specific with the kg amount. Maximum 2 sentences."""
-    
     try:
         response = client.models.generate_content(
             model="gemini-2.5-flash-lite",
@@ -495,44 +485,36 @@ Give a short recommendation for the next workout weight. Be specific with the kg
         )
         return jsonify({"recommendation": response.text}), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500 
-    
+        return jsonify({"error": str(e)}), 500
+
+
 @api.route('/workout/recommend', methods=['GET'])
 @jwt_required()
 def recommend_workout():
     from api.models import ExerciseLog, Workout
     current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
-    
-    # Get last 7 days of workouts
     from datetime import timedelta
     week_ago = date.today() - timedelta(days=7)
     recent_workouts = Workout.query.filter(
         Workout.user_id == current_user_id,
         Workout.date >= week_ago
     ).order_by(Workout.date.desc()).all()
-    
-    # Get recent exercise logs to know which muscles were worked
     recent_logs = ExerciseLog.query.filter(
         ExerciseLog.user_id == current_user_id,
         ExerciseLog.date >= week_ago
     ).order_by(ExerciseLog.date.desc()).all()
-    
-    # Build history string
     history = ""
     if recent_logs:
         history = "\n".join([
             f"- {log.date}: {log.exercise_name} ({log.weight}kg, difficulty: {log.difficulty})"
             for log in recent_logs[:15]
         ])
-    
-    # User profile info
     age = None
     if user.date_of_birth:
         from datetime import datetime
         birth = datetime.strptime(user.date_of_birth, "%Y-%m-%d")
         age = (datetime.now() - birth).days // 365
-    
     prompt = f"""You are a professional fitness coach. Based on this user's profile and recent training history, recommend which muscle group they should train today.
 
 User profile:
@@ -552,7 +534,6 @@ Return ONLY a valid JSON object:
     "recommended_group": "string (one of the available groups)",
     "reason": "string (2-3 sentences explaining why, considering rest days and muscle recovery)"
 }}"""
-
     try:
         response = client.models.generate_content(
             model="gemini-2.0-flash",
@@ -569,4 +550,38 @@ Return ONLY a valid JSON object:
         return jsonify(data), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+
+# ── PROGRESS PHOTOS ──────────────────────────────────────────────────────────
+
+@api.route('/user/<int:user_id>/progress-photo', methods=['POST'])
+@jwt_required()
+def upload_progress_photo(user_id):
+    from datetime import date as date_type
+    existing = ProgressPhoto.query.filter(
+        ProgressPhoto.user_id == user_id,
+        db.func.date(ProgressPhoto.taken_at) == date_type.today()
+    ).first()
+    if existing:
+        return jsonify({"error": "You already uploaded a photo today"}), 400
+    file = request.files.get('photo')
+    notes = request.form.get('notes', '')
+    if not file:
+        return jsonify({"error": "No photo provided"}), 400
+    try:
+        upload_result = cloudinary.uploader.upload(file, folder=f"gymmind/progress/{user_id}")
+        photo_url = upload_result.get('secure_url')
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    new_photo = ProgressPhoto(user_id=user_id, photo_url=photo_url, notes=notes)
+    db.session.add(new_photo)
+    db.session.commit()
+    return jsonify(new_photo.serialize()), 201
+
+
+@api.route('/user/<int:user_id>/progress-photos', methods=['GET'])
+@jwt_required()
+def get_progress_photos(user_id):
+    photos = ProgressPhoto.query.filter_by(user_id=user_id)\
+                .order_by(ProgressPhoto.taken_at.desc()).all()
+    return jsonify([p.serialize() for p in photos]), 200

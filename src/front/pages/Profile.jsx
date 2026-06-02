@@ -8,22 +8,74 @@ const Profile = () => {
     const [user, setUser] = useState(null);
     const [error, setError] = useState(null);
     const [selectedGoal, setSelectedGoal] = useState("Gain muscle");
+    const [photos, setPhotos] = useState([]);
+    const [showPhotoModal, setShowPhotoModal] = useState(false);
+    const [photoFile, setPhotoFile] = useState(null);
+    const [photoNotes, setPhotoNotes] = useState("");
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
+    const [previewUrl, setPreviewUrl] = useState(null);
     const navigate = useNavigate();
 
-useEffect(() => {
-    const token = sessionStorage.getItem("token");
-    if (!token || !userId) {
-        navigate("/login");
-        return;
-    }
-    fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`)
-        .then(res => res.json())
-        .then(data => {
-            if (data.error) setError(data.error);
-            else setUser(data);
+    useEffect(() => {
+        const token = sessionStorage.getItem("token");
+        if (!token || !userId) {
+            navigate("/login");
+            return;
+        }
+        fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) setError(data.error);
+                else setUser(data);
+            })
+            .catch(() => setError("Could not connect to server"));
+
+        fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}/progress-photos`, {
+            headers: { Authorization: `Bearer ${token}` }
         })
-        .catch(() => setError("Could not connect to server"));
-}, [userId]);
+            .then(res => res.json())
+            .then(data => { if (Array.isArray(data)) setPhotos(data); })
+            .catch(() => { });
+    }, [userId]);
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setPhotoFile(file);
+        setPreviewUrl(URL.createObjectURL(file));
+    };
+
+    const handleUploadPhoto = async () => {
+        if (!photoFile) return;
+        setUploadingPhoto(true);
+        const token = sessionStorage.getItem("token");
+        const formData = new FormData();
+        formData.append("photo", photoFile);
+        formData.append("notes", photoNotes);
+        try {
+            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}/progress-photo`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData
+            });
+            const data = await res.json();
+            console.log("STATUS:", res.status);
+            console.log("RESPONSE:", data);
+            if (res.ok) {
+                setPhotos(prev => [data, ...prev]);
+                setShowPhotoModal(false);
+                setPhotoFile(null);
+                setPhotoNotes("");
+                setPreviewUrl(null);
+            } else {
+                alert("Error: " + JSON.stringify(data));
+            }
+        } catch (e) {
+            console.error("Fetch error:", e);
+            alert("Fetch failed: " + e.message);
+        }
+        setUploadingPhoto(false);
+    };
 
     const calculateAge = (dob) => {
         if (!dob) return null;
@@ -84,7 +136,7 @@ useEffect(() => {
 
                 /* HERO CARD */
                 .pf-hero { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 28px; display: flex; align-items: center; gap: 24px; margin-bottom: 20px; flex-wrap: wrap; }
-                .pf-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #0066ff, #00c6ff); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: white; flex-shrink: 0; border: 3px solid var(--accent); }
+                .pf-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #0066ff, #00c6ff); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: white; flex-shrink: 0; border: 3px solid var(--accent); overflow: hidden; }
                 .pf-hero-info { flex: 1; }
                 .pf-hero-name { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; margin-bottom: 2px; }
                 .pf-hero-email { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
@@ -122,6 +174,31 @@ useEffect(() => {
                 .pf-goal-label { font-size: 13px; font-weight: 600; }
                 .pf-goal-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
 
+                /* PROGRESS PHOTOS */
+                .pf-photos-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+                .pf-photos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+                .pf-btn-add-photo { background: linear-gradient(135deg, #0066ff, #00c6ff); border: none; color: white; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+                .pf-photos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+                .pf-photo-item { position: relative; border-radius: 10px; overflow: hidden; aspect-ratio: 1; background: #111; }
+                .pf-photo-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+                .pf-photo-date { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.65); color: #fff; font-size: 10px; padding: 4px 7px; text-align: center; }
+                .pf-photos-empty { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; border: 1px dashed var(--border); border-radius: 12px; }
+
+                /* MODAL */
+                .pf-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+                .pf-modal { background: #0d1318; border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 420px; }
+                .pf-modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; margin-bottom: 20px; }
+                .pf-modal-preview { width: 100%; aspect-ratio: 1; border-radius: 10px; object-fit: cover; margin-bottom: 14px; border: 1px solid var(--border); }
+                .pf-modal-upload-area { border: 2px dashed var(--border); border-radius: 10px; padding: 28px; text-align: center; cursor: pointer; margin-bottom: 14px; color: var(--muted); font-size: 13px; transition: border-color 0.2s; }
+                .pf-modal-upload-area:hover { border-color: var(--accent); }
+                .pf-modal-input { display: none; }
+                .pf-modal-notes { width: 100%; background: #111; border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; font-size: 13px; font-family: 'DM Sans', sans-serif; resize: none; box-sizing: border-box; margin-bottom: 16px; }
+                .pf-modal-notes:focus { outline: none; border-color: var(--accent); }
+                .pf-modal-actions { display: flex; gap: 10px; }
+                .pf-modal-cancel { flex: 1; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 10px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+                .pf-modal-submit { flex: 2; background: linear-gradient(135deg, #0066ff, #00c6ff); border: none; color: white; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+                .pf-modal-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
                 /* DANGER ZONE */
                 .pf-danger { background: var(--bg2); border: 1px solid rgba(255,80,80,0.25); border-radius: 16px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; }
                 .pf-danger-title { color: #ff6b6b; font-weight: 600; font-size: 14px; margin-bottom: 4px; }
@@ -141,7 +218,6 @@ useEffect(() => {
                         <a onClick={() => navigate("/moodcheck")}>Mood Check</a>
                         <a onClick={() => navigate("/progress")}>Progress</a>
                         <a onClick={() => navigate("/nutrition")}>Nutrition</a>
-                        
                         <a className="active">Profile</a>
                     </div>
                     <div className="pf-nav-cta">
@@ -161,9 +237,12 @@ useEffect(() => {
 
                     {/* HERO */}
                     <div className="pf-hero">
-                        <div className="pf-avatar">{user.photo_url? <img src={user.photo_url} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />: initials}
-                            </div>
-                        <div className="pf-hero-info">  
+                        <div className="pf-avatar">
+                            {user.photo_url
+                                ? <img src={user.photo_url} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                : initials}
+                        </div>
+                        <div className="pf-hero-info">
                             <div className="pf-hero-name">{user.first_name.toUpperCase()} {user.last_name.toUpperCase()}</div>
                             <div className="pf-hero-email">{user.email}</div>
                             <div className="pf-badges">
@@ -234,24 +313,47 @@ useEffect(() => {
 
                     </div>
 
+                    {/* PROGRESS PHOTOS */}
+                    <div className="pf-photos-card">
+                        <div className="pf-photos-header">
+                            <div className="pf-card-title" style={{ margin: 0 }}>📸 Progress Photos</div>
+                            <button className="pf-btn-add-photo" onClick={() => setShowPhotoModal(true)}>+ Add Photo</button>
+                        </div>
+
+                        {photos.length === 0 ? (
+                            <div className="pf-photos-empty">
+                                No progress photos yet. Add your first one to start tracking your transformation! 💪
+                            </div>
+                        ) : (
+                            <div className="pf-photos-grid">
+                                {photos.map(photo => (
+                                    <div key={photo.id} className="pf-photo-item">
+                                        <img src={photo.photo_url} alt={photo.notes || "Progress photo"} />
+                                        <div className="pf-photo-date">
+                                            {new Date(photo.taken_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
                     {/* DANGER ZONE */}
                     <div className="pf-danger">
                         <div>
                             <div className="pf-danger-title">Danger zone</div>
                             <div className="pf-danger-sub">Once you delete your account, there is no going back.</div>
                         </div>
-                        <button className="pf-btn-delete" onClick={() => {  // 👈 CAMBIADO
+                        <button className="pf-btn-delete" onClick={() => {
                             if (window.confirm("Are you sure you want to delete your account? This cannot be undone.")) {
-                                fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`, {
-                                    method: "DELETE"
-                                })
-                                .then(res => res.json())
-                                .then(() => {
-                                    sessionStorage.removeItem("token");
-                                    sessionStorage.removeItem("user");
-                                    navigate("/signup");
-                                })
-                                .catch(() => alert("Could not delete account. Try again."));
+                                fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`, { method: "DELETE" })
+                                    .then(res => res.json())
+                                    .then(() => {
+                                        sessionStorage.removeItem("token");
+                                        sessionStorage.removeItem("user");
+                                        navigate("/signup");
+                                    })
+                                    .catch(() => alert("Could not delete account. Try again."));
                             }
                         }}>
                             Delete account
@@ -260,6 +362,66 @@ useEffect(() => {
 
                 </div>
             </div>
+
+            {/* MODAL UPLOAD PHOTO */}
+            {showPhotoModal && (
+                <div className="pf-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowPhotoModal(false); }}>
+                    <div className="pf-modal">
+                        <div className="pf-modal-title">📸 Add Progress Photo</div>
+
+                        {previewUrl
+                            ? <img src={previewUrl} className="pf-modal-preview" alt="preview" />
+                            : (
+                                <label className="pf-modal-upload-area" htmlFor="photo-input">
+                                    📁 Click to select a photo
+                                    <br />
+                                    <span style={{ fontSize: "11px", marginTop: "6px", display: "block" }}>JPG, PNG, WEBP supported</span>
+                                </label>
+                            )
+                        }
+
+                        <input
+                            id="photo-input"
+                            type="file"
+                            accept="image/*"
+                            className="pf-modal-input"
+                            onChange={handleFileChange}
+                        />
+
+                        {previewUrl && (
+                            <label htmlFor="photo-input" style={{ display: "block", textAlign: "center", color: "var(--accent)", fontSize: "12px", cursor: "pointer", marginBottom: "12px" }}>
+                                Change photo
+                            </label>
+                        )}
+
+                        <textarea
+                            className="pf-modal-notes"
+                            placeholder="Add a note (optional)... e.g. After 4 weeks of training"
+                            rows={2}
+                            value={photoNotes}
+                            onChange={e => setPhotoNotes(e.target.value)}
+                        />
+
+                        <div className="pf-modal-actions">
+                            <button className="pf-modal-cancel" onClick={() => {
+                                setShowPhotoModal(false);
+                                setPhotoFile(null);
+                                setPhotoNotes("");
+                                setPreviewUrl(null);
+                            }}>
+                                Cancel
+                            </button>
+                            <button
+                                className="pf-modal-submit"
+                                onClick={handleUploadPhoto}
+                                disabled={!photoFile || uploadingPhoto}
+                            >
+                                {uploadingPhoto ? "Uploading..." : "Save Photo"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 };
