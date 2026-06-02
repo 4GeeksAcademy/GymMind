@@ -53,14 +53,11 @@ def signup():
         return jsonify({"error": "All fields are required"}), 400
     if User.query.filter_by(email=email).first():
         return jsonify({"error": "User already exists"}), 400
-    new_user = User(first_name=first_name, last_name=last_name,
-                    email=email, is_active=True)
+    new_user = User(first_name=first_name, last_name=last_name, email=email, is_active=True)
     new_user.set_password(password)
     db.session.add(new_user)
     db.session.commit()
-
     access_token = create_access_token(identity=str(new_user.id))
-
     return jsonify({
         "message": "User created successfully",
         "token": access_token,
@@ -105,15 +102,11 @@ def get_nutrition_recommendations():
 def search_food():
     body = request.get_json()
     food = body.get("food", "").lower().strip()
-
     if not food:
         return jsonify({"error": "Food is required"}), 400
-
     quantity_match = re.match(r"^(\d+)", food)
     quantity = int(quantity_match.group(1)) if quantity_match else 1
-
     clean_food = re.sub(r"^\d+\s*", "", food).strip()
-
     for key, item in COMMON_FOODS.items():
         if key in clean_food:
             return jsonify({
@@ -126,58 +119,31 @@ def search_food():
                 "fats": round(item["fats"] * quantity, 2),
                 "source": "GymMind verified food database"
             }), 200
-
     api_key = os.getenv("USDA_API_KEY")
-
     response = requests.get(
         "https://api.nal.usda.gov/fdc/v1/foods/search",
-        params={
-            "api_key": api_key,
-            "query": clean_food,
-            "pageSize": 5
-        }
+        params={"api_key": api_key, "query": clean_food, "pageSize": 5}
     )
-
     data = response.json()
-
     if "foods" not in data or len(data["foods"]) == 0:
         return jsonify({"error": "Food not found"}), 404
-
     foods = data["foods"]
-
     search_terms = clean_food.lower().split()
-
     food_item = next(
-        (
-            item for item in foods
-            if all(
-                term.rstrip("s") in item.get("description", "").lower()
-                for term in search_terms
-            )
-        ),
+        (item for item in foods if all(term.rstrip("s") in item.get("description", "").lower() for term in search_terms)),
         None
     )
-
     if food_item is None:
         food_item = next(
-            (
-                item for item in foods
-                if any(
-                    term.rstrip("s") in item.get("description", "").lower()
-                    for term in search_terms
-                )
-            ),
+            (item for item in foods if any(term.rstrip("s") in item.get("description", "").lower() for term in search_terms)),
             foods[0]
         )
-
     nutrients = food_item["foodNutrients"]
-
     def nutrient(name):
         for item in nutrients:
             if item["nutrientName"] == name:
                 return item.get("value", 0)
         return 0
-
     return jsonify({
         "name": food_item["description"],
         "calories": round(nutrient("Energy") * quantity, 2),
@@ -194,23 +160,17 @@ def search_food():
 def healthy_meals():
     body = request.get_json()
     query = body.get("query")
-
     if not query:
         return jsonify({"error": "Meal search is required"}), 400
-
     prompt = f"""
     You are a nutrition coach for a fitness app.
-
     Generate 5 healthy and flavorful meal recommendations based on this user request:
     {query}
-
     Rules:
     - Do not mention cuisine, nationality, culture, or country of origin.
-    - Do not label meals as Mexican, Cuban, Italian, Asian, American, etc.
     - Focus only on flavor, nutrition, macros, ingredients, and preparation.
     - Meals should be healthy, enjoyable, and tasty.
     - Include simple recipes.
-
     Return ONLY valid JSON with this structure:
     {{
         "meals": [
@@ -227,48 +187,25 @@ def healthy_meals():
         ]
     }}
     """
-
     try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
-            contents=prompt
-        )
-
+        response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
         text = response.text.strip()
-
         if text.startswith("```"):
             text = text.replace("```json", "").replace("```", "").strip()
-
         return jsonify(json.loads(text)), 200
-
     except Exception as e:
         print("HEALTHY MEALS ERROR:", e)
-
         return jsonify({
-            "meals": [
-                {
-                    "name": "High Protein Steak Bowl",
-                    "calories": "520 kcal",
-                    "protein": "45g",
-                    "prep_time": "25 minutes",
-                    "flavor_profile": "Savory, smoky, fresh",
-                    "ingredients": [
-                        "6 oz lean steak",
-                        "1 cup cooked rice",
-                        "1/2 avocado",
-                        "mixed greens",
-                        "Greek yogurt sauce"
-                    ],
-                    "instructions": [
-                        "Season and cook the steak until desired doneness.",
-                        "Prepare the rice.",
-                        "Slice the avocado.",
-                        "Add greens to a bowl.",
-                        "Top with steak, rice, avocado, and Greek yogurt sauce."
-                    ],
-                    "why_healthy": "High in protein, balanced with complex carbs and healthy fats."
-                }
-            ],
+            "meals": [{
+                "name": "High Protein Steak Bowl",
+                "calories": "520 kcal",
+                "protein": "45g",
+                "prep_time": "25 minutes",
+                "flavor_profile": "Savory, smoky, fresh",
+                "ingredients": ["6 oz lean steak", "1 cup cooked rice", "1/2 avocado", "mixed greens", "Greek yogurt sauce"],
+                "instructions": ["Season and cook the steak.", "Prepare the rice.", "Slice the avocado.", "Add greens to a bowl.", "Top with steak, rice, avocado, and sauce."],
+                "why_healthy": "High in protein, balanced with complex carbs and healthy fats."
+            }],
             "fallback": True
         }), 200
 
@@ -278,7 +215,6 @@ def healthy_meals():
 def add_food_log():
     user_id = int(get_jwt_identity())
     body = request.get_json()
-
     new_food = FoodLog(
         user_id=user_id,
         food_name=body.get("food_name"),
@@ -290,52 +226,48 @@ def add_food_log():
         serving=body.get("serving"),
         source=body.get("source")
     )
-
     db.session.add(new_food)
     db.session.commit()
-
-    return jsonify({
-        "message": "Food added to log",
-        "food": new_food.serialize()
-    }), 201
+    return jsonify({"message": "Food added to log", "food": new_food.serialize()}), 201
 
 
 @api.route("/food-log/today", methods=["GET"])
 @jwt_required()
 def get_today_food_log():
     user_id = int(get_jwt_identity())
-
     today = date.today()
-
-    foods = FoodLog.query.filter(
-        FoodLog.user_id == user_id,
-        db.func.date(FoodLog.created_at) == today
-    ).all()
-
-    return jsonify({
-        "foods": [food.serialize() for food in foods]
-    }), 200
+    foods = FoodLog.query.filter(FoodLog.user_id == user_id, db.func.date(FoodLog.created_at) == today).all()
+    return jsonify({"foods": [food.serialize() for food in foods]}), 200
 
 
 @api.route("/food-log/<int:food_id>", methods=["DELETE"])
 @jwt_required()
 def delete_food_log(food_id):
     user_id = int(get_jwt_identity())
-
-    food = FoodLog.query.filter_by(
-        id=food_id,
-        user_id=user_id
-    ).first()
-
+    food = FoodLog.query.filter_by(id=food_id, user_id=user_id).first()
     if not food:
         return jsonify({"error": "Food not found"}), 404
-
     db.session.delete(food)
     db.session.commit()
+    return jsonify({"message": "Food removed from log"}), 200
 
-    return jsonify({
-        "message": "Food removed from log"
-    }), 200
+
+@api.route("/food-log/history", methods=["GET"])
+@jwt_required()
+def get_food_log_history():
+    user_id = int(get_jwt_identity())
+    foods = FoodLog.query.filter_by(user_id=user_id).order_by(FoodLog.created_at.desc()).all()
+    history = {}
+    for food in foods:
+        day = food.created_at.strftime("%Y-%m-%d")
+        if day not in history:
+            history[day] = {"date": day, "foods": [], "totals": {"calories": 0, "protein": 0, "carbs": 0, "fats": 0}}
+        history[day]["foods"].append(food.serialize())
+        history[day]["totals"]["calories"] += food.calories
+        history[day]["totals"]["protein"] += food.protein
+        history[day]["totals"]["carbs"] += food.carbs
+        history[day]["totals"]["fats"] += food.fats
+    return jsonify({"history": list(history.values())}), 200
 
 
 @api.route('/user/<int:user_id>', methods=['GET'])
@@ -354,27 +286,19 @@ def edit_user_profile(user_id):
     body = request.get_json()
     if not body:
         return jsonify({"error": "No data provided"}), 400
-    if "first_name" in body:
-        user.first_name = body["first_name"]
-    if "last_name" in body:
-        user.last_name = body["last_name"]
+    if "first_name" in body: user.first_name = body["first_name"]
+    if "last_name" in body: user.last_name = body["last_name"]
     if "email" in body:
         existing = User.query.filter_by(email=body["email"]).first()
         if existing and existing.id != user_id:
             return jsonify({"error": "Email already in use"}), 400
         user.email = body["email"]
-    if "nickname" in body:
-        user.nickname = body["nickname"]
-    if "gender" in body:
-        user.gender = body["gender"]
-    if "date_of_birth" in body:
-        user.date_of_birth = body["date_of_birth"]
-    if "weight" in body:
-        user.weight = body["weight"]
-    if "height" in body:
-        user.height = body["height"]
-    if "phone_number" in body:
-        user.phone_number = body["phone_number"]
+    if "nickname" in body: user.nickname = body["nickname"]
+    if "gender" in body: user.gender = body["gender"]
+    if "date_of_birth" in body: user.date_of_birth = body["date_of_birth"]
+    if "weight" in body: user.weight = body["weight"]
+    if "height" in body: user.height = body["height"]
+    if "phone_number" in body: user.phone_number = body["phone_number"]
     db.session.commit()
     return jsonify({"message": "Profile updated successfully", "user": user.serialize()}), 200
 
@@ -397,9 +321,7 @@ def upload_user_photo(user_id):
     if 'photo' not in request.files:
         return jsonify({"error": "No photo provided"}), 400
     file = request.files['photo']
-    result = cloudinary.uploader.upload(
-        file, folder="gymmind/avatars", public_id=f"user_{user_id}", overwrite=True, resource_type="image"
-    )
+    result = cloudinary.uploader.upload(file, folder="gymmind/avatars", public_id=f"user_{user_id}", overwrite=True, resource_type="image")
     user.photo_url = result.get("secure_url")
     db.session.commit()
     return jsonify({"message": "Photo uploaded successfully", "photo_url": user.photo_url}), 200
@@ -409,8 +331,7 @@ def upload_user_photo(user_id):
 @jwt_required()
 def get_progress(user_id):
     from api.models import ProgressLog
-    logs = ProgressLog.query.filter_by(
-        user_id=user_id).order_by(ProgressLog.date.desc()).all()
+    logs = ProgressLog.query.filter_by(user_id=user_id).order_by(ProgressLog.date.desc()).all()
     return jsonify([log.serialize() for log in logs]), 200
 
 
@@ -423,8 +344,7 @@ def add_progress():
     weight = body.get("weight")
     if not user_id or not weight:
         return jsonify({"error": "user_id and weight are required"}), 400
-    existing = ProgressLog.query.filter_by(
-        user_id=user_id, date=date.today()).first()
+    existing = ProgressLog.query.filter_by(user_id=user_id, date=date.today()).first()
     if existing:
         return jsonify({"error": "You already logged your weight today"}), 400
     log = ProgressLog(user_id=user_id, weight=weight, date=date.today())
@@ -444,18 +364,12 @@ def add_mood():
     if mood not in valid_moods:
         return jsonify({"error": "Invalid mood"}), 400
     today = date.today()
-    todays_moods = MoodCheck.query.filter(
-        MoodCheck.user_id == current_user,
-        db.func.date(MoodCheck.date) == today
-    ).count()
+    todays_moods = MoodCheck.query.filter(MoodCheck.user_id == current_user, db.func.date(MoodCheck.date) == today).count()
     if todays_moods >= 3:
         return jsonify({"error": "Daily mood check limit reached"}), 400
     try:
         prompt = f"The user is feeling '{mood}' today. Give a short motivational fitness message. Keep it positive, supportive, and fitness-focused. Maximum 2 sentences."
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt
-        )
+        response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
         ai_message = response.text
     except Exception as e:
         print("Gemini error:", e)
@@ -467,8 +381,7 @@ def add_mood():
         "tired": {"training_intensity": "Low", "recommended_focus": "Recovery & Stretching"},
         "low": {"training_intensity": "Low", "recommended_focus": "Light Movement & Motivation"}
     }
-    mood_check = MoodCheck(user_id=current_user, mood=mood,
-                           ai_message=ai_message, date=today)
+    mood_check = MoodCheck(user_id=current_user, mood=mood, ai_message=ai_message, date=today)
     db.session.add(mood_check)
     db.session.commit()
     return jsonify({
@@ -484,8 +397,7 @@ def add_mood():
 def get_mood_history():
     from api.models import MoodCheck
     user_id = int(get_jwt_identity())
-    moods = MoodCheck.query.filter_by(
-        user_id=user_id).order_by(MoodCheck.date.desc()).all()
+    moods = MoodCheck.query.filter_by(user_id=user_id).order_by(MoodCheck.date.desc()).all()
     return jsonify([m.serialize() for m in moods]), 200
 
 
@@ -493,8 +405,7 @@ def get_mood_history():
 @jwt_required()
 def get_workouts(user_id):
     from api.models import Workout
-    workouts = Workout.query.filter_by(
-        user_id=user_id).order_by(Workout.date.desc()).all()
+    workouts = Workout.query.filter_by(user_id=user_id).order_by(Workout.date.desc()).all()
     return jsonify([w.serialize() for w in workouts]), 200
 
 
@@ -508,8 +419,7 @@ def add_workout():
     exercises = body.get("exercises", [])
     if not user_id or not fitness_goal:
         return jsonify({"error": "user_id and fitness_goal are required"}), 400
-    workout = Workout(
-        user_id=user_id, fitness_goal=fitness_goal, date=date.today())
+    workout = Workout(user_id=user_id, fitness_goal=fitness_goal, date=date.today())
     db.session.add(workout)
     db.session.flush()
     for ex in exercises:
@@ -535,10 +445,7 @@ def chat_with_ai():
         You help users with workout advice, nutrition tips, motivation, and emotional support.
         Keep responses concise, friendly and motivational.
         {f'User context: {context}' if context else ''}"""
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=f"{system_prompt}\n\nUser: {message}"
-        )
+        response = client.models.generate_content(model="gemini-2.0-flash", contents=f"{system_prompt}\n\nUser: {message}")
         return jsonify({"response": response.text}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -551,9 +458,7 @@ def google_login():
     if not credential:
         return jsonify({"error": "Google credential is required"}), 400
     try:
-        google_user = id_token.verify_oauth2_token(
-            credential, google_requests.Request(), os.getenv("GOOGLE_CLIENT_ID")
-        )
+        google_user = id_token.verify_oauth2_token(credential, google_requests.Request(), os.getenv("GOOGLE_CLIENT_ID"))
         email = google_user.get("email")
         first_name = google_user.get("given_name", "")
         last_name = google_user.get("family_name", "")
@@ -561,8 +466,7 @@ def google_login():
             return jsonify({"error": "Google account email not found"}), 400
         user = User.query.filter_by(email=email).first()
         if not user:
-            user = User(first_name=first_name, last_name=last_name,
-                        email=email, is_active=True)
+            user = User(first_name=first_name, last_name=last_name, email=email, is_active=True)
             user.set_password("google-oauth-user")
             db.session.add(user)
             db.session.commit()
@@ -585,7 +489,6 @@ def search_youtube():
         "part": "snippet,contentDetails",
         "q": f"how to do {query} exercise form",
         "type": "video",
-
         "maxResults": 1,
         "videoEmbeddable": "true",
         "key": youtube_api_key
@@ -595,7 +498,7 @@ def search_youtube():
     if "items" in data and len(data["items"]) > 0:
         video_id = data["items"][0]["id"]["videoId"]
         return jsonify({"video_id": video_id}), 200
-    return jsonify({"error": "No video found"}), 404 
+    return jsonify({"error": "No video found"}), 404
 
 
 @api.route('/workout/generate', methods=['POST'])
@@ -616,13 +519,9 @@ Return ONLY a valid JSON object with this exact structure, no extra text:
     "description": "string",
     "muscle_group": "{muscle_group}",
     "exercises": [
-        {{"name": "string", "muscle": "string", "equipment": "machine or free weight",
-            "sets": number, "reps": number, "instructions": "string"}}
+        {{"name": "string", "muscle": "string", "equipment": "machine or free weight", "sets": number, "reps": number, "instructions": "string"}}
     ]
 }}
-Generate 5-6 exercises. Keep exercise names simple and searchable on YouTube."""
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-lite", contents=prompt)
 
 Generate 5-6 exercises. Use real gym exercises with specific names like:
 - For chest: Barbell bench press, Incline dumbbell press, Pec deck machine, Cable crossover, Dips
@@ -636,7 +535,6 @@ Generate 5-6 exercises. Use real gym exercises with specific names like:
 Mix machines and free weights. Keep exercise names specific and searchable on YouTube.
 All text must be in English only. No Spanish words."""
         response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
-        import json
         text = response.text.strip()
         if text.startswith("```"):
             text = text.split("```")[1]
@@ -648,49 +546,12 @@ All text must be in English only. No Spanish words."""
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@api.route("/food-log/history", methods=["GET"])
-@jwt_required()
-def get_food_log_history():
-    user_id = int(get_jwt_identity())
-
-    foods = FoodLog.query.filter_by(user_id=user_id).order_by(
-        FoodLog.created_at.desc()
-    ).all()
-
-    history = {}
-
-    for food in foods:
-        day = food.created_at.strftime("%Y-%m-%d")
-
-        if day not in history:
-            history[day] = {
-                "date": day,
-                "foods": [],
-                "totals": {
-                    "calories": 0,
-                    "protein": 0,
-                    "carbs": 0,
-                    "fats": 0
-                }
-            }
-
-        history[day]["foods"].append(food.serialize())
-        history[day]["totals"]["calories"] += food.calories
-        history[day]["totals"]["protein"] += food.protein
-        history[day]["totals"]["carbs"] += food.carbs
-        history[day]["totals"]["fats"] += food.fats
-
-    return jsonify({
-        "history": list(history.values())
-    }), 200
 
 @api.route("/favorite-meals", methods=["POST"])
 @jwt_required()
 def add_favorite_meal():
-
     user_id = int(get_jwt_identity())
     body = request.get_json()
-
     meal = FavoriteMeal(
         user_id=user_id,
         meal_name=body.get("meal_name"),
@@ -699,47 +560,30 @@ def add_favorite_meal():
         carbs=body.get("carbs"),
         fats=body.get("fats")
     )
-
     db.session.add(meal)
     db.session.commit()
-
     return jsonify(meal.serialize()), 201
+
 
 @api.route("/favorite-meals", methods=["GET"])
 @jwt_required()
 def get_favorite_meals():
-
     user_id = int(get_jwt_identity())
-
-    meals = FavoriteMeal.query.filter_by(
-        user_id=user_id
-    ).all()
-
-    return jsonify([
-        meal.serialize()
-        for meal in meals
-    ]), 200
+    meals = FavoriteMeal.query.filter_by(user_id=user_id).all()
+    return jsonify([meal.serialize() for meal in meals]), 200
 
 
 @api.route("/favorite-meals/<int:meal_id>", methods=["DELETE"])
 @jwt_required()
 def delete_favorite_meal(meal_id):
-
     user_id = int(get_jwt_identity())
-
-    meal = FavoriteMeal.query.filter_by(
-        id=meal_id,
-        user_id=user_id
-    ).first()
-
+    meal = FavoriteMeal.query.filter_by(id=meal_id, user_id=user_id).first()
     if not meal:
         return jsonify({"error": "Meal not found"}), 404
-
     db.session.delete(meal)
     db.session.commit()
-
     return jsonify({"message": "Deleted"}), 200
-        return jsonify({"error": str(e)}), 500 
+
 
 # EXERCISE LOG ENDPOINTS
 @api.route('/exercise-log', methods=['POST'])
@@ -748,16 +592,13 @@ def add_exercise_log():
     from api.models import ExerciseLog
     current_user = int(get_jwt_identity())
     body = request.get_json()
-    
     exercise_name = body.get("exercise_name")
     weight = body.get("weight")
     sets = body.get("sets")
     reps = body.get("reps")
     difficulty = body.get("difficulty")
-    
     if not all([exercise_name, weight, sets, reps, difficulty]):
         return jsonify({"error": "All fields are required"}), 400
-    
     log = ExerciseLog(
         user_id=current_user,
         exercise_name=exercise_name,
@@ -777,10 +618,7 @@ def add_exercise_log():
 def get_exercise_logs(exercise_name):
     from api.models import ExerciseLog
     current_user = int(get_jwt_identity())
-    logs = ExerciseLog.query.filter_by(
-        user_id=current_user,
-        exercise_name=exercise_name
-    ).order_by(ExerciseLog.date.desc()).limit(5).all()
+    logs = ExerciseLog.query.filter_by(user_id=current_user, exercise_name=exercise_name).order_by(ExerciseLog.date.desc()).limit(5).all()
     return jsonify([log.serialize() for log in logs]), 200
 
 
@@ -791,37 +629,25 @@ def recommend_weight():
     current_user = int(get_jwt_identity())
     body = request.get_json()
     exercise_name = body.get("exercise_name")
-    
     if not exercise_name:
         return jsonify({"error": "exercise_name is required"}), 400
-    
-    logs = ExerciseLog.query.filter_by(
-        user_id=current_user,
-        exercise_name=exercise_name
-    ).order_by(ExerciseLog.date.desc()).limit(5).all()
-    
+    logs = ExerciseLog.query.filter_by(user_id=current_user, exercise_name=exercise_name).order_by(ExerciseLog.date.desc()).limit(5).all()
     if not logs:
         return jsonify({"recommendation": f"Start with a comfortable weight for {exercise_name} and focus on form first."}), 200
-    
     history = "\n".join([
         f"- Date: {log.date}, Weight: {log.weight}kg, Sets: {log.sets}, Reps: {log.reps}, Difficulty: {log.difficulty}"
         for log in logs
     ])
-    
     prompt = f"""Based on this exercise history for {exercise_name}:
 {history}
 
 Give a short recommendation for the next workout weight. Be specific with the kg amount. Maximum 2 sentences."""
-    
     try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt
-        )
+        response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
         return jsonify({"recommendation": response.text}), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500 
-    
+        return jsonify({"error": str(e)}), 500
+
 
 @api.route('/workout/recommend', methods=['GET'])
 @jwt_required()
@@ -829,32 +655,23 @@ def recommend_workout():
     from api.models import ExerciseLog, Workout
     current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
-    
     from datetime import timedelta
     week_ago = date.today() - timedelta(days=7)
-    recent_workouts = Workout.query.filter(
-        Workout.user_id == current_user_id,
-        Workout.date >= week_ago
-    ).order_by(Workout.date.desc()).all()
-    
     recent_logs = ExerciseLog.query.filter(
         ExerciseLog.user_id == current_user_id,
         ExerciseLog.date >= week_ago
     ).order_by(ExerciseLog.date.desc()).all()
-    
     history = ""
     if recent_logs:
         history = "\n".join([
             f"- {log.date}: {log.exercise_name} ({log.weight}kg, difficulty: {log.difficulty})"
             for log in recent_logs[:15]
         ])
-    
     age = None
     if user.date_of_birth:
         from datetime import datetime
         birth = datetime.strptime(user.date_of_birth, "%Y-%m-%d")
         age = (datetime.now() - birth).days // 365
-    
     prompt = f"""You are a professional fitness coach. Based on this user's profile and recent training history, recommend which muscle group they should train today.
 
 User profile:
@@ -874,13 +691,8 @@ Return ONLY a valid JSON object:
     "recommended_group": "string (one of the available groups)",
     "reason": "string (2-3 sentences explaining why, considering rest days and muscle recovery)"
 }}"""
-
     try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt
-        )
-        import json
+        response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
         text = response.text.strip()
         if text.startswith("```"):
             text = text.split("```")[1]
@@ -893,15 +705,12 @@ Return ONLY a valid JSON object:
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-    
+
+
 @api.route('/exercise-log/date/<string:date>', methods=['GET'])
 @jwt_required()
 def get_exercise_logs_by_date(date):
     from api.models import ExerciseLog
     current_user = int(get_jwt_identity())
-    logs = ExerciseLog.query.filter_by(
-        user_id=current_user,
-        date=date
-    ).all()
+    logs = ExerciseLog.query.filter_by(user_id=current_user, date=date).all()
     return jsonify([log.serialize() for log in logs]), 200 
-    
