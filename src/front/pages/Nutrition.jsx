@@ -6,16 +6,24 @@ export const Nutrition = () => {
 
     const [nutritionData, setNutritionData] = useState(null);
     const [goal, setGoal] = useState("muscle_gain");
-
     const [foodSearch, setFoodSearch] = useState("");
     const [foodResults, setFoodResults] = useState([]);
-
     const [mealIdea, setMealIdea] = useState("");
     const [mealResults, setMealResults] = useState([]);
+    const [nutritionHistory, setNutritionHistory] = useState([]);
+    const [showHistory, setShowHistory] = useState(false);
+    const [favoriteMeals, setFavoriteMeals] = useState([]);
+    const [showFavorites, setShowFavorites] = useState(false);
+
 
     useEffect(() => {
         fetchNutrition();
+        fetchTodayFoodLog();
+        fetchNutritionHistory();
+        fetchFavoriteMeals();
     }, [goal]);
+
+    const getToken = () => sessionStorage.getItem("token");
 
     const fetchNutrition = async () => {
         try {
@@ -23,9 +31,7 @@ export const Nutrition = () => {
                 import.meta.env.VITE_BACKEND_URL + "/api/nutrition/recommendations",
                 {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ goal })
                 }
             );
@@ -35,11 +41,93 @@ export const Nutrition = () => {
             if (response.ok) {
                 setNutritionData(data);
             }
-
         } catch (error) {
             console.log(error);
         }
     };
+
+    const fetchTodayFoodLog = async () => {
+        try {
+            const token = getToken();
+
+            if (!token) {
+                navigate("/login");
+                return;
+            }
+
+            const response = await fetch(
+                import.meta.env.VITE_BACKEND_URL + "/api/food-log/today",
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setFoodResults(data.foods || []);
+            } else if (response.status === 401) {
+                sessionStorage.removeItem("token");
+                sessionStorage.removeItem("user");
+                navigate("/login");
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const fetchNutritionHistory = async () => {
+        try {
+            const token = getToken();
+
+            if (!token) return;
+
+            const response = await fetch(
+                import.meta.env.VITE_BACKEND_URL + "/api/food-log/history",
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setNutritionHistory(data.history || []);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const fetchFavoriteMeals = async () => {
+    try {
+        const token = getToken();
+
+        const response = await fetch(
+            import.meta.env.VITE_BACKEND_URL + "/api/favorite-meals",
+            {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+            setFavoriteMeals(data || []);
+        }
+    } catch (error) {
+        console.log(error);
+    }
+};
 
     const handleSearch = async () => {
         if (!foodSearch.trim()) return;
@@ -49,11 +137,51 @@ export const Nutrition = () => {
                 import.meta.env.VITE_BACKEND_URL + "/api/nutrition/search",
                 {
                     method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ food: foodSearch })
+                }
+            );
+
+            const data = await response.json();
+
+            if (response.ok) {
+                await saveFoodLog(data);
+                setFoodSearch("");
+                fetchNutritionHistory();
+            } else {
+                console.log("FOOD SEARCH ERROR:", data);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const saveFoodLog = async (food) => {
+        try {
+            const token = getToken();
+
+            if (!token) {
+                navigate("/login");
+                return;
+            }
+
+            const response = await fetch(
+                import.meta.env.VITE_BACKEND_URL + "/api/food-log",
+                {
+                    method: "POST",
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
                     },
                     body: JSON.stringify({
-                        food: foodSearch
+                        food_name: food.name,
+                        calories: parseFloat(food.calories) || 0,
+                        protein: parseFloat(food.protein) || 0,
+                        carbs: food.carbs,
+                        fats: food.fats,
+                        category: food.category,
+                        serving: food.serving,
+                        source: food.source
                     })
                 }
             );
@@ -61,15 +189,14 @@ export const Nutrition = () => {
             const data = await response.json();
 
             if (response.ok) {
-                setFoodResults([
-                    ...foodResults,
-                    data
-                ]);
-
-                setFoodSearch("");
+                setFoodResults((prevFoods) => [...prevFoods, data.food]);
+            } else if (response.status === 401) {
+                sessionStorage.removeItem("token");
+                sessionStorage.removeItem("user");
+                navigate("/login");
+            } else {
+                console.log("FOOD LOG ERROR:", data);
             }
-            console.log(data);
-
         } catch (error) {
             console.log(error);
         }
@@ -83,12 +210,8 @@ export const Nutrition = () => {
                 import.meta.env.VITE_BACKEND_URL + "/api/healthy-meals",
                 {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        query: mealIdea
-                    })
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ query: mealIdea })
                 }
             );
 
@@ -98,39 +221,109 @@ export const Nutrition = () => {
                 setMealResults(data.meals || []);
                 setMealIdea("");
             }
-
         } catch (error) {
             console.log(error);
         }
     };
 
-    const handleDeleteFood = (index) => {
-        const updatedFoods = foodResults.filter(
-            (_, i) => i !== index
-        );
+    const handleDeleteFood = async (index, foodId) => {
+        if (!foodId) {
+            setFoodResults((prevFoods) => prevFoods.filter((_, i) => i !== index));
+            return;
+        }
 
-        setFoodResults(updatedFoods);
+        try {
+            const token = getToken();
+
+            if (!token) {
+                navigate("/login");
+                return;
+            }
+
+            const response = await fetch(
+                import.meta.env.VITE_BACKEND_URL + `/api/food-log/${foodId}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            if (response.ok) {
+                setFoodResults((prevFoods) => prevFoods.filter((_, i) => i !== index));
+                fetchNutritionHistory();
+            }
+        } catch (error) {
+            console.log(error);
+        }
     };
 
-    const totalCalories = foodResults.reduce(
-        (total, food) => total + food.calories,
-        0
-    );
+    const saveFavoriteMeal = async (meal) => {
+    try {
+        const token = getToken();
 
-    const totalProtein = foodResults.reduce(
-        (total, food) => total + food.protein,
-        0
-    );
+        const response = await fetch(
+            import.meta.env.VITE_BACKEND_URL + "/api/favorite-meals",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    meal_name: meal.name,
+                    calories: parseFloat(meal.calories) || 0,
+                    protein: parseFloat(meal.protein) || 0,
+                    carbs: 0,
+                    fats: 0
+                })
+            }
+        );
 
-    const totalCarbs = foodResults.reduce(
-        (total, food) => total + food.carbs,
-        0
-    );
+        const data = await response.json();
 
-    const totalFats = foodResults.reduce(
-        (total, food) => total + food.fats,
-        0
-    );
+        if (response.ok) {
+            console.log("Favorite saved:", data);
+            alert("Meal saved to favorites");
+            fetchFavoriteMeals();
+        } else {
+            console.log("FAVORITE ERROR:", data);
+        }
+    } catch (error) {
+        console.log("SAVE FAVORITE ERROR:", error);
+    }
+};
+
+const deleteFavoriteMeal = async (mealId) => {
+    try {
+        const token = getToken();
+
+        const response = await fetch(
+            import.meta.env.VITE_BACKEND_URL + `/api/favorite-meals/${mealId}`,
+            {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+
+        if (response.ok) {
+            setFavoriteMeals((prev) =>
+                prev.filter((meal) => meal.id !== mealId)
+            );
+        }
+
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+    const totalCalories = foodResults.reduce((total, food) => total + Number(food.calories || 0), 0);
+    const totalProtein = foodResults.reduce((total, food) => total + Number(food.protein || 0), 0);
+    const totalCarbs = foodResults.reduce((total, food) => total + Number(food.carbs || 0), 0);
+    const totalFats = foodResults.reduce((total, food) => total + Number(food.fats || 0), 0);
 
     return (
         <div className="nutrition-page">
@@ -163,10 +356,7 @@ export const Nutrition = () => {
             </nav>
 
             <div className="nutrition-container">
-                <select
-                    value={goal}
-                    onChange={(e) => setGoal(e.target.value)}
-                >
+                <select value={goal} onChange={(e) => setGoal(e.target.value)}>
                     <option value="muscle_gain">Muscle Gain</option>
                     <option value="fat_loss">Fat Loss</option>
                     <option value="recomposition">Recomposition</option>
@@ -176,25 +366,13 @@ export const Nutrition = () => {
                     <>
                         <div className="nutrition-summary">
                             <h2>🤖 AI COACH — NUTRITION</h2>
-
                             <p>{nutritionData.message}</p>
 
                             <div className="macro-tags">
-                                <div className="macro-tag">
-                                    🔥 {nutritionData.calories} kcal
-                                </div>
-
-                                <div className="macro-tag">
-                                    💪 {nutritionData.protein}g
-                                </div>
-
-                                <div className="macro-tag">
-                                    🍚 {nutritionData.carbs}g
-                                </div>
-
-                                <div className="macro-tag">
-                                    🥑 {nutritionData.fats}g
-                                </div>
+                                <div className="macro-tag">🔥 {nutritionData.calories} kcal</div>
+                                <div className="macro-tag">💪 {nutritionData.protein}g</div>
+                                <div className="macro-tag">🍚 {nutritionData.carbs}g</div>
+                                <div className="macro-tag">🥑 {nutritionData.fats}g</div>
                             </div>
                         </div>
 
@@ -208,17 +386,12 @@ export const Nutrition = () => {
                                     <div
                                         className="progress-fill"
                                         style={{
-                                            width: `${Math.min(
-                                                (totalCalories / nutritionData.calories) * 100,
-                                                100
-                                            )}%`
+                                            width: `${Math.min((totalCalories / nutritionData.calories) * 100, 100)}%`
                                         }}
                                     />
                                 </div>
 
-                                <small>
-                                    Target: {nutritionData.calories.toLocaleString()} kcal
-                                </small>
+                                <small>Target: {nutritionData.calories.toLocaleString()} kcal</small>
                             </div>
 
                             <div className="nutrition-card protein-card">
@@ -230,10 +403,7 @@ export const Nutrition = () => {
                                     <div
                                         className="progress-fill"
                                         style={{
-                                            width: `${Math.min(
-                                                (totalProtein / nutritionData.protein) * 100,
-                                                100
-                                            )}%`
+                                            width: `${Math.min((totalProtein / nutritionData.protein) * 100, 100)}%`
                                         }}
                                     />
                                 </div>
@@ -250,10 +420,7 @@ export const Nutrition = () => {
                                     <div
                                         className="progress-fill"
                                         style={{
-                                            width: `${Math.min(
-                                                (totalCarbs / nutritionData.carbs) * 100,
-                                                100
-                                            )}%`
+                                            width: `${Math.min((totalCarbs / nutritionData.carbs) * 100, 100)}%`
                                         }}
                                     />
                                 </div>
@@ -270,10 +437,7 @@ export const Nutrition = () => {
                                     <div
                                         className="progress-fill"
                                         style={{
-                                            width: `${Math.min(
-                                                (totalFats / nutritionData.fats) * 100,
-                                                100
-                                            )}%`
+                                            width: `${Math.min((totalFats / nutritionData.fats) * 100, 100)}%`
                                         }}
                                     />
                                 </div>
@@ -287,21 +451,20 @@ export const Nutrition = () => {
                 <div className="food-layout">
                     <div className="food-search">
                         <h2>🔍 SEARCH FOOD</h2>
+
                         <small className="food-search-hint">
                             For better accuracy, include quantity. Example: 2 eggs, 1 cup rice, 6 oz chicken.
                         </small>
+
                         <div className="search-bar">
                             <input
                                 type="text"
-                                placeholder="Example: 2 fried eggs, 1 cup rice, 6 oz chicken"
+                                placeholder="Example: 2 eggs, 1 cup rice, 6 oz chicken"
                                 value={foodSearch}
                                 onChange={(e) => setFoodSearch(e.target.value)}
                             />
 
-                            <button
-                                className="search-btn"
-                                onClick={handleSearch}
-                            >
+                            <button className="search-btn" onClick={handleSearch}>
                                 Search
                             </button>
                         </div>
@@ -323,10 +486,7 @@ export const Nutrition = () => {
                                     onChange={(e) => setMealIdea(e.target.value)}
                                 />
 
-                                <button
-                                    className="search-btn"
-                                    onClick={handleMealIdeas}
-                                >
+                                <button className="search-btn" onClick={handleMealIdeas}>
                                     Get Ideas
                                 </button>
                             </div>
@@ -336,36 +496,37 @@ export const Nutrition = () => {
                     <div className="food-log">
                         <h2>📋 TODAY'S FOOD LOG</h2>
 
+                        <button
+                            className="history-btn"
+                            onClick={() => setShowHistory(!showHistory)}
+                        >
+                            {showHistory ? "Hide History" : "View History"}
+                        </button>
+
                         {foodResults.map((food, index) => (
-                            <div
-                                key={index}
-                                className="food-log-item"
-                            >
+                            <div key={food.id || index} className="food-log-item">
                                 <div>
                                     <div className="food-name">
-                                        {food.name}
+                                        {food.name || food.food_name}
                                     </div>
 
                                     <div className="food-macros">
-                                        💪 {food.protein}g
-                                        🍚 {food.carbs}g
-                                        🥑 {food.fats}g
+                                        💪 {food.protein}g 🍚 {food.carbs}g 🥑 {food.fats}g
                                     </div>
+
                                     <div className="food-source">
-                                    {food.category && <span>{food.category}</span>}
-                                    {food.serving && <span> · {food.serving}</span>}
-                                    {food.source && <span> · {food.source}</span>}
-                                </div>
+                                        {food.category && <span>{food.category}</span>}
+                                        {food.serving && <span> · {food.serving}</span>}
+                                        {food.source && <span> · {food.source}</span>}
+                                    </div>
                                 </div>
 
                                 <div className="food-actions">
-                                    <span>
-                                        {food.calories} kcal
-                                    </span>
+                                    <span>{food.calories} kcal</span>
 
                                     <button
                                         className="delete-food-btn"
-                                        onClick={() => handleDeleteFood(index)}
+                                        onClick={() => handleDeleteFood(index, food.id)}
                                     >
                                         ✕
                                     </button>
@@ -376,10 +537,26 @@ export const Nutrition = () => {
                         <div className="food-total">
                             <h3>Daily Total</h3>
                             <p>🔥 {totalCalories} kcal</p>
-                            <p>💪 {totalProtein}g</p>
-                            <p>🍚 {totalCarbs}g</p>
-                            <p>🥑 {totalFats}g</p>
+                            <p>💪 {totalProtein.toFixed(1)}g</p>
+                            <p>🍚 {totalCarbs.toFixed(1)}g</p>
+                            <p>🥑 {totalFats.toFixed(1)}g</p>
                         </div>
+
+                        {showHistory && (
+                            <div className="nutrition-history">
+                                <h3>Nutrition History</h3>
+
+                                {nutritionHistory.map((day, index) => (
+                                    <div key={index} className="history-day">
+                                        <h4>{day.date}</h4>
+                                        <p>🔥 {day.totals.calories.toFixed(0)} kcal</p>
+                                        <p>💪 {day.totals.protein.toFixed(1)}g</p>
+                                        <p>🍚 {day.totals.carbs.toFixed(1)}g</p>
+                                        <p>🥑 {day.totals.fats.toFixed(1)}g</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -389,10 +566,7 @@ export const Nutrition = () => {
 
                         <div className="meal-results-grid">
                             {mealResults.map((meal, index) => (
-                                <div
-                                    key={index}
-                                    className="meal-card"
-                                >
+                                <div key={index} className="meal-card">
                                     <h3>{meal.name}</h3>
 
                                     <div className="meal-info">
@@ -401,16 +575,15 @@ export const Nutrition = () => {
                                         <span>⏱️ {meal.prep_time}</span>
                                     </div>
 
-                                    <p>
-                                        <strong>Flavor:</strong> {meal.flavor_profile}
-                                    </p>
-
-                                    <p>
-                                        <strong>Why healthy:</strong> {meal.why_healthy}
-                                    </p>
-
+                                    <p><strong>Flavor:</strong> {meal.flavor_profile}</p>
+                                    <p><strong>Why healthy:</strong> {meal.why_healthy}</p>
+                                    <button
+                                        className="favorite-btn"
+                                        onClick={() => saveFavoriteMeal(meal)}
+                                    >
+                                        ❤️ Save Favorite
+                                    </button>
                                     <h4>Ingredients</h4>
-
                                     <ul>
                                         {meal.ingredients?.map((ingredient, i) => (
                                             <li key={i}>{ingredient}</li>
@@ -418,7 +591,6 @@ export const Nutrition = () => {
                                     </ul>
 
                                     <h4>Recipe</h4>
-
                                     <ol>
                                         {meal.instructions?.map((step, i) => (
                                             <li key={i}>{step}</li>
@@ -426,6 +598,34 @@ export const Nutrition = () => {
                                     </ol>
                                 </div>
                             ))}
+                        </div>
+
+                        <div className="favorite-meals-section">
+                            <button
+                                className="favorite-toggle-btn"
+                                onClick={() => setShowFavorites(!showFavorites)}
+                            >
+                                {showFavorites ? "Hide Favorites" : "⭐ View Favorite Meals"}
+                            </button>
+
+                            {showFavorites && (
+                                favoriteMeals.map((meal) => (
+                                <div key={meal.id} className="favorite-meal-card">
+                                    <div>
+                                        <h3>{meal.meal_name}</h3>
+                                        <p>🔥 {meal.calories} kcal</p>
+                                        <p>💪 {meal.protein}g protein</p>
+                                    </div>
+
+                                    <button
+                                        className="delete-food-btn"
+                                        onClick={() => deleteFavoriteMeal(meal.id)}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            ))
+                            )}
                         </div>
                     </div>
                 )}

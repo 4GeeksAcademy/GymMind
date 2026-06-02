@@ -2059,3 +2059,53 @@ html {
     color: #8ca3ad;
     font-size: 12px;
 }
+
+.history-btn {
+    width: 100%;
+    margin-bottom: 16px;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: #00e5ff;
+    color: #001018;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.favorite-btn {
+    margin: 14px 0;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 10px;
+    background: #00e5ff;
+    color: #001018;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.favorite-meals-section {
+    margin-top: 30px;
+}
+
+.favorite-toggle-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    background: #00e5ff;
+    color: #001018;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.favorite-meals-list {
+    margin-top: 20px;
+}
+
+.favorite-meal-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 12px;
+}
