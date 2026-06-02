@@ -227,48 +227,33 @@ class ExerciseLog(db.Model):
     weight: Mapped[float] = mapped_column(Float, nullable=False)
     sets: Mapped[int] = mapped_column(nullable=False)
     reps: Mapped[int] = mapped_column(nullable=False)
-    difficulty: Mapped[str] = mapped_column(String(20), nullable=False)  # 'very_easy', 'easy', 'hard', 'very_hard'
+    difficulty: Mapped[str] = mapped_column(String(20), nullable=False)
     date: Mapped[date] = mapped_column(Date, nullable=False, default=datetime.utcnow)
 
-    # Relationships
     user: Mapped["User"] = relationship(back_populates="exercise_logs")
 
     def serialize(self):
         return {
             "id": self.id,
             "user_id": self.user_id,
-            "food_name": self.food_name,
-            "calories": self.calories,
-            "protein": self.protein,
-            "carbs": self.carbs,
-            "fats": self.fats,
-            "category": self.category,
-            "serving": self.serving,
-            "source": self.source,
-            "created_at": self.created_at.isoformat()
+            "exercise_name": self.exercise_name,
+            "weight": self.weight,
+            "sets": self.sets,
+            "reps": self.reps,
+            "difficulty": self.difficulty,
+            "date": self.date.isoformat()
         }
-    
+
 
 class FavoriteMeal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-
-    user_id = db.Column(
-        db.Integer,
-        db.ForeignKey("user.id"),
-        nullable=False
-    )
-
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     meal_name = db.Column(db.String(255), nullable=False)
-
     calories = db.Column(db.Float)
     protein = db.Column(db.Float)
     carbs = db.Column(db.Float)
     fats = db.Column(db.Float)
-
-    created_at = db.Column(
-        db.DateTime,
-        default=datetime.utcnow
-    )
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def serialize(self):
         return {
@@ -278,11 +263,5 @@ class FavoriteMeal(db.Model):
             "protein": self.protein,
             "carbs": self.carbs,
             "fats": self.fats
-        }    
-            "exercise_name": self.exercise_name,
-            "weight": self.weight,
-            "sets": self.sets,
-            "reps": self.reps,
-            "difficulty": self.difficulty,
-            "date": self.date.isoformat()
         }
+    
