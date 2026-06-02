@@ -1867,161 +1867,247 @@ html {
 /* NutritionNAVBAR */
 
 .nutrition-navbar {
-    width: 100%;
-    height: 56px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 24px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    background: #050b10;
-    box-sizing: border-box;
+  width: 100%;
+  height: 56px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #050b10;
+  box-sizing: border-box;
 }
 
 .nutrition-navbar-left {
-    display: flex;
-    align-items: center;
-    gap: 28px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
 }
 
 .nutrition-navbar-links {
-    display: flex;
-    gap: 28px;
-    align-items: center;
+  display: flex;
+  gap: 28px;
+  align-items: center;
 }
 
 .nutrition-navbar-links a {
-    text-decoration: none;
-    color: #9ca3af;
-    font-size: 14px;
-    transition: 0.2s ease;
+  text-decoration: none;
+  color: #9ca3af;
+  font-size: 14px;
+  transition: 0.2s ease;
 }
 
 .nutrition-navbar-links a:hover {
-    color: #00e5ff;
+  color: #00e5ff;
 }
 
 .nutrition-navbar-links .active {
-    color: #00e5ff;
-    font-weight: 600;
+  color: #00e5ff;
+  font-weight: 600;
 }
 
 .nutrition-navbar-actions {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .nutrition-signout-btn {
-    background: transparent;
-    border: 1px solid rgba(255, 0, 0, 0.4);
-    color: #ff4d4d;
-    padding: 8px 16px;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: 0.2s ease;
+  background: transparent;
+  border: 1px solid rgba(255, 0, 0, 0.4);
+  color: #ff4d4d;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s ease;
 }
 
 .nutrition-signout-btn:hover {
-    background: rgba(255, 0, 0, 0.1);
+  background: rgba(255, 0, 0, 0.1);
 }
 
 .nutrition-logo {
-    font-family: "Bebas Neue", sans-serif;
-    font-size: 28px;
-    letter-spacing: 2px;
-    color: #00e5ff;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 28px;
+  letter-spacing: 2px;
+  color: #00e5ff;
 }
 
 .legal-page {
-    min-height: 100vh;
-    background:
-        radial-gradient(circle at top left, rgba(0, 229, 255, 0.08), transparent 35%),
-        radial-gradient(circle at bottom right, rgba(0, 255, 163, 0.06), transparent 35%),
-        #050b10;
-    color: #ffffff;
-    padding: 90px 20px;
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0, 229, 255, 0.08),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(0, 255, 163, 0.06),
+      transparent 35%
+    ),
+    #050b10;
+  color: #ffffff;
+  padding: 90px 20px;
 }
 
 .legal-container {
-    max-width: 980px;
-    margin: 0 auto;
-    background: rgba(8, 19, 27, 0.92);
-    border: 1px solid rgba(0, 229, 255, 0.18);
-    border-radius: 22px;
-    padding: 55px;
-    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.45);
+  max-width: 980px;
+  margin: 0 auto;
+  background: rgba(8, 19, 27, 0.92);
+  border: 1px solid rgba(0, 229, 255, 0.18);
+  border-radius: 22px;
+  padding: 55px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.45);
 }
 
 .legal-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 35px;
-    color: #00e5ff;
-    text-decoration: none;
-    font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 35px;
+  color: #00e5ff;
+  text-decoration: none;
+  font-weight: 700;
 }
 
 .legal-label {
-    color: #00e5ff;
-    letter-spacing: 4px;
-    font-size: 13px;
-    font-weight: 800;
-    text-transform: uppercase;
-    margin-bottom: 12px;
+  color: #00e5ff;
+  letter-spacing: 4px;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 12px;
 }
 
 .legal-container h1 {
-    font-size: 46px;
-    line-height: 1.1;
-    margin-bottom: 10px;
-    color: #ffffff;
+  font-size: 46px;
+  line-height: 1.1;
+  margin-bottom: 10px;
+  color: #ffffff;
 }
 
 .legal-date {
-    color: #8ca3ad;
-    margin-bottom: 35px;
+  color: #8ca3ad;
+  margin-bottom: 35px;
 }
 
 .legal-divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.45), transparent);
-    margin: 35px 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 229, 255, 0.45),
+    transparent
+  );
+  margin: 35px 0;
 }
 
 .legal-container h2 {
-    margin-top: 30px;
-    margin-bottom: 12px;
-    color: #00e5ff;
-    font-size: 22px;
+  margin-top: 30px;
+  margin-bottom: 12px;
+  color: #00e5ff;
+  font-size: 22px;
 }
 
 .legal-container p {
-    color: #cbd5df;
-    line-height: 1.85;
-    font-size: 16px;
+  color: #cbd5df;
+  line-height: 1.85;
+  font-size: 16px;
 }
 
 .legal-note {
-    background: rgba(0, 229, 255, 0.08);
-    border: 1px solid rgba(0, 229, 255, 0.18);
-    border-radius: 14px;
-    padding: 18px 20px;
-    margin: 25px 0;
-    color: #dcefff;
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.18);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin: 25px 0;
+  color: #dcefff;
 }
 
 @media (max-width: 768px) {
-    .legal-container {
-        padding: 32px 24px;
-    }
+  .legal-container {
+    padding: 32px 24px;
+  }
 
-    .legal-container h1 {
-        font-size: 34px;
-    }
+  .legal-container h1 {
+    font-size: 34px;
+  }
 }
 
 .terms-error {
+  color: #ff5f5f;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.nutrition-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 30px 0;
+}
+
+.food-search-hint {
+    display: block;
+    margin-top: 10px;
+    color: #8ca3ad;
+    font-size: 13px;
+}
+
+.food-source {
+    margin-top: 4px;
+    color: #8ca3ad;
+    font-size: 12px;
+}
+
+.history-btn {
+    width: 100%;
+    margin-bottom: 16px;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: #00e5ff;
+    color: #001018;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.favorite-btn {
+    margin: 14px 0;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 10px;
+    background: #00e5ff;
+    color: #001018;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.favorite-meals-section {
+    margin-top: 30px;
+}
+
+.favorite-toggle-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    background: #00e5ff;
+    color: #001018;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.favorite-meals-list {
+    margin-top: 20px;
+}
+
+.favorite-meal-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 12px;
     color: #ff5f5f;
     font-size: 14px;
     font-weight: 600;

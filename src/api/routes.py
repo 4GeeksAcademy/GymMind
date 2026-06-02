@@ -1,5 +1,5 @@
 from flask import request, jsonify, Blueprint
-from api.models import db, User
+from api.models import db, User, FoodLog
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
@@ -12,6 +12,10 @@ from datetime import date
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from google import genai
+import json
+from api.common_foods import COMMON_FOODS
+import re
+from api.models import FavoriteMeal
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -49,7 +53,8 @@ def signup():
         return jsonify({"error": "All fields are required"}), 400
     if User.query.filter_by(email=email).first():
         return jsonify({"error": "User already exists"}), 400
-    new_user = User(first_name=first_name, last_name=last_name, email=email, is_active=True)
+    new_user = User(first_name=first_name, last_name=last_name,
+                    email=email, is_active=True)
     new_user.set_password(password)
     db.session.add(new_user)
     db.session.commit()
@@ -99,30 +104,237 @@ def get_nutrition_recommendations():
 @api.route("/nutrition/search", methods=["POST"])
 def search_food():
     body = request.get_json()
-    food = body.get("food")
+    food = body.get("food", "").lower().strip()
+
     if not food:
         return jsonify({"error": "Food is required"}), 400
+
+    quantity_match = re.match(r"^(\d+)", food)
+    quantity = int(quantity_match.group(1)) if quantity_match else 1
+
+    clean_food = re.sub(r"^\d+\s*", "", food).strip()
+
+    for key, item in COMMON_FOODS.items():
+        if key in clean_food:
+            return jsonify({
+                "name": f"{quantity} {item['name']}",
+                "category": item.get("category"),
+                "serving": item.get("serving"),
+                "calories": round(item["calories"] * quantity, 2),
+                "protein": round(item["protein"] * quantity, 2),
+                "carbs": round(item["carbs"] * quantity, 2),
+                "fats": round(item["fats"] * quantity, 2),
+                "source": "GymMind verified food database"
+            }), 200
+
     api_key = os.getenv("USDA_API_KEY")
+
     response = requests.get(
         "https://api.nal.usda.gov/fdc/v1/foods/search",
-        params={"api_key": api_key, "query": food, "pageSize": 1}
+        params={
+            "api_key": api_key,
+            "query": clean_food,
+            "pageSize": 5
+        }
     )
+
     data = response.json()
-    if len(data["foods"]) == 0:
+
+    if "foods" not in data or len(data["foods"]) == 0:
         return jsonify({"error": "Food not found"}), 404
-    food_item = data["foods"][0]
+
+    foods = data["foods"]
+
+    search_terms = clean_food.lower().split()
+
+    food_item = next(
+        (
+            item for item in foods
+            if all(
+                term.rstrip("s") in item.get("description", "").lower()
+                for term in search_terms
+            )
+        ),
+        None
+    )
+
+    if food_item is None:
+        food_item = next(
+            (
+                item for item in foods
+                if any(
+                    term.rstrip("s") in item.get("description", "").lower()
+                    for term in search_terms
+                )
+            ),
+            foods[0]
+        )
+
     nutrients = food_item["foodNutrients"]
+
     def nutrient(name):
         for item in nutrients:
             if item["nutrientName"] == name:
                 return item.get("value", 0)
         return 0
+
     return jsonify({
         "name": food_item["description"],
-        "calories": nutrient("Energy"),
-        "protein": nutrient("Protein"),
-        "carbs": nutrient("Carbohydrate, by difference"),
-        "fats": nutrient("Total lipid (fat)")
+        "calories": round(nutrient("Energy") * quantity, 2),
+        "protein": round(nutrient("Protein") * quantity, 2),
+        "carbs": round(nutrient("Carbohydrate, by difference") * quantity, 2),
+        "fats": round(nutrient("Total lipid (fat)") * quantity, 2),
+        "source": "USDA database",
+        "category": "USDA Result",
+        "serving": "Estimated standard serving"
+    }), 200
+
+
+@api.route("/healthy-meals", methods=["POST"])
+def healthy_meals():
+    body = request.get_json()
+    query = body.get("query")
+
+    if not query:
+        return jsonify({"error": "Meal search is required"}), 400
+
+    prompt = f"""
+    You are a nutrition coach for a fitness app.
+
+    Generate 5 healthy and flavorful meal recommendations based on this user request:
+    {query}
+
+    Rules:
+    - Do not mention cuisine, nationality, culture, or country of origin.
+    - Do not label meals as Mexican, Cuban, Italian, Asian, American, etc.
+    - Focus only on flavor, nutrition, macros, ingredients, and preparation.
+    - Meals should be healthy, enjoyable, and tasty.
+    - Include simple recipes.
+
+    Return ONLY valid JSON with this structure:
+    {{
+        "meals": [
+            {{
+                "name": "string",
+                "calories": "string",
+                "protein": "string",
+                "prep_time": "string",
+                "flavor_profile": "string",
+                "ingredients": ["string"],
+                "instructions": ["string"],
+                "why_healthy": "string"
+            }}
+        ]
+    }}
+    """
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite",
+            contents=prompt
+        )
+
+        text = response.text.strip()
+
+        if text.startswith("```"):
+            text = text.replace("```json", "").replace("```", "").strip()
+
+        return jsonify(json.loads(text)), 200
+
+    except Exception as e:
+        print("HEALTHY MEALS ERROR:", e)
+
+        return jsonify({
+            "meals": [
+                {
+                    "name": "High Protein Steak Bowl",
+                    "calories": "520 kcal",
+                    "protein": "45g",
+                    "prep_time": "25 minutes",
+                    "flavor_profile": "Savory, smoky, fresh",
+                    "ingredients": [
+                        "6 oz lean steak",
+                        "1 cup cooked rice",
+                        "1/2 avocado",
+                        "mixed greens",
+                        "Greek yogurt sauce"
+                    ],
+                    "instructions": [
+                        "Season and cook the steak until desired doneness.",
+                        "Prepare the rice.",
+                        "Slice the avocado.",
+                        "Add greens to a bowl.",
+                        "Top with steak, rice, avocado, and Greek yogurt sauce."
+                    ],
+                    "why_healthy": "High in protein, balanced with complex carbs and healthy fats."
+                }
+            ],
+            "fallback": True
+        }), 200
+
+
+@api.route("/food-log", methods=["POST"])
+@jwt_required()
+def add_food_log():
+    user_id = int(get_jwt_identity())
+    body = request.get_json()
+
+    new_food = FoodLog(
+        user_id=user_id,
+        food_name=body.get("food_name"),
+        calories=body.get("calories"),
+        protein=body.get("protein"),
+        carbs=body.get("carbs"),
+        fats=body.get("fats"),
+        category=body.get("category"),
+        serving=body.get("serving"),
+        source=body.get("source")
+    )
+
+    db.session.add(new_food)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Food added to log",
+        "food": new_food.serialize()
+    }), 201
+
+
+@api.route("/food-log/today", methods=["GET"])
+@jwt_required()
+def get_today_food_log():
+    user_id = int(get_jwt_identity())
+
+    today = date.today()
+
+    foods = FoodLog.query.filter(
+        FoodLog.user_id == user_id,
+        db.func.date(FoodLog.created_at) == today
+    ).all()
+
+    return jsonify({
+        "foods": [food.serialize() for food in foods]
+    }), 200
+
+
+@api.route("/food-log/<int:food_id>", methods=["DELETE"])
+@jwt_required()
+def delete_food_log(food_id):
+    user_id = int(get_jwt_identity())
+
+    food = FoodLog.query.filter_by(
+        id=food_id,
+        user_id=user_id
+    ).first()
+
+    if not food:
+        return jsonify({"error": "Food not found"}), 404
+
+    db.session.delete(food)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Food removed from log"
     }), 200
 
 
@@ -142,19 +354,27 @@ def edit_user_profile(user_id):
     body = request.get_json()
     if not body:
         return jsonify({"error": "No data provided"}), 400
-    if "first_name" in body: user.first_name = body["first_name"]
-    if "last_name" in body: user.last_name = body["last_name"]
+    if "first_name" in body:
+        user.first_name = body["first_name"]
+    if "last_name" in body:
+        user.last_name = body["last_name"]
     if "email" in body:
         existing = User.query.filter_by(email=body["email"]).first()
         if existing and existing.id != user_id:
             return jsonify({"error": "Email already in use"}), 400
         user.email = body["email"]
-    if "nickname" in body: user.nickname = body["nickname"]
-    if "gender" in body: user.gender = body["gender"]
-    if "date_of_birth" in body: user.date_of_birth = body["date_of_birth"]
-    if "weight" in body: user.weight = body["weight"]
-    if "height" in body: user.height = body["height"]
-    if "phone_number" in body: user.phone_number = body["phone_number"]
+    if "nickname" in body:
+        user.nickname = body["nickname"]
+    if "gender" in body:
+        user.gender = body["gender"]
+    if "date_of_birth" in body:
+        user.date_of_birth = body["date_of_birth"]
+    if "weight" in body:
+        user.weight = body["weight"]
+    if "height" in body:
+        user.height = body["height"]
+    if "phone_number" in body:
+        user.phone_number = body["phone_number"]
     db.session.commit()
     return jsonify({"message": "Profile updated successfully", "user": user.serialize()}), 200
 
@@ -189,7 +409,8 @@ def upload_user_photo(user_id):
 @jwt_required()
 def get_progress(user_id):
     from api.models import ProgressLog
-    logs = ProgressLog.query.filter_by(user_id=user_id).order_by(ProgressLog.date.desc()).all()
+    logs = ProgressLog.query.filter_by(
+        user_id=user_id).order_by(ProgressLog.date.desc()).all()
     return jsonify([log.serialize() for log in logs]), 200
 
 
@@ -202,7 +423,8 @@ def add_progress():
     weight = body.get("weight")
     if not user_id or not weight:
         return jsonify({"error": "user_id and weight are required"}), 400
-    existing = ProgressLog.query.filter_by(user_id=user_id, date=date.today()).first()
+    existing = ProgressLog.query.filter_by(
+        user_id=user_id, date=date.today()).first()
     if existing:
         return jsonify({"error": "You already logged your weight today"}), 400
     log = ProgressLog(user_id=user_id, weight=weight, date=date.today())
@@ -245,7 +467,8 @@ def add_mood():
         "tired": {"training_intensity": "Low", "recommended_focus": "Recovery & Stretching"},
         "low": {"training_intensity": "Low", "recommended_focus": "Light Movement & Motivation"}
     }
-    mood_check = MoodCheck(user_id=current_user, mood=mood, ai_message=ai_message, date=today)
+    mood_check = MoodCheck(user_id=current_user, mood=mood,
+                           ai_message=ai_message, date=today)
     db.session.add(mood_check)
     db.session.commit()
     return jsonify({
@@ -261,7 +484,8 @@ def add_mood():
 def get_mood_history():
     from api.models import MoodCheck
     user_id = int(get_jwt_identity())
-    moods = MoodCheck.query.filter_by(user_id=user_id).order_by(MoodCheck.date.desc()).all()
+    moods = MoodCheck.query.filter_by(
+        user_id=user_id).order_by(MoodCheck.date.desc()).all()
     return jsonify([m.serialize() for m in moods]), 200
 
 
@@ -269,7 +493,8 @@ def get_mood_history():
 @jwt_required()
 def get_workouts(user_id):
     from api.models import Workout
-    workouts = Workout.query.filter_by(user_id=user_id).order_by(Workout.date.desc()).all()
+    workouts = Workout.query.filter_by(
+        user_id=user_id).order_by(Workout.date.desc()).all()
     return jsonify([w.serialize() for w in workouts]), 200
 
 
@@ -283,7 +508,8 @@ def add_workout():
     exercises = body.get("exercises", [])
     if not user_id or not fitness_goal:
         return jsonify({"error": "user_id and fitness_goal are required"}), 400
-    workout = Workout(user_id=user_id, fitness_goal=fitness_goal, date=date.today())
+    workout = Workout(
+        user_id=user_id, fitness_goal=fitness_goal, date=date.today())
     db.session.add(workout)
     db.session.flush()
     for ex in exercises:
@@ -335,7 +561,8 @@ def google_login():
             return jsonify({"error": "Google account email not found"}), 400
         user = User.query.filter_by(email=email).first()
         if not user:
-            user = User(first_name=first_name, last_name=last_name, email=email, is_active=True)
+            user = User(first_name=first_name, last_name=last_name,
+                        email=email, is_active=True)
             user.set_password("google-oauth-user")
             db.session.add(user)
             db.session.commit()
@@ -393,6 +620,9 @@ Return ONLY a valid JSON object with this exact structure, no extra text:
             "sets": number, "reps": number, "instructions": "string"}}
     ]
 }}
+Generate 5-6 exercises. Keep exercise names simple and searchable on YouTube."""
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite", contents=prompt)
 
 Generate 5-6 exercises. Use real gym exercises with specific names like:
 - For chest: Barbell bench press, Incline dumbbell press, Pec deck machine, Cable crossover, Dips
@@ -416,6 +646,99 @@ All text must be in English only. No Spanish words."""
         workout_data = json.loads(text)
         return jsonify(workout_data), 200
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route("/food-log/history", methods=["GET"])
+@jwt_required()
+def get_food_log_history():
+    user_id = int(get_jwt_identity())
+
+    foods = FoodLog.query.filter_by(user_id=user_id).order_by(
+        FoodLog.created_at.desc()
+    ).all()
+
+    history = {}
+
+    for food in foods:
+        day = food.created_at.strftime("%Y-%m-%d")
+
+        if day not in history:
+            history[day] = {
+                "date": day,
+                "foods": [],
+                "totals": {
+                    "calories": 0,
+                    "protein": 0,
+                    "carbs": 0,
+                    "fats": 0
+                }
+            }
+
+        history[day]["foods"].append(food.serialize())
+        history[day]["totals"]["calories"] += food.calories
+        history[day]["totals"]["protein"] += food.protein
+        history[day]["totals"]["carbs"] += food.carbs
+        history[day]["totals"]["fats"] += food.fats
+
+    return jsonify({
+        "history": list(history.values())
+    }), 200
+
+@api.route("/favorite-meals", methods=["POST"])
+@jwt_required()
+def add_favorite_meal():
+
+    user_id = int(get_jwt_identity())
+    body = request.get_json()
+
+    meal = FavoriteMeal(
+        user_id=user_id,
+        meal_name=body.get("meal_name"),
+        calories=body.get("calories"),
+        protein=body.get("protein"),
+        carbs=body.get("carbs"),
+        fats=body.get("fats")
+    )
+
+    db.session.add(meal)
+    db.session.commit()
+
+    return jsonify(meal.serialize()), 201
+
+@api.route("/favorite-meals", methods=["GET"])
+@jwt_required()
+def get_favorite_meals():
+
+    user_id = int(get_jwt_identity())
+
+    meals = FavoriteMeal.query.filter_by(
+        user_id=user_id
+    ).all()
+
+    return jsonify([
+        meal.serialize()
+        for meal in meals
+    ]), 200
+
+
+@api.route("/favorite-meals/<int:meal_id>", methods=["DELETE"])
+@jwt_required()
+def delete_favorite_meal(meal_id):
+
+    user_id = int(get_jwt_identity())
+
+    meal = FavoriteMeal.query.filter_by(
+        id=meal_id,
+        user_id=user_id
+    ).first()
+
+    if not meal:
+        return jsonify({"error": "Meal not found"}), 404
+
+    db.session.delete(meal)
+    db.session.commit()
+
+    return jsonify({"message": "Deleted"}), 200
         return jsonify({"error": str(e)}), 500 
 
 # EXERCISE LOG ENDPOINTS
