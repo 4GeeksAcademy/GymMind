@@ -247,35 +247,6 @@ class ExerciseLog(db.Model):
         }
 
 
-class ExerciseLog(db.Model):
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(
-        db.ForeignKey("user.id"), nullable=False)
-    exercise_name: Mapped[str] = mapped_column(String(150), nullable=False)
-    weight: Mapped[float] = mapped_column(Float, nullable=False)
-    sets: Mapped[int] = mapped_column(nullable=False)
-    reps: Mapped[int] = mapped_column(nullable=False)
-    # 'very_easy', 'easy', 'hard', 'very_hard'
-    difficulty: Mapped[str] = mapped_column(String(20), nullable=False)
-    date: Mapped[date] = mapped_column(
-        Date, nullable=False, default=datetime.utcnow)
-
-    # Relationships
-    user: Mapped["User"] = relationship(back_populates="exercise_logs")
-
-    def serialize(self):
-        return {
-            "id": self.id,
-            "user_id": self.user_id,
-            "exercise_name": self.exercise_name,
-            "weight": self.weight,
-            "sets": self.sets,
-            "reps": self.reps,
-            "difficulty": self.difficulty,
-            "date": self.date.isoformat()
-        }
-
-
 class FavoriteMeal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
