@@ -564,15 +564,18 @@ def upload_progress_photo(user_id):
     ).first()
     if existing:
         return jsonify({"error": "You already uploaded a photo today"}), 400
+
     file = request.files.get('photo')
     notes = request.form.get('notes', '')
     if not file:
         return jsonify({"error": "No photo provided"}), 400
+
     try:
         upload_result = cloudinary.uploader.upload(file, folder=f"gymmind/progress/{user_id}")
         photo_url = upload_result.get('secure_url')
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
     new_photo = ProgressPhoto(user_id=user_id, photo_url=photo_url, notes=notes)
     db.session.add(new_photo)
     db.session.commit()
