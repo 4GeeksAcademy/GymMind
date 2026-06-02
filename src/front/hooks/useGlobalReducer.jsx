@@ -1,4 +1,3 @@
-cat > src/front/hooks/useGlobalReducer.jsx << 'EOF'
 import React, { createContext, useContext, useReducer } from "react";
 import storeReducer, { initialStore } from "../store";
 export const Context = createContext(null);
@@ -21,4 +20,3 @@ const useGlobalReducer = () => {
     return useContext(Context);
 };
 export default useGlobalReducer;
-EOF
