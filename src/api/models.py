@@ -222,6 +222,23 @@ class FoodLog(db.Model):
         db.DateTime,
         default=datetime.utcnow
     )
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "food_name": self.food_name,
+            "calories": self.calories,
+            "protein": self.protein,
+            "carbs": self.carbs,
+            "fats": self.fats,
+            "category": self.category,
+            "serving": self.serving,
+            "source": self.source,
+            "created_at": self.created_at.isoformat()
+        }
+
+
 class ExerciseLog(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(db.ForeignKey("user.id"), nullable=False)
