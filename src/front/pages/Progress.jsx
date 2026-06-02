@@ -193,12 +193,13 @@ export const Progress = () => {
         .pr-day-name { font-weight: 600; margin-bottom: 2px; }
         .pr-day-status { font-size: 10px; }
         .pr-empty { text-align: center; padding: 20px; color: var(--muted); font-size: 13px; }
+      
 
         /* CALENDAR */
         .pr-cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
         .pr-cal-month { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; }
         .pr-cal-nav { background: transparent; border: 1px solid var(--border); color: var(--text); width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
-        .pr-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; } 
+        .pr-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
         .pr-cal-day { aspect-ratio: 1; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; position: relative; min-height: 32px; max-height: 36px; }
         .pr-cal-day-header { text-align: center; font-size: 9px; color: var(--muted); font-weight: 600; padding: 3px 0; text-transform: uppercase; }
         .pr-cal-day:hover { border-color: var(--border); }
@@ -222,6 +223,29 @@ export const Progress = () => {
         @keyframes pr-spin { to { transform: rotate(360deg); } }
         @keyframes pr-fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
         .pr-page > * { animation: pr-fadeUp 0.5s ease both; }
+
+        .pr-side-panel{width:0;overflow:hidden;transition:width 0.3s ease;border-left:0px solid var(--border);background:rgba(0,0,0,0.2);}
+        .pr-side-panel.open{width:260px;border-left-width:1px;}
+        .pr-side-inner{width:260px;padding:16px;height:100%;overflow-y:auto;}.pr-side-close{float:right;background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:0;}
+        .pr-side-close:hover{color:var(--text);}
+        .pr-side-date{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;margin-bottom:4px;clear:both;}
+        .pr-side-section{margin-bottom:16px;}
+        .pr-side-section-title{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+        .pr-side-ex{padding:8px 0;border-bottom:1px solid var(--border);}
+        .pr-side-ex:last-child{border-bottom:none;}
+        .pr-side-ex-name{font-size:13px;font-weight:600;margin-bottom:2px;}
+        .pr-side-ex-detail{font-size:12px;color:var(--muted);}
+        .pr-side-ex-weight{color:var(--accent);font-weight:600;}
+        .pr-diff-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px;}
+        .pr-diff-easy{background:rgba(0,255,136,0.15);color:var(--accent2);}
+        .pr-diff-hard{background:rgba(255,107,107,0.15);color:#ff6b6b;}
+        .pr-side-stat{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);}
+        .pr-side-stat:last-child{border-bottom:none;}
+        .pr-side-stat-label{color:var(--muted);}
+        .pr-side-stat-val{font-weight:600;color:var(--accent);}
+        .pr-side-empty{text-align:center;padding:24px 0;color:var(--muted);font-size:13px;}
+        .pr-cal-wrap{display:flex;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg2);margin-bottom:16px;}
+        .pr-cal-main{flex:1;padding:20px;min-width:0;}
       `}</style>
 
       <div className="pr-body">
@@ -299,52 +323,61 @@ export const Progress = () => {
               </div>
 
 
-              <div className="pr-grid-2">
-                {/* CALENDAR */}
-                    <div className="pr-card">
-                      <div className="pr-card-title">📅 Training Calendar</div>
-                      <div className="pr-cal-header">
-                        <button className="pr-cal-nav" onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1))}>‹</button>
-                        <div className="pr-cal-month">{monthName}</div>
-                        <button className="pr-cal-nav" onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1))}>›</button>
-                      </div>
-                      <div className="pr-cal-grid">
-                        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(d => (
-                          <div key={d} className="pr-cal-day-header">{d}</div>
-                        ))}
-                        {calendarDays.map((day, i) => {
-                          if (!day) return <div key={i} className="pr-cal-day empty" />;
-                          const isTrained = trainedDates.has(day.dateStr);
-                          const hasWeight = weightDates[day.dateStr];
-                          const isToday = day.dateStr === todayStr;
-                          const isSelected = selectedDay === day.dateStr;
-                          return (
-                            <div
-                              key={i}
-                              className={`pr-cal-day ${isToday ? "today" : ""} ${isTrained ? "trained" : ""} ${hasWeight ? "weighed" : ""} ${isSelected ? "selected" : ""}`}
-                              onClick={() => setSelectedDay(isSelected ? null : day.dateStr)}
-                            >
-                              {day.day}
-                              {isTrained && <div className="pr-cal-dot trained" style={{ left: "4px" }} />}
-                              {hasWeight && <div className="pr-cal-dot weighed" />}
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <div className="pr-cal-legend">
-                        <span><span className="pr-cal-legend-dot" style={{ background: "var(--accent2)" }}></span>Workout day</span>
-                        <span><span className="pr-cal-legend-dot" style={{ background: "var(--accent)" }}></span>Weight logged</span>
-                      </div>
-                      {selectedDay && (
-                        <div className="pr-day-detail">
-                          <div className="pr-day-detail-title">📆 {selectedDay}</div>
-                          {trainedDates.has(selectedDay) && <div>🏋️ Workout completed</div>}
-                          {weightDates[selectedDay] && <div>⚖️ Weight: {weightDates[selectedDay]} kg</div>}
-                          {!trainedDates.has(selectedDay) && !weightDates[selectedDay] && <div style={{ color: "var(--muted)" }}>No activity logged</div>}
-                        </div>
-                      )}
+                {/* CALENDAR WITH SIDE PANEL */}
+                <div className="pr-cal-wrap">
+                  <div className="pr-cal-main">
+                    <div className="pr-card-title">📅 Training Calendar</div>
+                    <div className="pr-cal-header">
+                      <button className="pr-cal-nav" onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1))}>‹</button>
+                      <div className="pr-cal-month">{monthName}</div>
+                      <button className="pr-cal-nav" onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1))}>›</button>
                     </div>
+                    <div className="pr-cal-grid">
+                      {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(d => (
+                        <div key={d} className="pr-cal-day-header">{d}</div>
+                      ))}
+                      {calendarDays.map((day, i) => {
+                        if (!day) return <div key={i} className="pr-cal-day empty" />;
+                        const isTrained = trainedDates.has(day.dateStr);
+                        const hasWeight = weightDates[day.dateStr];
+                        const isToday = day.dateStr === todayStr;
+                        const isSelected = selectedDay === day.dateStr;
+                        return (
+                          <div
+                            key={i}
+                            className={`pr-cal-day ${isToday ? "today" : ""} ${isTrained ? "trained" : ""} ${hasWeight ? "weighed" : ""} ${isSelected ? "selected" : ""}`}
+                            onClick={() => setSelectedDay(isSelected ? null : day.dateStr)}
+                          >
+                            {day.day}
+                            {isTrained && <div className="pr-cal-dot trained" style={{ left: "4px" }} />}
+                            {hasWeight && <div className="pr-cal-dot weighed" />}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="pr-cal-legend">
+                      <span><span className="pr-cal-legend-dot" style={{ background: "var(--accent2)" }}></span>Workout day</span>
+                      <span><span className="pr-cal-legend-dot" style={{ background: "var(--accent)" }}></span>Weight logged</span>
+                    </div>
+                  </div>
 
+                  {/* SIDE PANEL */}
+                  <div className={`pr-side-panel ${selectedDay ? "open" : ""}`}>
+                    {selectedDay && (
+                      <div className="pr-side-inner">
+                        <button className="pr-side-close" onClick={() => setSelectedDay(null)}>✕</button>
+                        <div className="pr-side-date">{selectedDay}</div>
+                        <DayDetail
+                          date={selectedDay}
+                          isTrained={trainedDates.has(selectedDay)}
+                          weight={weightDates[selectedDay]}
+                          token={token}
+                          backendUrl={backendUrl}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
                     {/* WEIGHT LOG TABLE */}
                     <div className="pr-card">
                       <div className="pr-card-title">📋 Weight log</div>
@@ -373,7 +406,6 @@ export const Progress = () => {
                         </table>
                       )}
                     </div>
-                  </div> 
 
               {/* CHART */}
               <div className="pr-card">
@@ -431,4 +463,77 @@ export const Progress = () => {
   );
 };
 
-export default Progress; 
+const DayDetail = ({ date, isTrained, weight, token, backendUrl }) => {
+  const [exLogs, setExLogs] = useState([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+
+  useEffect(() => {
+    if (!date || !isTrained) return;
+    setLoadingLogs(true);
+    fetch(`${backendUrl}/api/exercise-log/date/${date}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => setExLogs(Array.isArray(data) ? data : []))
+      .catch(() => {})
+      .finally(() => setLoadingLogs(false));
+  }, [date]);
+
+  if (!isTrained && !weight) {
+    return <div className="pr-side-empty">No activity logged this day</div>;
+  }
+
+  const totalVolume = exLogs.filter(l => l.weight).reduce((s, l) => s + l.weight * l.sets * l.reps, 0);
+
+  return (
+    <>
+      {weight && (
+        <div className="pr-side-section">
+          <div className="pr-side-section-title">Body weight</div>
+          <div className="pr-side-stat">
+            <span className="pr-side-stat-label">Logged weight</span>
+            <span className="pr-side-stat-val">{weight} kg</span>
+          </div>
+        </div>
+      )}
+      {isTrained && (
+        <div className="pr-side-section">
+          <div className="pr-side-section-title">Exercises</div>
+          {loadingLogs ? (
+            <div style={{ fontSize: "12px", color: "var(--muted)" }}>Loading...</div>
+          ) : exLogs.length > 0 ? (
+            <>
+              {exLogs.map((log, i) => (
+                <div key={i} className="pr-side-ex">
+                  <div className="pr-side-ex-name">
+                    {log.exercise_name}
+                    <span className={`pr-diff-badge ${log.difficulty?.includes("hard") ? "pr-diff-hard" : "pr-diff-easy"}`}>
+                      {log.difficulty?.replace("_", " ")}
+                    </span>
+                  </div>
+                  <div className="pr-side-ex-detail">
+                    {log.sets} sets × {log.reps} reps
+                    {log.weight ? <> · <span className="pr-side-ex-weight">{log.weight} kg</span></> : " · bodyweight"}
+                  </div>
+                </div>
+              ))}
+              {totalVolume > 0 && (
+                <div style={{ marginTop: "12px" }}>
+                  <div className="pr-side-section-title">Volume</div>
+                  <div className="pr-side-stat">
+                    <span className="pr-side-stat-label">Total volume</span>
+                    <span className="pr-side-stat-val">{totalVolume.toLocaleString()} kg</span>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div style={{ fontSize: "12px", color: "var(--muted)" }}>Workout completed — no weight logs recorded</div>
+          )}
+        </div>
+      )}
+    </>
+  );
+};
+
+export default Progress;

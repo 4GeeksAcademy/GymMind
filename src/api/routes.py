@@ -231,7 +231,7 @@ def add_mood():
     try:
         prompt = f"The user is feeling '{mood}' today. Give a short motivational fitness message. Keep it positive, supportive, and fitness-focused. Maximum 2 sentences."
         response = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
+            model="gemini-2.0-flash",
             contents=prompt
         )
         ai_message = response.text
@@ -310,7 +310,7 @@ def chat_with_ai():
         Keep responses concise, friendly and motivational.
         {f'User context: {context}' if context else ''}"""
         response = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
+            model="gemini-2.0-flash",
             contents=f"{system_prompt}\n\nUser: {message}"
         )
         return jsonify({"response": response.text}), 200
@@ -389,21 +389,23 @@ Return ONLY a valid JSON object with this exact structure, no extra text:
     "description": "string",
     "muscle_group": "{muscle_group}",
     "exercises": [
-        {{"name": "string", "muscle": "string", "equipment": "machine or free weight", "sets": number, "reps": number, "instructions": "string"}}
+        {{"name": "string", "muscle": "string", "equipment": "machine or free weight",
+            "sets": number, "reps": number, "instructions": "string"}}
     ]
 }}
 
 Generate 5-6 exercises. Use real gym exercises with specific names like:
-- For chest: Press de banca con barra, Press inclinado con mancuernas, Aperturas en máquina, Fondos en paralelas
-- For back: Jalón al pecho, Remo con barra, Dominadas, Peso muerto
-- For shoulders: Press militar, Elevaciones laterales, Face pulls
-- For biceps: Curl con barra, Curl martillo, Curl concentrado
-- For triceps: Extensiones en polea, Press francés, Fondos en paralelas
-- For legs: Sentadilla con barra, Prensa de piernas, Curl femoral, Extensión de cuádriceps
-- For glutes: Hip Thrust, Sentadilla suma, Abducción en máquina
-- For core: Plancha, Crunch con disco, Elevación de piernas
-Mix machines and free weights. Keep exercise names specific and searchable on YouTube."""
-        response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
+- For chest: Barbell bench press, Incline dumbbell press, Pec deck machine, Cable crossover, Dips
+- For back: Lat pulldown, Barbell row, Pull-ups, Seated cable row, Deadlift
+- For shoulders: Military press, Dumbbell lateral raise, Face pulls, Arnold press, Front raise
+- For biceps: Barbell curl, Hammer curl, Concentration curl, Preacher curl
+- For triceps: Tricep pushdown, Skull crushers, Overhead tricep extension, Dips
+- For legs: Barbell squat, Leg press, Romanian deadlift, Leg curl, Leg extension
+- For glutes: Hip thrust, Bulgarian split squat, Cable kickback, Glute bridge
+- For core: Plank, Cable crunch, Hanging leg raise, Russian twist
+Mix machines and free weights. Keep exercise names specific and searchable on YouTube.
+All text must be in English only. No Spanish words."""
+        response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
         import json
         text = response.text.strip()
         if text.startswith("```"):
@@ -490,13 +492,14 @@ Give a short recommendation for the next workout weight. Be specific with the kg
     
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
+            model="gemini-2.0-flash",
             contents=prompt
         )
         return jsonify({"recommendation": response.text}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500 
     
+
 @api.route('/workout/recommend', methods=['GET'])
 @jwt_required()
 def recommend_workout():
@@ -504,7 +507,6 @@ def recommend_workout():
     current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
     
-    # Get last 7 days of workouts
     from datetime import timedelta
     week_ago = date.today() - timedelta(days=7)
     recent_workouts = Workout.query.filter(
@@ -512,13 +514,11 @@ def recommend_workout():
         Workout.date >= week_ago
     ).order_by(Workout.date.desc()).all()
     
-    # Get recent exercise logs to know which muscles were worked
     recent_logs = ExerciseLog.query.filter(
         ExerciseLog.user_id == current_user_id,
         ExerciseLog.date >= week_ago
     ).order_by(ExerciseLog.date.desc()).all()
     
-    # Build history string
     history = ""
     if recent_logs:
         history = "\n".join([
@@ -526,7 +526,6 @@ def recommend_workout():
             for log in recent_logs[:15]
         ])
     
-    # User profile info
     age = None
     if user.date_of_birth:
         from datetime import datetime
@@ -568,5 +567,18 @@ Return ONLY a valid JSON object:
         data = json.loads(text)
         return jsonify(data), 200
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+    
+@api.route('/exercise-log/date/<string:date>', methods=['GET'])
+@jwt_required()
+def get_exercise_logs_by_date(date):
+    from api.models import ExerciseLog
+    current_user = int(get_jwt_identity())
+    logs = ExerciseLog.query.filter_by(
+        user_id=current_user,
+        date=date
+    ).all()
+    return jsonify([log.serialize() for log in logs]), 200 
     
