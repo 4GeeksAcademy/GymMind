@@ -22,8 +22,10 @@ class User(db.Model):
     date_of_birth: Mapped[str] = mapped_column(String(20), nullable=True)
     weight: Mapped[float] = mapped_column(Float, nullable=True)
     height: Mapped[float] = mapped_column(Float, nullable=True)
+    fitness_goal: Mapped[str] = mapped_column(String(50), nullable=True)
     phone_number: Mapped[str] = mapped_column(String(30), nullable=True)
     photo_url: Mapped[str] = mapped_column(String(300), nullable=True)
+    exercise_logs: Mapped[list["ExerciseLog"]] = relationship(back_populates="user") 
 
     # Relationships
     profile: Mapped["Profile"] = relationship(
@@ -55,6 +57,7 @@ class User(db.Model):
             "height": self.height,
             "phone_number": self.phone_number,
             "photo_url": self.photo_url,
+            "fitness_goal": self.fitness_goal,
 
         }
 
@@ -217,6 +220,18 @@ class FoodLog(db.Model):
         db.DateTime,
         default=datetime.utcnow
     )
+class ExerciseLog(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(db.ForeignKey("user.id"), nullable=False)
+    exercise_name: Mapped[str] = mapped_column(String(150), nullable=False)
+    weight: Mapped[float] = mapped_column(Float, nullable=False)
+    sets: Mapped[int] = mapped_column(nullable=False)
+    reps: Mapped[int] = mapped_column(nullable=False)
+    difficulty: Mapped[str] = mapped_column(String(20), nullable=False)  # 'very_easy', 'easy', 'hard', 'very_hard'
+    date: Mapped[date] = mapped_column(Date, nullable=False, default=datetime.utcnow)
+
+    # Relationships
+    user: Mapped["User"] = relationship(back_populates="exercise_logs")
 
     def serialize(self):
         return {
@@ -264,3 +279,10 @@ class FavoriteMeal(db.Model):
             "carbs": self.carbs,
             "fats": self.fats
         }    
+            "exercise_name": self.exercise_name,
+            "weight": self.weight,
+            "sets": self.sets,
+            "reps": self.reps,
+            "difficulty": self.difficulty,
+            "date": self.date.isoformat()
+        }

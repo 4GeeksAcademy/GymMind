@@ -29,9 +29,9 @@ export const router = createBrowserRouter(
       <Route path="/progress" element={<Progress />} />
       <Route path="/moodcheck" element={<MoodCheckPage />} />
       <Route path="/nutrition" element={<Nutrition />} />
-      <Route path="/workout" element={<MyWorkout />} /> 
+      <Route path="/workout" element={<MyWorkout />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />
     </Route>
   )
-);
+); 

@@ -2108,4 +2108,37 @@ html {
     border-radius: 14px;
     padding: 16px;
     margin-top: 12px;
+    color: #ff5f5f;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.show-password-btn {
+    background: transparent;
+    border: none;
+    color: #00e5ff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: -10px;
+    margin-bottom: 14px;
+}
+
+.show-password-btn:hover {
+    text-decoration: underline;
+}
+
+.show-confirm-password-btn {
+    background: transparent;
+    border: none;
+    color: #00e5ff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: -10px;
+    margin-bottom: 14px;
+}
+.show-confirm-password-btn:hover {
+    text-decoration: underline;
 }

@@ -21,6 +21,9 @@ export const Signup = () => {
 
     const [submitAttempted, setSubmitAttempted] = useState(false);
 
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
     const handleChange = (event) => {
         setFormData({
             ...formData,
@@ -162,12 +165,20 @@ export const Signup = () => {
                     <label>Password</label>
 
                     <input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         name="password"
                         placeholder="Minimum 8 characters"
                         value={formData.password}
                         onChange={handleChange}
                     />
+
+                    <button
+                        type="button"
+                        className="show-password-btn"
+                        onClick={() => setShowPassword(!showPassword)}
+                    >
+                        {showPassword ? "Hide" : "Show"}
+                    </button>
 
                     <div className="password-lines">
                         <span></span>
@@ -179,13 +190,19 @@ export const Signup = () => {
                     <label>Confirm Password</label>
 
                     <input
-                        type="password"
+                        type={showConfirmPassword ? "text" : "password"}
                         name="confirm_password"
                         placeholder="••••••••"
                         value={formData.confirm_password}
                         onChange={handleChange}
                     />
-
+                    <button
+                        type="button"
+                        className="show-confirm-password-btn"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                        {showConfirmPassword ? "Hide" : "Show"}
+                    </button>
                     <div className="terms">
                         <input
                             type="checkbox"
