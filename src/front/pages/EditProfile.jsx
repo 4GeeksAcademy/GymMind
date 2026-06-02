@@ -41,7 +41,12 @@ const EditProfile = () => {
     const [dobYear, setDobYear] = useState("");
 
     useEffect(() => {
-        fetch(`/api/user/${userId}`)
+        const token = sessionStorage.getItem("token");
+        if (!token || !userId) {
+            navigate("/login");
+            return;
+        }
+        fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`)
             .then(res => res.json())
             .then(data => {
                 setForm({
@@ -58,7 +63,7 @@ const EditProfile = () => {
                 if (data.photo_url) setPhotoPreview(data.photo_url);
             })
             .catch(() => setError("Could not connect to server"));
-    }, []);
+    }, [userId]);
 
     useEffect(() => {
         if (form.date_of_birth) {
@@ -163,7 +168,7 @@ const EditProfile = () => {
 
         try {
             // 1. Guardar datos del perfil
-            const res = await fetch(`/api/user/${userId}`, {
+            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(form)
@@ -178,7 +183,7 @@ const EditProfile = () => {
             if (photoFile) {
                 const formData = new FormData();
                 formData.append("photo", photoFile);
-                const photoRes = await fetch(`/api/user/${userId}/photo`, {
+                const photoRes = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}/photo`, {
                     method: "POST",
                     body: formData
                 });

@@ -10,15 +10,20 @@ const Profile = () => {
     const [selectedGoal, setSelectedGoal] = useState("Gain muscle");
     const navigate = useNavigate();
 
-    useEffect(() => {
-        fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) setError(data.error);
-                else setUser(data);
-            })
-            .catch(() => setError("Could not connect to server"));
-    }, []);
+useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    if (!token || !userId) {
+        navigate("/login");
+        return;
+    }
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) setError(data.error);
+            else setUser(data);
+        })
+        .catch(() => setError("Could not connect to server"));
+}, [userId]);
 
     const calculateAge = (dob) => {
         if (!dob) return null;
