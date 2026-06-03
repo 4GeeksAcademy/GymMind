@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
+import { MobileNavbar } from "../components/MobileNavbar";
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -8,6 +9,7 @@ export const Dashboard = () => {
 
   const [selectedMood, setSelectedMood] = useState(null);
   const [aiMessage, setAiMessage] = useState(null);
+  const [moodLoading, setMoodLoading] = useState(false);
   const [progressLogs, setProgressLogs] = useState([]);
   const [workouts, setWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +17,7 @@ export const Dashboard = () => {
   const user = store.user || JSON.parse(sessionStorage.getItem("user") || "{}");
   const token = store.token || sessionStorage.getItem("token");
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const [coachMessage, setCoachMessage] = useState(null); 
 
   useEffect(() => {
     if (!token) navigate("/login");
@@ -22,19 +25,13 @@ export const Dashboard = () => {
 
   useEffect(() => {
     if (!user?.id || !token) return;
-
     const fetchData = async () => {
       setLoading(true);
       try {
         const [progressRes, workoutRes] = await Promise.all([
-          fetch(`${backendUrl}/api/progress/${user.id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
-          fetch(`${backendUrl}/api/workout/${user.id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          })
+          fetch(`${backendUrl}/api/progress/${user.id}`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${backendUrl}/api/workout/${user.id}`, { headers: { Authorization: `Bearer ${token}` } })
         ]);
-
         if (progressRes.ok) setProgressLogs(await progressRes.json());
         if (workoutRes.ok) setWorkouts(await workoutRes.json());
       } catch (error) {
@@ -43,9 +40,18 @@ export const Dashboard = () => {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [user?.id, token]);
+
+  useEffect(() => {
+  if (!token) return;
+  fetch(`${backendUrl}/api/dashboard/message`, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+    .then(res => res.json())
+    .then(data => setCoachMessage(data.message))
+    .catch(() => {});
+}, [token]);
 
   const handleLogout = () => {
     sessionStorage.removeItem("token");
@@ -55,12 +61,30 @@ export const Dashboard = () => {
   };
 
   const moods = [
-    { id: "great", emoji: "🔥", label: "Great", message: "You're on fire today! Your AI Coach has an intense workout ready. Channel that energy and go all in!" },
-    { id: "good", emoji: "😊", label: "Good", message: "Feeling good is the perfect foundation. Stay focused and consistent — every rep brings you closer to your goal." },
-    { id: "okay", emoji: "😐", label: "Okay", message: "Even on okay days, showing up is what separates those who reach their goals. Keep going!" },
-    { id: "tired", emoji: "😴", label: "Tired", message: "Rest is part of the process. Consider a light recovery session today. Listen to your body." },
-    { id: "low", emoji: "😔", label: "Low", message: "It's okay to have off days. Start with just 5 minutes — once you begin, momentum will carry you through." },
+    { id: "great", emoji: "🔥", label: "Great" },
+    { id: "good", emoji: "😊", label: "Good" },
+    { id: "okay", emoji: "😐", label: "Okay" },
+    { id: "tired", emoji: "😴", label: "Tired" },
+    { id: "low", emoji: "😔", label: "Low" },
   ];
+
+  const handleMoodSelect = async (mood) => {
+    setSelectedMood(mood.id);
+    setMoodLoading(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/mood`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ mood: mood.id }),
+      });
+      const data = await res.json();
+      if (res.ok) setAiMessage(data.mood_check?.ai_message || null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setMoodLoading(false);
+    }
+  };
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -71,7 +95,7 @@ export const Dashboard = () => {
 
   const firstName = user?.first_name || user?.email?.split("@")[0] || "there";
 
-  // Stats from real data
+  // Stats
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfWeek = new Date(now);
@@ -80,16 +104,37 @@ export const Dashboard = () => {
 
   const daysTrainedThisMonth = workouts.filter(w => new Date(w.date) >= startOfMonth).length;
   const daysTrainedThisWeek = workouts.filter(w => new Date(w.date) >= startOfWeek).length;
-
   const currentWeight = progressLogs.length > 0 ? progressLogs[0].weight : null;
   const firstWeight = progressLogs.length > 0 ? progressLogs[progressLogs.length - 1].weight : null;
   const weightChange = currentWeight && firstWeight ? (currentWeight - firstWeight).toFixed(1) : null;
+
+  // Streak counter
+  const calcStreak = () => {
+    if (workouts.length === 0) return 0;
+    const sortedDates = [...new Set(workouts.map(w => w.date))].sort().reverse();
+    let streak = 0;
+    let checkDate = new Date();
+    checkDate.setHours(0, 0, 0, 0);
+    for (const dateStr of sortedDates) {
+      const workoutDate = new Date(dateStr);
+      workoutDate.setHours(0, 0, 0, 0);
+      const diff = (checkDate - workoutDate) / (1000 * 60 * 60 * 24);
+      if (diff <= 1) {
+        streak++;
+        checkDate = workoutDate;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    return streak;
+  };
+  const streak = calcStreak();
 
   // Week tracker
   const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const todayIndex = now.getDay() === 0 ? 6 : now.getDay() - 1;
   const trainedDates = workouts.map(w => new Date(w.date).toDateString());
-
   const getWeekDayDate = (index) => {
     const date = new Date(startOfWeek);
     date.setDate(startOfWeek.getDate() + index);
@@ -100,12 +145,7 @@ export const Dashboard = () => {
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
-
-        :root {
-          --bg: #080c10; --bg2: #0d1318; --accent: #00e5ff; --accent2: #00ff88;
-          --text: #f0f4f8; --muted: #6b7c8f; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08);
-        }
-
+        :root { --bg: #080c10; --bg2: #0d1318; --accent: #00e5ff; --accent2: #00ff88; --text: #f0f4f8; --muted: #6b7c8f; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08); }
         .db-body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
         .db-nav { display: flex; align-items: center; height: 56px; background: rgba(8,12,16,0.97); border-bottom: 1px solid var(--border); padding: 0 20px; width: 100%; position: sticky; top: 0; z-index: 100; }
         .db-logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--accent); white-space: nowrap; flex-shrink: 0; margin-right: 24px; cursor: pointer; }
@@ -125,6 +165,7 @@ export const Dashboard = () => {
         .db-stat-icon { font-size: 18px; margin-bottom: 6px; }
         .db-stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--accent); letter-spacing: 1px; }
         .db-stat-num.green { color: var(--accent2); }
+        .db-stat-num.orange { color: #f97316; }
         .db-stat-num.muted { color: var(--muted); font-size: 16px; padding-top: 6px; }
         .db-stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
         .db-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
@@ -155,10 +196,15 @@ export const Dashboard = () => {
         @keyframes db-spin { to { transform: rotate(360deg); } }
         @keyframes db-fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
         .db-page > * { animation: db-fadeUp 0.4s ease both; }
+        @media (max-width: 768px) {
+        .db-nav {
+              display: none !important;
+          }
+      }
       `}</style>
 
       <div className="db-body">
-
+        <MobileNavbar />
         <nav className="db-nav">
           <div className="db-logo" onClick={() => navigate("/")}>GymMind AI</div>
           <div className="db-nav-links">
@@ -181,9 +227,15 @@ export const Dashboard = () => {
         </nav>
 
         <div className="db-page">
-
           <div className="db-section-label">Welcome back</div>
           <div className="db-page-title">{getGreeting()}, {firstName.toUpperCase()} 👋</div>
+
+          {coachMessage && (
+            <div style={{ background: "rgba(0,229,255,0.04)", border: "1px solid rgba(0,229,255,0.15)", borderRadius: "10px", padding: "14px 18px", marginBottom: "20px", fontSize: "14px", color: "var(--text)", lineHeight: "1.6" }}>
+              <div style={{ fontSize: "11px", color: "var(--accent)", fontWeight: "600", marginBottom: "6px", letterSpacing: "1px", textTransform: "uppercase" }}>🤖 AI Coach</div>
+              {coachMessage}
+            </div>
+          )}
 
           {loading ? (
             <div className="db-loading">
@@ -212,11 +264,11 @@ export const Dashboard = () => {
                   <div className="db-stat-label">Workouts this week</div>
                 </div>
                 <div className="db-stat-card">
-                  <div className="db-stat-icon">🎯</div>
-                  <div className={`db-stat-num ${!user?.fitness_goal ? "muted" : ""}`}>
-                    {user?.fitness_goal || "No goal set"}
+                  <div className="db-stat-icon">⚡</div>
+                  <div className={`db-stat-num ${streak > 0 ? "orange" : "muted"}`}>
+                    {streak > 0 ? `${streak}🔥` : "0"}
                   </div>
-                  <div className="db-stat-label">Current goal</div>
+                  <div className="db-stat-label">Day streak</div>
                 </div>
               </div>
 
@@ -249,16 +301,22 @@ export const Dashboard = () => {
                       <div
                         key={mood.id}
                         className={`db-mood-chip ${selectedMood === mood.id ? "selected" : ""}`}
-                        onClick={() => { setSelectedMood(mood.id); setAiMessage(mood.message); }}
+                        onClick={() => handleMoodSelect(mood)}
                       >
                         {mood.emoji} {mood.label}
                       </div>
                     ))}
                   </div>
-                  {aiMessage
-                    ? <div className="db-ai-message"><div className="db-ai-badge">🤖 AI Coach</div>{aiMessage}</div>
-                    : <div className="db-mood-placeholder">Select your mood to get a message from your AI Coach</div>
-                  }
+                  {moodLoading ? (
+                    <div className="db-mood-placeholder">Getting your AI message...</div>
+                  ) : aiMessage ? (
+                    <div className="db-ai-message">
+                      <div className="db-ai-badge">🤖 AI Coach</div>
+                      {aiMessage}
+                    </div>
+                  ) : (
+                    <div className="db-mood-placeholder">Select your mood to get a message from your AI Coach</div>
+                  )}
                 </div>
 
                 {/* RECENT PROGRESS */}
@@ -270,10 +328,7 @@ export const Dashboard = () => {
                   {progressLogs.length === 0 ? (
                     <div className="db-empty-state">
                       No weight logs yet.<br />
-                      <span
-                        style={{ color: "var(--accent)", cursor: "pointer", fontSize: "13px" }}
-                        onClick={() => navigate("/progress")}
-                      >
+                      <span style={{ color: "var(--accent)", cursor: "pointer", fontSize: "13px" }} onClick={() => navigate("/progress")}>
                         Log your first weight →
                       </span>
                     </div>
@@ -308,7 +363,6 @@ export const Dashboard = () => {
 
             </>
           )}
-
         </div>
       </div>
     </>

@@ -180,6 +180,46 @@ class NutritionLog(db.Model):
         }
 
 
+class FoodLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False
+    )
+
+    food_name = db.Column(db.String(255), nullable=False)
+    calories = db.Column(db.Float, nullable=False)
+    protein = db.Column(db.Float, nullable=False)
+    carbs = db.Column(db.Float, nullable=False)
+    fats = db.Column(db.Float, nullable=False)
+
+    category = db.Column(db.String(100))
+    serving = db.Column(db.String(100))
+    source = db.Column(db.String(100))
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "food_name": self.food_name,
+            "calories": self.calories,
+            "protein": self.protein,
+            "carbs": self.carbs,
+            "fats": self.fats,
+            "category": self.category,
+            "serving": self.serving,
+            "source": self.source,
+            "created_at": self.created_at.isoformat()
+        }
+
+
 class ExerciseLog(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(db.ForeignKey("user.id"), nullable=False)
@@ -213,6 +253,15 @@ class ProgressPhoto(db.Model):
     taken_at: Mapped[datetime] = mapped_column(nullable=False, default=datetime.utcnow)
 
     user: Mapped["User"] = relationship(back_populates="progress_photos")
+class FavoriteMeal(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    meal_name = db.Column(db.String(255), nullable=False)
+    calories = db.Column(db.Float)
+    protein = db.Column(db.Float)
+    carbs = db.Column(db.Float)
+    fats = db.Column(db.Float)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def serialize(self):
         return {
@@ -222,3 +271,11 @@ class ProgressPhoto(db.Model):
             "notes": self.notes,
             "taken_at": self.taken_at.isoformat()
         }
+            "meal_name": self.meal_name,
+            "calories": self.calories,
+            "protein": self.protein,
+            "carbs": self.carbs,
+            "fats": self.fats
+
+        }
+    
