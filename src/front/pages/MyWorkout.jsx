@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
+import { MobileNavbar } from "../components/MobileNavbar";
 
 export const MyWorkout = () => {
   const navigate = useNavigate();
@@ -396,6 +397,11 @@ export const MyWorkout = () => {
         .wk-progress-btn{background:transparent;border:1px solid var(--accent2);color:var(--accent2);padding:10px 28px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-left:10px;}
         @keyframes wk-fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         .wk-page>*{animation:wk-fadeUp 0.5s ease both;}
+        @media (max-width: 768px) {
+        .wk-nav {
+            display: none !important;
+        }
+    }
       `}</style>
 
       {countdown !== null && (
@@ -409,6 +415,7 @@ export const MyWorkout = () => {
       {validationAlert && <div className="wk-alert">⚠️ {validationAlert}</div>}
 
       <div className="wk-body">
+        <MobileNavbar />
         <nav className="wk-nav">
           <div className="wk-logo" onClick={() => navigate("/")}>GymMind AI</div>
           <div className="wk-nav-links">
