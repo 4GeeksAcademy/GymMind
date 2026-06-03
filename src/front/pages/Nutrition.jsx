@@ -356,11 +356,28 @@ const deleteFavoriteMeal = async (mealId) => {
             </nav>
 
             <div className="nutrition-container">
-                <select value={goal} onChange={(e) => setGoal(e.target.value)}>
-                    <option value="muscle_gain">Muscle Gain</option>
-                    <option value="fat_loss">Fat Loss</option>
-                    <option value="recomposition">Recomposition</option>
-                </select>
+                <div className="goal-selector">
+                    <button
+                        className={goal === "muscle_gain" ? "goal-btn active" : "goal-btn"}
+                        onClick={() => setGoal("muscle_gain")}
+                    >
+                        Muscle Gain
+                    </button>
+
+                    <button
+                        className={goal === "fat_loss" ? "goal-btn active" : "goal-btn"}
+                        onClick={() => setGoal("fat_loss")}
+                    >
+                        Fat Loss
+                    </button>
+
+                    <button
+                        className={goal === "recomposition" ? "goal-btn active" : "goal-btn"}
+                        onClick={() => setGoal("recomposition")}
+                    >
+                        Recomposition
+                    </button>
+                </div>
 
                 {nutritionData && (
                     <>
