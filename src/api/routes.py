@@ -188,7 +188,7 @@ def healthy_meals():
     }}
     """
     try:
-        response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
+        response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
         text = response.text.strip()
         if text.startswith("```"):
             text = text.replace("```json", "").replace("```", "").strip()
@@ -369,7 +369,7 @@ def add_mood():
         return jsonify({"error": "Daily mood check limit reached"}), 400
     try:
         prompt = f"The user is feeling '{mood}' today. Give a short motivational fitness message. Keep it positive, supportive, and fitness-focused. Maximum 2 sentences."
-        response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
+        response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
         ai_message = response.text
     except Exception as e:
         print("Gemini error:", e)
@@ -445,7 +445,7 @@ def chat_with_ai():
         You help users with workout advice, nutrition tips, motivation, and emotional support.
         Keep responses concise, friendly and motivational.
         {f'User context: {context}' if context else ''}"""
-        response = client.models.generate_content(model="gemini-2.0-flash", contents=f"{system_prompt}\n\nUser: {message}")
+        response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=f"{system_prompt}\n\nUser: {message}")
         return jsonify({"response": response.text}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -534,7 +534,7 @@ Generate 5-6 exercises. Use real gym exercises with specific names like:
 - For core: Plank, Cable crunch, Hanging leg raise, Russian twist
 Mix machines and free weights. Keep exercise names specific and searchable on YouTube.
 All text must be in English only. No Spanish words."""
-        response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
+        response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
         text = response.text.strip()
         if text.startswith("```"):
             text = text.split("```")[1]
@@ -643,7 +643,7 @@ def recommend_weight():
 
 Give a short recommendation for the next workout weight. Be specific with the kg amount. Maximum 2 sentences."""
     try:
-        response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
+        response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
         return jsonify({"recommendation": response.text}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -692,7 +692,7 @@ Return ONLY a valid JSON object:
     "reason": "string (2-3 sentences explaining why, considering rest days and muscle recovery)"
 }}"""
     try:
-        response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
+        response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
         text = response.text.strip()
         if text.startswith("```"):
             text = text.split("```")[1]
@@ -714,3 +714,47 @@ def get_exercise_logs_by_date(date):
     current_user = int(get_jwt_identity())
     logs = ExerciseLog.query.filter_by(user_id=current_user, date=date).all()
     return jsonify([log.serialize() for log in logs]), 200 
+
+@api.route('/dashboard/message', methods=['GET'])
+@jwt_required()
+def dashboard_message():
+    from api.models import ProgressLog, MoodCheck, Workout
+    from datetime import timedelta
+    current_user_id = int(get_jwt_identity())
+    user = User.query.get(current_user_id)
+    week_ago = date.today() - timedelta(days=7)
+
+    workouts = Workout.query.filter(
+        Workout.user_id == current_user_id,
+        Workout.date >= week_ago
+    ).all()
+
+    last_mood = MoodCheck.query.filter_by(
+        user_id=current_user_id
+    ).order_by(MoodCheck.date.desc()).first()
+
+    logs = ProgressLog.query.filter_by(
+        user_id=current_user_id
+    ).order_by(ProgressLog.date.desc()).limit(2).all()
+
+    weight_change = None
+    if len(logs) >= 2:
+        weight_change = round(logs[0].weight - logs[1].weight, 1)
+
+    prompt = f"""You are GymMind AI Coach. Generate a short, personalized motivational message for this user.
+
+User: {user.first_name}, goal: {user.fitness_goal or 'general fitness'}
+This week: {len(workouts)} workouts
+Last mood: {last_mood.mood if last_mood else 'unknown'}
+Weight change: {f'{weight_change:+.1f} kg' if weight_change is not None else 'no data'}
+
+Write 1-2 sentences. Be specific, energetic, and personal. Use their name. In English only."""
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite",
+            contents=prompt
+        )
+        return jsonify({"message": response.text}), 200
+    except Exception as e:
+        return jsonify({"message": f"Keep pushing, {user.first_name}! Every workout counts."}), 200 
