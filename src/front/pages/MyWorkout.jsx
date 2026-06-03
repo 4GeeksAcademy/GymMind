@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
+import { MobileNavbar } from "../components/MobileNavbar";
 
 export const MyWorkout = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export const MyWorkout = () => {
   const [weightRecs, setWeightRecs] = useState({});
   const [unit, setUnit] = useState("kg");
   const [workoutPreview, setWorkoutPreview] = useState(true);
+  const [routineFeedback, setRoutineFeedback] = useState(null); // "easy" | "hard" | null
 
   // Countdown + Timer
   const [countdown, setCountdown] = useState(null);
@@ -106,7 +108,21 @@ export const MyWorkout = () => {
     return { set: 90, exercise: 120, label: "60–90 sec (muscle gain goal)" };
   };
 
-  const generateWorkout = async () => {
+  const saveWorkoutToBackend = async (workoutData) => {
+    try {
+      await fetch(`${backendUrl}/api/workout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          user_id: user?.id,
+          fitness_goal: user?.fitness_goal || "general fitness",
+          exercises: workoutData.exercises.map(e => ({ name: e.name, muscle: e.muscle, is_completed: false })),
+        }),
+      });
+    } catch (e) {}
+  };
+
+  const generateWorkout = async (difficultyPreference = null) => {
     if (!selectedMuscleGroup) { alert("Please select a muscle group first."); return; }
     setLoading(true);
     setWorkout(null);
@@ -119,6 +135,7 @@ export const MyWorkout = () => {
     setWorkoutStarted(false);
     setTimerRunning(false);
     setWorkoutPreview(true);
+    setRoutineFeedback(null);
 
     try {
       const res = await fetch(`${backendUrl}/api/workout/generate`, {
@@ -128,6 +145,7 @@ export const MyWorkout = () => {
           fitness_goal: user?.fitness_goal || "general fitness",
           user_id: user?.id,
           muscle_group: selectedMuscleGroup,
+          difficulty_preference: difficultyPreference,
         }),
       });
       const data = await res.json();
@@ -136,9 +154,20 @@ export const MyWorkout = () => {
         initSetData(data.exercises);
         fetchVideos(data.exercises);
         fetchWeightRecs(data.exercises);
+        // Save to backend so AI Coach knows user generated a workout today
+        await saveWorkoutToBackend(data);
       } else { alert(data.error || "Failed to generate workout"); }
     } catch (e) { alert("Connection error."); }
     finally { setLoading(false); }
+  };
+
+  const handleRoutineFeedback = (feedback) => {
+    setRoutineFeedback(feedback);
+    if (feedback === "just_right") {
+      setWorkoutPreview(false);
+      return;
+    }
+    generateWorkout(feedback);
   };
 
   const startCountdown = () => {
@@ -242,17 +271,6 @@ export const MyWorkout = () => {
       const allSetsDone = updatedSets.every(st => st.done);
       if (allSetsDone) {
         setExCompleted(prev => ({ ...prev, [exIdx]: true }));
-        try {
-          await fetch(`${backendUrl}/api/workout`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body: JSON.stringify({
-              user_id: user?.id,
-              fitness_goal: user?.fitness_goal || "general fitness",
-              exercises: workout.exercises.map(e => ({ name: e.name, muscle: e.muscle, is_completed: true })),
-            }),
-          });
-        } catch (e) {}
         startBreak("exercise");
       } else {
         startBreak("set");
@@ -318,6 +336,13 @@ export const MyWorkout = () => {
         .wk-generate-btn{background:var(--accent);color:#000;padding:12px 32px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:opacity 0.2s;width:100%;}
         .wk-generate-btn:hover{opacity:0.85;}
         .wk-generate-btn:disabled{opacity:0.4;cursor:not-allowed;}
+        .wk-feedback-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+        .wk-feedback-btn{flex:1;padding:10px 8px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;text-align:center;}
+        .wk-feedback-btn:hover{border-color:var(--accent);}
+        .wk-feedback-btn.easy{border-color:rgba(0,255,136,0.4);color:var(--accent2);}
+        .wk-feedback-btn.hard{border-color:rgba(255,107,107,0.4);color:#ff6b6b;}
+        .wk-feedback-btn.just-right{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,0.08);}
+        .wk-feedback-label{font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:1px;}
         .wk-workout-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px;}
         .wk-workout-info{flex:1;}
         .wk-workout-info h2{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;margin-bottom:4px;}
@@ -388,6 +413,13 @@ export const MyWorkout = () => {
         .wk-complete-title{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--accent2);letter-spacing:2px;margin-bottom:8px;}
         .wk-complete-time{font-family:'Bebas Neue',sans-serif;font-size:56px;color:var(--accent);letter-spacing:2px;}
         .wk-complete-time-label{font-size:12px;color:var(--muted);margin-bottom:24px;}
+        .wk-comparison{background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.15);border-radius:10px;padding:14px 18px;margin:16px 0;text-align:left;}
+        .wk-comparison-title{font-size:11px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+        .wk-comparison-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;}
+        .wk-comparison-label{color:var(--muted);}
+        .wk-comparison-val{font-weight:600;}
+        .wk-comparison-val.up{color:var(--accent2);}
+        .wk-comparison-val.down{color:#ff6b6b;}
         .wk-mood-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;}
         .wk-mood-btn{background:var(--card);border:1px solid var(--border);padding:8px 16px;border-radius:20px;font-size:13px;cursor:pointer;color:var(--text);font-family:'DM Sans',sans-serif;transition:all 0.2s;}
         .wk-mood-btn:hover{border-color:var(--accent);color:var(--accent);}
@@ -396,6 +428,7 @@ export const MyWorkout = () => {
         .wk-progress-btn{background:transparent;border:1px solid var(--accent2);color:var(--accent2);padding:10px 28px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-left:10px;}
         @keyframes wk-fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         .wk-page>*{animation:wk-fadeUp 0.5s ease both;}
+        @media (max-width: 768px) { .wk-nav { display: none !important; } }
       `}</style>
 
       {countdown !== null && (
@@ -409,6 +442,7 @@ export const MyWorkout = () => {
       {validationAlert && <div className="wk-alert">⚠️ {validationAlert}</div>}
 
       <div className="wk-body">
+        <MobileNavbar />
         <nav className="wk-nav">
           <div className="wk-logo" onClick={() => navigate("/")}>GymMind AI</div>
           <div className="wk-nav-links">
@@ -465,7 +499,7 @@ export const MyWorkout = () => {
                   );
                 })}
               </div>
-              <button className="wk-generate-btn" onClick={generateWorkout} disabled={!selectedMuscleGroup}>
+              <button className="wk-generate-btn" onClick={() => generateWorkout()} disabled={!selectedMuscleGroup}>
                 {selectedMuscleGroup ? `Generate ${selectedGroup?.label} workout` : "Select a muscle group"}
               </button>
             </div>
@@ -474,7 +508,11 @@ export const MyWorkout = () => {
           {loading && (
             <div className="wk-loading">
               <div className="wk-spinner"></div>
-              <div className="wk-loading-text">Generating your {selectedGroup?.label} workout...</div>
+              <div className="wk-loading-text">
+                {routineFeedback === "easy" ? "Generating a more challenging routine..." :
+                 routineFeedback === "hard" ? "Generating a lighter routine..." :
+                 `Generating your ${selectedGroup?.label} workout...`}
+              </div>
             </div>
           )}
 
@@ -503,17 +541,20 @@ export const MyWorkout = () => {
                 </div>
               ))}
 
-              <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
-                <button className="wk-generate-btn" onClick={() => setWorkoutPreview(false)} style={{ flex: 2 }}>
-                  Start this workout
-                </button>
-                <button
-                  className="wk-generate-btn"
-                  onClick={generateWorkout}
-                  style={{ flex: 1, background: "transparent", border: "1px solid var(--border)", color: "var(--muted)" }}
-                >
-                  Generate another
-                </button>
+              {/* AI COACH FEEDBACK */}
+              <div style={{ marginTop: "20px", padding: "16px", background: "rgba(0,229,255,0.04)", border: "1px solid rgba(0,229,255,0.15)", borderRadius: "10px" }}>
+                <div className="wk-feedback-label">🤖 AI Coach — How does this routine feel?</div>
+                <div className="wk-feedback-row">
+                  <button className="wk-feedback-btn easy" onClick={() => handleRoutineFeedback("easy")}>
+                    😅 Too easy
+                  </button>
+                  <button className="wk-feedback-btn just-right" onClick={() => handleRoutineFeedback("just_right")}>
+                    ✅ Just right — Start!
+                  </button>
+                  <button className="wk-feedback-btn hard" onClick={() => handleRoutineFeedback("hard")}>
+                    🔥 Too hard
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -712,10 +753,12 @@ export const MyWorkout = () => {
               seconds={seconds}
               fmtTime={fmtTime}
               workout={workout}
-              onNewWorkout={() => { setWorkout(null); setExCompleted({}); setSeconds(0); setTimerRunning(false); setWorkoutStarted(false); setWorkoutPreview(true); }}
+              onNewWorkout={() => { setWorkout(null); setExCompleted({}); setSeconds(0); setTimerRunning(false); setWorkoutStarted(false); setWorkoutPreview(true); setRoutineFeedback(null); }}
               token={token}
               backendUrl={backendUrl}
               navigate={navigate}
+              setData={setData}
+              unit={unit}
             />
           )}
         </div>
@@ -724,9 +767,10 @@ export const MyWorkout = () => {
   );
 };
 
-const CompletionScreen = ({ seconds, fmtTime, workout, onNewWorkout, token, backendUrl, navigate }) => {
+const CompletionScreen = ({ seconds, fmtTime, workout, onNewWorkout, token, backendUrl, navigate, setData, unit }) => {
   const [selectedMood, setSelectedMood] = useState(null);
   const [moodSaved, setMoodSaved] = useState(false);
+  const [volumeComparison, setVolumeComparison] = useState(null);
 
   const moods = [
     { id: "great", label: "🔥 Amazing" },
@@ -735,6 +779,32 @@ const CompletionScreen = ({ seconds, fmtTime, workout, onNewWorkout, token, back
     { id: "tired", label: "😴 Tired" },
     { id: "low", label: "😔 Exhausted" },
   ];
+
+  // Calculate today's total volume from setData
+  const todayVolume = Object.values(setData).flat().reduce((total, s) => {
+    if (s.done && s.weight && s.reps) {
+      const weightKg = unit === "lbs" ? parseFloat(s.weight) / 2.2046 : parseFloat(s.weight);
+      return total + weightKg * parseInt(s.reps);
+    }
+    return total;
+  }, 0);
+
+  // Fetch last session volume for same muscle group
+  useEffect(() => {
+    if (!workout?.muscle_group) return;
+    const fetchComparison = async () => {
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const res = await fetch(`${backendUrl}/api/exercise-log/date/${today}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        // We already have today's data, just show the volume
+        setVolumeComparison({ todayVolume: Math.round(todayVolume) });
+      } catch (e) {}
+    };
+    fetchComparison();
+  }, []);
 
   const saveMood = async (moodId) => {
     setSelectedMood(moodId);
@@ -757,6 +827,25 @@ const CompletionScreen = ({ seconds, fmtTime, workout, onNewWorkout, token, back
       </p>
       <div className="wk-complete-time">{fmtTime(seconds)}</div>
       <div className="wk-complete-time-label">Total workout time</div>
+
+      {/* VOLUME COMPARISON */}
+      {todayVolume > 0 && (
+        <div className="wk-comparison">
+          <div className="wk-comparison-title">📊 Today's Session Summary</div>
+          <div className="wk-comparison-row">
+            <span className="wk-comparison-label">Total volume lifted</span>
+            <span className="wk-comparison-val up">{Math.round(todayVolume).toLocaleString()} kg</span>
+          </div>
+          <div className="wk-comparison-row">
+            <span className="wk-comparison-label">Exercises completed</span>
+            <span className="wk-comparison-val">{workout?.exercises?.length}</span>
+          </div>
+          <div className="wk-comparison-row">
+            <span className="wk-comparison-label">Muscle group</span>
+            <span className="wk-comparison-val" style={{ color: "var(--accent)" }}>{workout?.muscle_group}</span>
+          </div>
+        </div>
+      )}
 
       {!moodSaved ? (
         <>

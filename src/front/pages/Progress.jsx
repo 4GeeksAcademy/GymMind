@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
+import { MobileNavbar } from "../components/MobileNavbar";
 
 export const Progress = () => {
   const navigate = useNavigate();
@@ -246,9 +247,15 @@ export const Progress = () => {
         .pr-side-empty{text-align:center;padding:24px 0;color:var(--muted);font-size:13px;}
         .pr-cal-wrap{display:flex;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg2);margin-bottom:16px;}
         .pr-cal-main{flex:1;padding:20px;min-width:0;}
+        @media (max-width: 768px) {
+         .pr-nav {
+        display: none !important;
+    }
+}
       `}</style>
 
       <div className="pr-body">
+        <MobileNavbar />
 
         <nav className="pr-nav">
           <div className="pr-logo" onClick={() => navigate("/")}>GymMind AI</div>

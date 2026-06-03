@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { MobileNavbar } from "../components/MobileNavbar";
 
 export const Nutrition = () => {
     const navigate = useNavigate();
@@ -327,6 +328,7 @@ const deleteFavoriteMeal = async (mealId) => {
 
     return (
         <div className="nutrition-page">
+            <MobileNavbar />
             <nav className="nutrition-navbar">
                 <div className="nutrition-navbar-left">
                     <div className="nutrition-logo">GYMMIND AI</div>

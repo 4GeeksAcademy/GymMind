@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
+import { MobileNavbar } from "../components/MobileNavbar";
 
 const Profile = () => {
     const { store } = useGlobalReducer();
@@ -123,9 +124,15 @@ const Profile = () => {
                 .pf-danger-sub { color: var(--muted); font-size: 12px; }
                 .pf-btn-delete { background: transparent; border: 1px solid rgba(255,80,80,0.4); color: #ff6b6b; padding: 8px 20px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; }
                 .pf-btn-delete:hover { background: rgba(255,80,80,0.1); }
+                @media (max-width: 768px) {
+                .pf-nav {
+                    display: none !important;
+                }
+            }
             `}</style>
 
             <div className="pf-body">
+                <MobileNavbar />
 
                 {/* NAVBAR */}
                 <nav className="pf-nav">
