@@ -508,8 +508,17 @@ def generate_workout():
     fitness_goal = body.get("fitness_goal")
     user_id = body.get("user_id")
     muscle_group = body.get("muscle_group", "full body")
+    difficulty_preference = body.get("difficulty_preference")
+
     if not fitness_goal or not user_id:
         return jsonify({"error": "fitness_goal and user_id are required"}), 400
+
+    difficulty_note = ""
+    if difficulty_preference == "easy":
+        difficulty_note = "\nIMPORTANT: The user found the last routine too easy. Generate a MORE CHALLENGING version with heavier weights, more sets, or more demanding exercises."
+    elif difficulty_preference == "hard":
+        difficulty_note = "\nIMPORTANT: The user found the last routine too hard. Generate a LIGHTER version with fewer sets, lighter exercises, or more beginner-friendly movements."
+
     try:
         prompt = f"""You are a professional fitness coach. Generate a workout routine for someone with the goal: {fitness_goal} focusing on muscle group: {muscle_group}.
 
@@ -533,7 +542,8 @@ Generate 5-6 exercises. Use real gym exercises with specific names like:
 - For glutes: Hip thrust, Bulgarian split squat, Cable kickback, Glute bridge
 - For core: Plank, Cable crunch, Hanging leg raise, Russian twist
 Mix machines and free weights. Keep exercise names specific and searchable on YouTube.
-All text must be in English only. No Spanish words."""
+All text must be in English only. No Spanish words.{difficulty_note}"""
+
         response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
         text = response.text.strip()
         if text.startswith("```"):
