@@ -1,8 +1,8 @@
-"""add progress_photo table
+"""clean migration
 
-Revision ID: de9b326da847
-Revises: 210e531f7c01
-Create Date: 2026-06-02 02:52:41.292108
+Revision ID: 3182853a787b
+Revises: 
+Create Date: 2026-06-03 22:39:51.955581
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'de9b326da847'
-down_revision = '210e531f7c01'
+revision = '3182853a787b'
+down_revision = None
 branch_labels = None
 depends_on = None
 
