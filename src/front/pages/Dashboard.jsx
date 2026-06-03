@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
+import { MobileNavbar } from "../components/MobileNavbar";
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -155,10 +156,15 @@ export const Dashboard = () => {
         @keyframes db-spin { to { transform: rotate(360deg); } }
         @keyframes db-fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
         .db-page > * { animation: db-fadeUp 0.4s ease both; }
+        @media (max-width: 768px) {
+        .db-nav {
+              display: none !important;
+          }
+      }
       `}</style>
 
       <div className="db-body">
-
+        <MobileNavbar />
         <nav className="db-nav">
           <div className="db-logo" onClick={() => navigate("/")}>GymMind AI</div>
           <div className="db-nav-links">

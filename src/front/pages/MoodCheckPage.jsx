@@ -1,11 +1,13 @@
 import React from "react";
 import { MoodCheck } from "../components/MoodCheck";
 import { Link, useNavigate } from "react-router-dom";
+import { MobileNavbar } from "../components/MobileNavbar";
 
 export const MoodCheckPage = () => {
     const navigate = useNavigate();
     return (
         <div className="moodcheck-page">
+            <MobileNavbar />
             <nav className="moodcheck-navbar">
                 <div className="moodcheck-left">
                     <div className="moodcheck-logo">GYMMIND AI</div>
