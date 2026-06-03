@@ -1,4 +1,5 @@
 from flask import request, jsonify, Blueprint
+from api.models import db, User, ProgressPhoto
 from api.models import db, User, FoodLog
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
@@ -595,7 +596,6 @@ def delete_favorite_meal(meal_id):
     return jsonify({"message": "Deleted"}), 200
 
 
-# EXERCISE LOG ENDPOINTS
 @api.route('/exercise-log', methods=['POST'])
 @jwt_required()
 def add_exercise_log():
@@ -641,7 +641,10 @@ def recommend_weight():
     exercise_name = body.get("exercise_name")
     if not exercise_name:
         return jsonify({"error": "exercise_name is required"}), 400
-    logs = ExerciseLog.query.filter_by(user_id=current_user, exercise_name=exercise_name).order_by(ExerciseLog.date.desc()).limit(5).all()
+    logs = ExerciseLog.query.filter_by(
+        user_id=current_user,
+        exercise_name=exercise_name
+    ).order_by(ExerciseLog.date.desc()).limit(5).all()
     if not logs:
         return jsonify({"recommendation": f"Start with a comfortable weight for {exercise_name} and focus on form first."}), 200
     history = "\n".join([
@@ -667,6 +670,10 @@ def recommend_workout():
     user = User.query.get(current_user_id)
     from datetime import timedelta
     week_ago = date.today() - timedelta(days=7)
+    recent_workouts = Workout.query.filter(
+        Workout.user_id == current_user_id,
+        Workout.date >= week_ago
+    ).order_by(Workout.date.desc()).all()
     recent_logs = ExerciseLog.query.filter(
         ExerciseLog.user_id == current_user_id,
         ExerciseLog.date >= week_ago
@@ -717,6 +724,42 @@ Return ONLY a valid JSON object:
         return jsonify({"error": str(e)}), 500
 
 
+# ── PROGRESS PHOTOS ──────────────────────────────────────────────────────────
+
+@api.route('/user/<int:user_id>/progress-photo', methods=['POST'])
+@jwt_required()
+def upload_progress_photo(user_id):
+    from datetime import date as date_type
+    existing = ProgressPhoto.query.filter(
+        ProgressPhoto.user_id == user_id,
+        db.func.date(ProgressPhoto.taken_at) == date_type.today()
+    ).first()
+    if existing:
+        return jsonify({"error": "You already uploaded a photo today"}), 400
+
+    file = request.files.get('photo')
+    notes = request.form.get('notes', '')
+    if not file:
+        return jsonify({"error": "No photo provided"}), 400
+
+    try:
+        upload_result = cloudinary.uploader.upload(file, folder=f"gymmind/progress/{user_id}")
+        photo_url = upload_result.get('secure_url')
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    new_photo = ProgressPhoto(user_id=user_id, photo_url=photo_url, notes=notes)
+    db.session.add(new_photo)
+    db.session.commit()
+    return jsonify(new_photo.serialize()), 201
+
+
+@api.route('/user/<int:user_id>/progress-photos', methods=['GET'])
+@jwt_required()
+def get_progress_photos(user_id):
+    photos = ProgressPhoto.query.filter_by(user_id=user_id)\
+                .order_by(ProgressPhoto.taken_at.desc()).all()
+    return jsonify([p.serialize() for p in photos]), 200
 @api.route('/exercise-log/date/<string:date>', methods=['GET'])
 @jwt_required()
 def get_exercise_logs_by_date(date):

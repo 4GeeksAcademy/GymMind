@@ -41,7 +41,12 @@ const EditProfile = () => {
     const [dobYear, setDobYear] = useState("");
 
     useEffect(() => {
-        fetch(`/api/user/${userId}`)
+        const token = sessionStorage.getItem("token");
+        if (!token || !userId) {
+            navigate("/login");
+            return;
+        }
+        fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`)
             .then(res => res.json())
             .then(data => {
                 setForm({
@@ -58,7 +63,7 @@ const EditProfile = () => {
                 if (data.photo_url) setPhotoPreview(data.photo_url);
             })
             .catch(() => setError("Could not connect to server"));
-    }, []);
+    }, [userId]);
 
     useEffect(() => {
         if (form.date_of_birth) {
@@ -163,7 +168,7 @@ const EditProfile = () => {
 
         try {
             // 1. Guardar datos del perfil
-            const res = await fetch(`/api/user/${userId}`, {
+            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(form)
@@ -178,7 +183,7 @@ const EditProfile = () => {
             if (photoFile) {
                 const formData = new FormData();
                 formData.append("photo", photoFile);
-                const photoRes = await fetch(`/api/user/${userId}/photo`, {
+                const photoRes = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}/photo`, {
                     method: "POST",
                     body: formData
                 });
@@ -301,6 +306,9 @@ const EditProfile = () => {
                 .ep-number-input { background: #0d1318; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: var(--accent); font-size: 15px; font-weight: 700; width: 72px; text-align: center; padding: 6px 8px; outline: none; font-family: 'DM Sans', sans-serif; -moz-appearance: textfield; }
                 .ep-number-input::-webkit-outer-spin-button,
                 .ep-number-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+                input[type=number]::-webkit-outer-spin-button,
+                input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+                input[type=number] { -moz-appearance: textfield; }
 
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
                 @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -497,7 +505,7 @@ const EditProfile = () => {
                                             if (isNaN(val) || val < 30) setForm({ ...form, weight: 30 });
                                             else if (val > 200) setForm({ ...form, weight: 200 });
                                         }}
-                                        style={{ background: "transparent", border: "none", color: "#00e5ff", fontSize: "22px", fontWeight: "700", width: "56px", textAlign: "center", outline: "none", fontFamily: "'DM Sans', sans-serif", MozAppearance: "textfield" }}
+                                        style={{ background: "transparent", border: "none", color: "#00e5ff", fontSize: "22px", fontWeight: "700", width: "56px", textAlign: "center", outline: "none", fontFamily: "'DM Sans', sans-serif", MozAppearance: "textfield", WebkitAppearance: "none" }}
                                     />
                                     <span style={{ color: "var(--muted)", fontSize: "13px", fontWeight: "500" }}>kg</span>
                                 </div>
@@ -537,7 +545,7 @@ const EditProfile = () => {
                                             if (isNaN(val) || val < 100) setForm({ ...form, height: 100 });
                                             else if (val > 250) setForm({ ...form, height: 250 });
                                         }}
-                                        style={{ background: "transparent", border: "none", color: "#00e5ff", fontSize: "22px", fontWeight: "700", width: "56px", textAlign: "center", outline: "none", fontFamily: "'DM Sans', sans-serif", MozAppearance: "textfield" }}
+                                        style={{ background: "transparent", border: "none", color: "#00e5ff", fontSize: "22px", fontWeight: "700", width: "56px", textAlign: "center", outline: "none", fontFamily: "'DM Sans', sans-serif", MozAppearance: "textfield", WebkitAppearance: "none" }}
                                     />
                                     <span style={{ color: "var(--muted)", fontSize: "13px", fontWeight: "500" }}>cm</span>
                                 </div>
