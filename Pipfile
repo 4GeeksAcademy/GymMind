@@ -25,6 +25,7 @@ google-generativeai = "*"
 google = "*"
 google-genai = "*"
 google-auth = "*"
+resend = "*"
 
 [requires]
 python_version = "3.13"

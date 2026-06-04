@@ -15,7 +15,8 @@ from google import genai
 import json
 from api.common_foods import COMMON_FOODS
 import re
-
+import resend
+from api.models import FavoriteMeal
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -36,10 +37,33 @@ motivations = {
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
+resend.api_key = os.getenv("RESEND_API_KEY")
+
 
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
     return jsonify({"message": "Hello! I'm a message that came from the backend"}), 200
+
+
+@api.route("/test-email", methods=["GET"])
+def test_email():
+    try:
+        response = resend.Emails.send({
+            "from": "onboarding@resend.dev",
+            "to": ["meylin103@gmail.com"],
+            "subject": "GymMind Test Email",
+            "html": "<h1>Hello from GymMind!</h1><p>Your Resend integration is working.</p>"
+        })
+
+        return jsonify({
+            "message": "Email sent",
+            "response": response
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 
 @api.route('/signup', methods=['POST'])
