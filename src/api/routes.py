@@ -103,7 +103,7 @@ def login():
 @api.route("/forgot-password", methods=["POST"])
 def forgot_password():
     data = request.get_json()
-    email = data.get("email")
+    email = data.get("email", "").strip().lower()
 
     if not email:
         return jsonify({"error": "Email is required"}), 400
@@ -113,9 +113,26 @@ def forgot_password():
     if not user:
         return jsonify({"error": "Email not found"}), 404
 
-    return jsonify({
-        "message": "Password reset email sent"
-    }), 200
+    try:
+        resend.Emails.send({
+            "from": "onboarding@resend.dev",
+            "to": [email],
+            "subject": "GymMind Password Reset",
+            "html": """
+            <h2>GymMind Password Reset</h2>
+            <p>You requested a password reset.</p>
+            <p>If this was you, please follow the instructions in the app.</p>
+            """
+        })
+
+        return jsonify({
+            "message": "Password reset email sent"
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 
 @api.route("/protected", methods=["GET"])
