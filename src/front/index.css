@@ -752,6 +752,10 @@ html {
   cursor: pointer;
 }
 
+.reset-password-toggle {
+  color: #00e5ff;
+}
+
 .password-toggle:hover {
   color: #00e5ff;
 }
@@ -2577,4 +2581,12 @@ html {
 
 .food-log::-webkit-scrollbar-track {
   background: transparent;
+}
+
+.success-message {
+  color: #00e5ff;
+  margin-top: 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
 }

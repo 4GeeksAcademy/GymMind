@@ -76,6 +76,24 @@ def login():
     return jsonify({"token": access_token, "user": user.serialize()}), 200
 
 
+@api.route("/forgot-password", methods=["POST"])
+def forgot_password():
+    data = request.get_json()
+    email = data.get("email")
+
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        return jsonify({"error": "Email not found"}), 404
+
+    return jsonify({
+        "message": "Password reset email sent"
+    }), 200
+
+
 @api.route("/protected", methods=["GET"])
 @jwt_required()
 def protected():
