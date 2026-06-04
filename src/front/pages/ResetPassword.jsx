@@ -9,7 +9,10 @@ export const ResetPassword = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
+        if (password.length < 8) {
+            setMessage("Password must be at least 8 characters");
+            return;
+        }
         if (password !== confirmPassword) {
             setMessage("Passwords do not match");
             return;
