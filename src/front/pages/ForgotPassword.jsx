@@ -62,7 +62,11 @@ export const ForgotPassword = () => {
                     <button type="submit" className="signin-btn">
                         Send Reset Link
                     </button>
-                    {message && <p>{message}</p>}
+                    {message && (
+                        <p className="success-message">
+                            {message}
+                        </p>
+                    )}
 
                     <p className="signup-text">
                         Remember your password? <Link to="/login">Back to Login</Link>
