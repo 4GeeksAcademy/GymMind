@@ -4,10 +4,34 @@ import { Link, useNavigate } from "react-router-dom";
 export const ForgotPassword = () => {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
+    const [message, setMessage] = useState("");
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Reset password for:", email);
+
+        try {
+            const response = await fetch(
+                `${import.meta.env.VITE_BACKEND_URL}/api/forgot-password`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ email }),
+                }
+            );
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setMessage(data.message);
+            } else {
+                setMessage(data.error);
+            }
+        } catch (error) {
+            console.error(error);
+            setMessage("Something went wrong.");
+        }
     };
 
     return (
@@ -38,6 +62,7 @@ export const ForgotPassword = () => {
                     <button type="submit" className="signin-btn">
                         Send Reset Link
                     </button>
+                    {message && <p>{message}</p>}
 
                     <p className="signup-text">
                         Remember your password? <Link to="/login">Back to Login</Link>
