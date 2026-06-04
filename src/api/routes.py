@@ -53,7 +53,8 @@ def signup():
         return jsonify({"error": "All fields are required"}), 400
     if User.query.filter_by(email=email).first():
         return jsonify({"error": "User already exists"}), 400
-    new_user = User(first_name=first_name, last_name=last_name, email=email, is_active=True)
+    new_user = User(first_name=first_name, last_name=last_name,
+                    email=email, is_active=True)
     new_user.set_password(password)
     db.session.add(new_user)
     db.session.commit()
@@ -73,6 +74,24 @@ def login():
         return jsonify({"msg": "Invalid email or password"}), 401
     access_token = create_access_token(identity=str(user.id))
     return jsonify({"token": access_token, "user": user.serialize()}), 200
+
+
+@api.route("/forgot-password", methods=["POST"])
+def forgot_password():
+    data = request.get_json()
+    email = data.get("email")
+
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        return jsonify({"error": "Email not found"}), 404
+
+    return jsonify({
+        "message": "Password reset email sent"
+    }), 200
 
 
 @api.route("/protected", methods=["GET"])
@@ -130,15 +149,18 @@ def search_food():
     foods = data["foods"]
     search_terms = clean_food.lower().split()
     food_item = next(
-        (item for item in foods if all(term.rstrip("s") in item.get("description", "").lower() for term in search_terms)),
+        (item for item in foods if all(term.rstrip("s") in item.get(
+            "description", "").lower() for term in search_terms)),
         None
     )
     if food_item is None:
         food_item = next(
-            (item for item in foods if any(term.rstrip("s") in item.get("description", "").lower() for term in search_terms)),
+            (item for item in foods if any(term.rstrip("s") in item.get(
+                "description", "").lower() for term in search_terms)),
             foods[0]
         )
     nutrients = food_item["foodNutrients"]
+
     def nutrient(name):
         for item in nutrients:
             if item["nutrientName"] == name:
@@ -188,7 +210,8 @@ def healthy_meals():
     }}
     """
     try:
-        response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite", contents=prompt)
         text = response.text.strip()
         if text.startswith("```"):
             text = text.replace("```json", "").replace("```", "").strip()
@@ -237,7 +260,8 @@ def get_today_food_log():
     from api.models import NutritionLog as FoodLog
     user_id = int(get_jwt_identity())
     today = date.today()
-    foods = FoodLog.query.filter(FoodLog.user_id == user_id, db.func.date(FoodLog.date) == today).all()
+    foods = FoodLog.query.filter(
+        FoodLog.user_id == user_id, db.func.date(FoodLog.date) == today).all()
     return jsonify({"foods": [food.serialize() for food in foods]}), 200
 
 
@@ -256,14 +280,16 @@ def delete_food_log(food_id):
 @api.route("/food-log/history", methods=["GET"])
 @jwt_required()
 def get_food_log_history():
-    from api.models import NutritionLog as FoodLog 
+    from api.models import NutritionLog as FoodLog
     user_id = int(get_jwt_identity())
-    foods = FoodLog.query.filter_by(user_id=user_id).order_by(FoodLog.date.desc()).all()
+    foods = FoodLog.query.filter_by(
+        user_id=user_id).order_by(FoodLog.date.desc()).all()
     history = {}
     for food in foods:
         day = food.date.isoformat()
         if day not in history:
-            history[day] = {"date": day, "foods": [], "totals": {"calories": 0, "protein": 0, "carbs": 0, "fats": 0}}
+            history[day] = {"date": day, "foods": [], "totals": {
+                "calories": 0, "protein": 0, "carbs": 0, "fats": 0}}
         history[day]["foods"].append(food.serialize())
         history[day]["totals"]["calories"] += food.calories
         history[day]["totals"]["protein"] += food.protein
@@ -288,19 +314,27 @@ def edit_user_profile(user_id):
     body = request.get_json()
     if not body:
         return jsonify({"error": "No data provided"}), 400
-    if "first_name" in body: user.first_name = body["first_name"]
-    if "last_name" in body: user.last_name = body["last_name"]
+    if "first_name" in body:
+        user.first_name = body["first_name"]
+    if "last_name" in body:
+        user.last_name = body["last_name"]
     if "email" in body:
         existing = User.query.filter_by(email=body["email"]).first()
         if existing and existing.id != user_id:
             return jsonify({"error": "Email already in use"}), 400
         user.email = body["email"]
-    if "nickname" in body: user.nickname = body["nickname"]
-    if "gender" in body: user.gender = body["gender"]
-    if "date_of_birth" in body: user.date_of_birth = body["date_of_birth"]
-    if "weight" in body: user.weight = body["weight"]
-    if "height" in body: user.height = body["height"]
-    if "phone_number" in body: user.phone_number = body["phone_number"]
+    if "nickname" in body:
+        user.nickname = body["nickname"]
+    if "gender" in body:
+        user.gender = body["gender"]
+    if "date_of_birth" in body:
+        user.date_of_birth = body["date_of_birth"]
+    if "weight" in body:
+        user.weight = body["weight"]
+    if "height" in body:
+        user.height = body["height"]
+    if "phone_number" in body:
+        user.phone_number = body["phone_number"]
     db.session.commit()
     return jsonify({"message": "Profile updated successfully", "user": user.serialize()}), 200
 
@@ -323,7 +357,8 @@ def upload_user_photo(user_id):
     if 'photo' not in request.files:
         return jsonify({"error": "No photo provided"}), 400
     file = request.files['photo']
-    result = cloudinary.uploader.upload(file, folder="gymmind/avatars", public_id=f"user_{user_id}", overwrite=True, resource_type="image")
+    result = cloudinary.uploader.upload(
+        file, folder="gymmind/avatars", public_id=f"user_{user_id}", overwrite=True, resource_type="image")
     user.photo_url = result.get("secure_url")
     db.session.commit()
     return jsonify({"message": "Photo uploaded successfully", "photo_url": user.photo_url}), 200
@@ -333,7 +368,8 @@ def upload_user_photo(user_id):
 @jwt_required()
 def get_progress(user_id):
     from api.models import ProgressLog
-    logs = ProgressLog.query.filter_by(user_id=user_id).order_by(ProgressLog.date.desc()).all()
+    logs = ProgressLog.query.filter_by(
+        user_id=user_id).order_by(ProgressLog.date.desc()).all()
     return jsonify([log.serialize() for log in logs]), 200
 
 
@@ -346,7 +382,8 @@ def add_progress():
     weight = body.get("weight")
     if not user_id or not weight:
         return jsonify({"error": "user_id and weight are required"}), 400
-    existing = ProgressLog.query.filter_by(user_id=user_id, date=date.today()).first()
+    existing = ProgressLog.query.filter_by(
+        user_id=user_id, date=date.today()).first()
     if existing:
         return jsonify({"error": "You already logged your weight today"}), 400
     log = ProgressLog(user_id=user_id, weight=weight, date=date.today())
@@ -366,12 +403,14 @@ def add_mood():
     if mood not in valid_moods:
         return jsonify({"error": "Invalid mood"}), 400
     today = date.today()
-    todays_moods = MoodCheck.query.filter(MoodCheck.user_id == current_user, db.func.date(MoodCheck.date) == today).count()
+    todays_moods = MoodCheck.query.filter(
+        MoodCheck.user_id == current_user, db.func.date(MoodCheck.date) == today).count()
     if todays_moods >= 3:
         return jsonify({"error": "Daily mood check limit reached"}), 400
     try:
         prompt = f"The user is feeling '{mood}' today. Give a short motivational fitness message. Keep it positive, supportive, and fitness-focused. Maximum 2 sentences."
-        response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite", contents=prompt)
         ai_message = response.text
     except Exception as e:
         print("Gemini error:", e)
@@ -383,7 +422,8 @@ def add_mood():
         "tired": {"training_intensity": "Low", "recommended_focus": "Recovery & Stretching"},
         "low": {"training_intensity": "Low", "recommended_focus": "Light Movement & Motivation"}
     }
-    mood_check = MoodCheck(user_id=current_user, mood=mood, ai_message=ai_message, date=today)
+    mood_check = MoodCheck(user_id=current_user, mood=mood,
+                           ai_message=ai_message, date=today)
     db.session.add(mood_check)
     db.session.commit()
     return jsonify({
@@ -399,7 +439,8 @@ def add_mood():
 def get_mood_history():
     from api.models import MoodCheck
     user_id = int(get_jwt_identity())
-    moods = MoodCheck.query.filter_by(user_id=user_id).order_by(MoodCheck.date.desc()).all()
+    moods = MoodCheck.query.filter_by(
+        user_id=user_id).order_by(MoodCheck.date.desc()).all()
     return jsonify([m.serialize() for m in moods]), 200
 
 
@@ -407,7 +448,8 @@ def get_mood_history():
 @jwt_required()
 def get_workouts(user_id):
     from api.models import Workout
-    workouts = Workout.query.filter_by(user_id=user_id).order_by(Workout.date.desc()).all()
+    workouts = Workout.query.filter_by(
+        user_id=user_id).order_by(Workout.date.desc()).all()
     return jsonify([w.serialize() for w in workouts]), 200
 
 
@@ -421,7 +463,8 @@ def add_workout():
     exercises = body.get("exercises", [])
     if not user_id or not fitness_goal:
         return jsonify({"error": "user_id and fitness_goal are required"}), 400
-    workout = Workout(user_id=user_id, fitness_goal=fitness_goal, date=date.today())
+    workout = Workout(
+        user_id=user_id, fitness_goal=fitness_goal, date=date.today())
     db.session.add(workout)
     db.session.flush()
     for ex in exercises:
@@ -447,7 +490,8 @@ def chat_with_ai():
         You help users with workout advice, nutrition tips, motivation, and emotional support.
         Keep responses concise, friendly and motivational.
         {f'User context: {context}' if context else ''}"""
-        response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=f"{system_prompt}\n\nUser: {message}")
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite", contents=f"{system_prompt}\n\nUser: {message}")
         return jsonify({"response": response.text}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -460,7 +504,8 @@ def google_login():
     if not credential:
         return jsonify({"error": "Google credential is required"}), 400
     try:
-        google_user = id_token.verify_oauth2_token(credential, google_requests.Request(), os.getenv("GOOGLE_CLIENT_ID"))
+        google_user = id_token.verify_oauth2_token(
+            credential, google_requests.Request(), os.getenv("GOOGLE_CLIENT_ID"))
         email = google_user.get("email")
         first_name = google_user.get("given_name", "")
         last_name = google_user.get("family_name", "")
@@ -468,7 +513,8 @@ def google_login():
             return jsonify({"error": "Google account email not found"}), 400
         user = User.query.filter_by(email=email).first()
         if not user:
-            user = User(first_name=first_name, last_name=last_name, email=email, is_active=True)
+            user = User(first_name=first_name, last_name=last_name,
+                        email=email, is_active=True)
             user.set_password("google-oauth-user")
             db.session.add(user)
             db.session.commit()
@@ -546,7 +592,8 @@ Generate 5-6 exercises. Use real gym exercises with specific names like:
 Mix machines and free weights. Keep exercise names specific and searchable on YouTube.
 All text must be in English only. No Spanish words.{difficulty_note}"""
 
-        response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite", contents=prompt)
         text = response.text.strip()
         if text.startswith("```"):
             text = text.split("```")[1]
@@ -629,7 +676,8 @@ def add_exercise_log():
 def get_exercise_logs(exercise_name):
     from api.models import ExerciseLog
     current_user = int(get_jwt_identity())
-    logs = ExerciseLog.query.filter_by(user_id=current_user, exercise_name=exercise_name).order_by(ExerciseLog.date.desc()).limit(5).all()
+    logs = ExerciseLog.query.filter_by(user_id=current_user, exercise_name=exercise_name).order_by(
+        ExerciseLog.date.desc()).limit(5).all()
     return jsonify([log.serialize() for log in logs]), 200
 
 
@@ -657,7 +705,8 @@ def recommend_weight():
 
 Give a short recommendation for the next workout weight. Be specific with the kg amount. Maximum 2 sentences."""
     try:
-        response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite", contents=prompt)
         return jsonify({"recommendation": response.text}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -710,7 +759,8 @@ Return ONLY a valid JSON object:
     "reason": "string (2-3 sentences explaining why, considering rest days and muscle recovery)"
 }}"""
     try:
-        response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite", contents=prompt)
         text = response.text.strip()
         if text.startswith("```"):
             text = text.split("```")[1]
@@ -744,12 +794,14 @@ def upload_progress_photo(user_id):
         return jsonify({"error": "No photo provided"}), 400
 
     try:
-        upload_result = cloudinary.uploader.upload(file, folder=f"gymmind/progress/{user_id}")
+        upload_result = cloudinary.uploader.upload(
+            file, folder=f"gymmind/progress/{user_id}")
         photo_url = upload_result.get('secure_url')
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    new_photo = ProgressPhoto(user_id=user_id, photo_url=photo_url, notes=notes)
+    new_photo = ProgressPhoto(
+        user_id=user_id, photo_url=photo_url, notes=notes)
     db.session.add(new_photo)
     db.session.commit()
     return jsonify(new_photo.serialize()), 201
@@ -759,15 +811,18 @@ def upload_progress_photo(user_id):
 @jwt_required()
 def get_progress_photos(user_id):
     photos = ProgressPhoto.query.filter_by(user_id=user_id)\
-                .order_by(ProgressPhoto.taken_at.desc()).all()
+        .order_by(ProgressPhoto.taken_at.desc()).all()
     return jsonify([p.serialize() for p in photos]), 200
+
+
 @api.route('/exercise-log/date/<string:date>', methods=['GET'])
 @jwt_required()
 def get_exercise_logs_by_date(date):
     from api.models import ExerciseLog
     current_user = int(get_jwt_identity())
     logs = ExerciseLog.query.filter_by(user_id=current_user, date=date).all()
-    return jsonify([log.serialize() for log in logs]), 200 
+    return jsonify([log.serialize() for log in logs]), 200
+
 
 @api.route('/dashboard/message', methods=['GET'])
 @jwt_required()
@@ -811,4 +866,4 @@ Write 1-2 sentences. Be specific, energetic, and personal. Use their name. In En
         )
         return jsonify({"message": response.text}), 200
     except Exception as e:
-        return jsonify({"message": f"Keep pushing, {user.first_name}! Every workout counts."}), 200 
+        return jsonify({"message": f"Keep pushing, {user.first_name}! Every workout counts."}), 200
