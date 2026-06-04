@@ -1,6 +1,5 @@
 from flask import request, jsonify, Blueprint
-from api.models import db, User, ProgressPhoto
-from api.models import db, User, FoodLog
+from api.models import db, User, ProgressPhoto, FavoriteMeal, ExerciseLog, ProgressLog, NutritionLog
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
@@ -235,9 +234,10 @@ def add_food_log():
 @api.route("/food-log/today", methods=["GET"])
 @jwt_required()
 def get_today_food_log():
+    from api.models import NutritionLog as FoodLog
     user_id = int(get_jwt_identity())
     today = date.today()
-    foods = FoodLog.query.filter(FoodLog.user_id == user_id, db.func.date(FoodLog.created_at) == today).all()
+    foods = FoodLog.query.filter(FoodLog.user_id == user_id, db.func.date(FoodLog.date) == today).all()
     return jsonify({"foods": [food.serialize() for food in foods]}), 200
 
 
@@ -256,11 +256,12 @@ def delete_food_log(food_id):
 @api.route("/food-log/history", methods=["GET"])
 @jwt_required()
 def get_food_log_history():
+    from api.models import NutritionLog as FoodLog 
     user_id = int(get_jwt_identity())
-    foods = FoodLog.query.filter_by(user_id=user_id).order_by(FoodLog.created_at.desc()).all()
+    foods = FoodLog.query.filter_by(user_id=user_id).order_by(FoodLog.date.desc()).all()
     history = {}
     for food in foods:
-        day = food.created_at.strftime("%Y-%m-%d")
+        day = food.date.isoformat()
         if day not in history:
             history[day] = {"date": day, "foods": [], "totals": {"calories": 0, "protein": 0, "carbs": 0, "fats": 0}}
         history[day]["foods"].append(food.serialize())

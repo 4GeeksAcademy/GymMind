@@ -735,6 +735,27 @@ html {
   color: #5f6f7f;
 }
 
+.password-container {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 16px;
+  top: 35%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #000;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.password-toggle:hover {
+  color: #00e5ff;
+}
+
 .options {
   display: flex;
   justify-content: space-between;
