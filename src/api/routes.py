@@ -39,29 +39,11 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 resend.api_key = os.getenv("RESEND_API_KEY")
 
+
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
     return jsonify({"message": "Hello! I'm a message that came from the backend"}), 200
 
-@api.route("/test-email", methods=["GET"])
-def test_email():
-    try:
-        response = resend.Emails.send({
-            "from": "onboarding@resend.dev",
-            "to": ["meylin103@gmail.com"],
-            "subject": "GymMind Test Email",
-            "html": "<h1>Hello from GymMind!</h1><p>Your Resend integration is working.</p>"
-        })
-
-        return jsonify({
-            "message": "Email sent",
-            "response": response
-        }), 200
-
-    except Exception as e:
-        return jsonify({
-            "error": str(e)
-        }), 500
 
 @api.route('/signup', methods=['POST'])
 def signup():
@@ -96,11 +78,11 @@ def login():
     access_token = create_access_token(identity=str(user.id))
     return jsonify({"token": access_token, "user": user.serialize()}), 200
 
-
 @api.route("/forgot-password", methods=["POST"])
 def forgot_password():
     data = request.get_json()
-    email = data.get("email")
+    email = data.get("email", "").strip().lower()
+
 
     if not email:
         return jsonify({"error": "Email is required"}), 400
@@ -110,9 +92,26 @@ def forgot_password():
     if not user:
         return jsonify({"error": "Email not found"}), 404
 
-    return jsonify({
-        "message": "Password reset email sent"
-    }), 200
+    try:
+        resend.Emails.send({
+            "from": "onboarding@resend.dev",
+            "to": [email],
+            "subject": "GymMind Password Reset",
+            "html": """
+            <h2>GymMind Password Reset</h2>
+            <p>You requested a password reset.</p>
+            <p>If this was you, please follow the instructions in the app.</p>
+            """
+        })
+
+        return jsonify({
+            "message": "Password reset email sent"
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 
 @api.route("/protected", methods=["GET"])
