@@ -39,6 +39,8 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 resend.api_key = os.getenv("RESEND_API_KEY")
 
+FRONTEND_URL = os.getenv("FRONTEND_URL")
+
 
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
@@ -77,8 +79,6 @@ def login():
         return jsonify({"msg": "Invalid email or password"}), 401
     access_token = create_access_token(identity=str(user.id))
     return jsonify({"token": access_token, "user": user.serialize()}), 200
-
-
 @api.route("/forgot-password", methods=["POST"])
 def forgot_password():
     data = request.get_json()
@@ -96,43 +96,128 @@ def forgot_password():
         resend.Emails.send({
             "from": "onboarding@resend.dev",
             "to": [email],
-            "subject": "GymMind Password Reset",
-            "html": """
-<div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
-    <h1 style="color:#4CAF50;">GYMMIND AI</h1>
+            "subject": "GymMind AI - Reset Your Password",
+            "html": f"""
+            <div style="
+                background:#050b12;
+                padding:40px 20px;
+                font-family:Arial,sans-serif;
+            ">
 
-    <h2>Reset Your Password</h2>
+                <div style="
+                    max-width:600px;
+                    margin:auto;
+                    background:#0a1118;
+                    border:1px solid #00d9ff;
+                    border-radius:16px;
+                    padding:40px;
+                    box-shadow:0 0 20px rgba(0,217,255,0.15);
+                ">
 
-    <p>We received a request to reset your password.</p>
+                    <div style="text-align:center;">
 
-    <p>
-        Click the button below to create a new password.
-    </p>
+                        <h1 style="
+                            color:#00d9ff;
+                            font-size:42px;
+                            letter-spacing:4px;
+                            margin-bottom:10px;
+                        ">
+                            GYMMIND AI
+                        </h1>
 
-    <a
-        href="http://localhost:3000/reset-password"
-        style="
-            display:inline-block;
-            padding:12px 24px;
-            background:#4CAF50;
-            color:white;
-            text-decoration:none;
-            border-radius:8px;
-            font-weight:bold;
-        "
-    >
-        Reset Password
-    </a>
+                        <div style="
+                            width:120px;
+                            height:3px;
+                            background:#00d9ff;
+                            margin:0 auto 30px auto;
+                            border-radius:4px;
+                        "></div>
 
-    <p style="margin-top:30px;">
-        If you did not request this change, you can safely ignore this email.
-    </p>
+                        <h2 style="
+                            color:white;
+                            font-size:34px;
+                            letter-spacing:2px;
+                            margin-bottom:30px;
+                        ">
+                            RESET YOUR PASSWORD
+                        </h2>
 
-    <p>
-        Your Mind. Your Body. Your Evolution.
-    </p>
-</div>
-"""
+                    </div>
+
+                    <p style="
+                        color:#d1d5db;
+                        font-size:18px;
+                        margin-bottom:20px;
+                    ">
+                        Hello <strong style="color:#00d9ff;">{user.first_name}</strong>,
+                    </p>
+
+                    <p style="
+                        color:#b6c2cf;
+                        font-size:16px;
+                        line-height:1.7;
+                    ">
+                        We received a request to reset the password for your GymMind account.
+                    </p>
+
+                    <p style="
+                        color:#b6c2cf;
+                        font-size:16px;
+                        line-height:1.7;
+                    ">
+                        Click the button below to create a new password and continue your fitness journey.
+                    </p>
+
+                    <div style="text-align:center;margin:40px 0;">
+
+                        <a
+                            href="{FRONTEND_URL}/reset-password"
+                            style="
+                                background:#00d9ff;
+                                color:#041018;
+                                padding:18px 36px;
+                                border-radius:10px;
+                                text-decoration:none;
+                                font-size:18px;
+                                font-weight:700;
+                                letter-spacing:1px;
+                                display:inline-block;
+                            "
+                        >
+                            RESET PASSWORD
+                        </a>
+
+                    </div>
+
+                    <div style="
+                        border-top:1px solid #1f2937;
+                        padding-top:25px;
+                    ">
+
+                        <p style="
+                            color:#94a3b8;
+                            text-align:center;
+                            line-height:1.7;
+                        ">
+                            If you didn't request this password reset,
+                            you can safely ignore this email.
+                        </p>
+
+                        <p style="
+                            color:#00d9ff;
+                            text-align:center;
+                            margin-top:25px;
+                            letter-spacing:1px;
+                        ">
+                            Your Mind. Your Body. Your Evolution.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+            """
         })
 
         return jsonify({
@@ -143,6 +228,7 @@ def forgot_password():
         return jsonify({
             "error": str(e)
         }), 500
+
 
 @api.route("/reset-password", methods=["POST"])
 def reset_password():
@@ -559,7 +645,7 @@ def chat_with_ai():
     if not message:
         return jsonify({"error": "Message is required"}), 400
     try:
-        system_prompt = f"""You are GymMind AI Coach, a personal fitness and wellness assistant. 
+        system_prompt = f"""You are GymMind AI Coach, a personal fitness and wellness assistant.
         You help users with workout advice, nutrition tips, motivation, and emotional support.
         Keep responses concise, friendly and motivational.
         {f'User context: {context}' if context else ''}"""
@@ -649,7 +735,8 @@ Return ONLY a valid JSON object with this exact structure, no extra text:
     "description": "string",
     "muscle_group": "{muscle_group}",
     "exercises": [
-        {{"name": "string", "muscle": "string", "equipment": "machine or free weight", "sets": number, "reps": number, "instructions": "string"}}
+        {{"name": "string", "muscle": "string", "equipment": "machine or free weight",
+            "sets": number, "reps": number, "instructions": "string"}}
     ]
 }}
 
