@@ -752,6 +752,10 @@ html {
   cursor: pointer;
 }
 
+.reset-password-toggle {
+  color: #00e5ff;
+}
+
 .password-toggle:hover {
   color: #00e5ff;
 }
