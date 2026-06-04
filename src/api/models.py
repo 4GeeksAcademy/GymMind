@@ -253,6 +253,17 @@ class ProgressPhoto(db.Model):
     taken_at: Mapped[datetime] = mapped_column(nullable=False, default=datetime.utcnow)
 
     user: Mapped["User"] = relationship(back_populates="progress_photos")
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "photo_url": self.photo_url,
+            "notes": self.notes,
+            "taken_at": self.taken_at.isoformat()
+        }
+
+
 class FavoriteMeal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
@@ -267,15 +278,10 @@ class FavoriteMeal(db.Model):
         return {
             "id": self.id,
             "user_id": self.user_id,
-            "photo_url": self.photo_url,
-            "notes": self.notes,
-            "taken_at": self.taken_at.isoformat()
-        }
             "meal_name": self.meal_name,
             "calories": self.calories,
             "protein": self.protein,
             "carbs": self.carbs,
             "fats": self.fats
-
         }
     
