@@ -1,6 +1,5 @@
 from flask import request, jsonify, Blueprint
-from api.models import db, User, ProgressPhoto
-from api.models import db, User, FoodLog
+from api.models import db, User, ProgressPhoto, FavoriteMeal, ExerciseLog, ProgressLog, NutritionLog
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
