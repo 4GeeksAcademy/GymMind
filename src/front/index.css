@@ -1286,8 +1286,8 @@ html {
 
 .nutrition-container {
   width: 85%;
-  max-width: 1400px;
-  margin: auto;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
 .nutrition-summary {
@@ -1327,7 +1327,9 @@ html {
 
   border: 1px solid rgba(0, 229, 255, 0.15);
 
-  padding: 14px 18px;
+  padding: 8px 12px;
+
+  font-size: 12px;
 
   border-radius: 12px;
 
@@ -1341,9 +1343,9 @@ html {
 
   grid-template-columns: repeat(4, 1fr);
 
-  gap: 20px;
+  gap: 14px;
 
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .nutrition-card {
@@ -1589,9 +1591,9 @@ html {
 }
 
 .nutrition-container {
-  width: 85%;
-  max-width: 1400px;
-  margin: auto;
+  width: 75%;
+  max-width: 980px;
+  margin: 0 auto;
 }
 
 .nutrition-summary {
@@ -1652,22 +1654,18 @@ html {
 
 .nutrition-card {
   background: #08131b;
-
-  border-radius: 18px;
-
-  padding: 35px;
-
-  text-align: center;
-
+  border-radius: 14px;
+  padding: 18px 20px;
+  text-align: left;
   border: 1px solid rgba(0, 229, 255, 0.15);
+  min-height: 130px;
 }
 
 .nutrition-card h1 {
   color: #00e5ff;
-
-  font-size: 48px;
-
-  margin-bottom: 8px;
+  font-size: 30px;
+  margin: 6px 0;
+  line-height: 1;
 }
 
 .nutrition-card p {
@@ -1686,6 +1684,21 @@ html {
   border-radius: 10px;
 
   overflow: hidden;
+}
+
+.nutrition-card h2 {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+.nutrition-card p {
+  font-size: 12px;
+  color: #8ca3ad;
+}
+
+.nutrition-card small {
+  font-size: 11px;
+  color: #8ca3ad;
 }
 
 .progress-fill {
@@ -1707,20 +1720,17 @@ html {
 .food-search,
 .food-log {
   background: #08131b;
-
-  border-radius: 18px;
-
-  padding: 30px;
-
-  min-height: 550px;
-
+  border-radius: 14px;
+  padding: 20px 22px;
+  min-height: 300px;
   border: 1px solid rgba(0, 229, 255, 0.15);
 }
 
 .food-search h2,
 .food-log h2 {
   color: white;
-
+  font-size: 22px;
+  margin-bottom: 14px;
   margin-bottom: 20px;
 }
 
@@ -1732,28 +1742,21 @@ html {
 
 .search-bar input {
   flex: 1;
-
-  height: 55px;
-
+  height: 30px;
   background: #0d1a22;
-
   border: none;
-
-  border-radius: 12px;
-
+  border-radius: 10px;
   padding-left: 20px;
-
   color: white;
-
   outline: none;
 }
 
 .search-btn {
-  width: 160px;
+  width: 130px;
 
   border: none;
 
-  border-radius: 12px;
+  border-radius: 10px;
 
   background: #00d7ff;
 
@@ -2386,4 +2389,192 @@ html {
   .wk-nav {
     display: none;
   }
+}
+
+/* Premium compact nutrition layout */
+
+.nutrition-container {
+  width: 72%;
+  max-width: 920px;
+}
+
+.nutrition-summary {
+  padding: 20px 22px;
+  margin-bottom: 22px;
+}
+
+.nutrition-summary h2 {
+  font-size: 17px;
+}
+
+.nutrition-summary p {
+  font-size: 14px;
+}
+
+.macro-tags {
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.macro-tag {
+  padding: 8px 13px;
+  font-size: 13px;
+}
+
+.nutrition-grid {
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.nutrition-card {
+  min-height: 125px;
+  padding: 16px 18px;
+}
+
+.nutrition-card h1 {
+  font-size: 28px;
+}
+
+.nutrition-card h2 {
+  font-size: 18px;
+}
+
+.nutrition-card p {
+  font-size: 12px;
+}
+
+.progress-line {
+  height: 5px;
+  margin: 10px auto;
+}
+
+.food-search,
+.food-log {
+  padding: 18px 20px;
+  min-height: 300px;
+}
+
+.food-search h2,
+.food-log h2 {
+  font-size: 21px;
+  margin-bottom: 12px;
+}
+
+.search-bar input {
+  height: 40px;
+  font-size: 13px;
+}
+
+.search-btn,
+.history-btn,
+.favorite-toggle-btn {
+  height: 40px;
+  padding: 0 18px;
+  font-size: 13px;
+  border-radius: 9px;
+}
+
+.nutrition-divider {
+  margin: 18px 0;
+}
+
+.food-log-item {
+  padding: 10px 0;
+}
+
+.food-name {
+  font-size: 15px;
+}
+
+.food-macros,
+.food-source,
+.food-search-hint {
+  font-size: 12px;
+}
+
+.delete-food-btn {
+  font-size: 18px;
+}
+
+.goal-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.goal-btn {
+  border: none;
+  background: transparent;
+  color: #8f9bab;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.goal-btn:hover {
+  color: white;
+}
+
+.goal-btn.active {
+  background: #00e5ff;
+  color: #001018;
+}
+
+.nutrition-card {
+  min-height: 115px;
+  padding: 14px 16px;
+}
+
+.nutrition-card h1 {
+  font-size: 26px;
+}
+
+.nutrition-card h2 {
+  font-size: 16px;
+}
+
+.nutrition-card p {
+  font-size: 12px;
+}
+
+.progress-line {
+  height: 5px;
+  margin: 9px auto;
+}
+
+.food-search h2,
+.food-log h2 {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.food-search h2 span,
+.food-log h2 span {
+  font-size: 20px;
+}
+
+.food-log {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.food-log::-webkit-scrollbar {
+  width: 6px;
+}
+
+.food-log::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 255, 0.35);
+  border-radius: 999px;
+}
+
+.food-log::-webkit-scrollbar-track {
+  background: transparent;
 }
