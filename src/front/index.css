@@ -1320,9 +1320,9 @@ html {
 
   grid-template-columns: repeat(4, 1fr);
 
-  gap: 20px;
+  gap: 14px;
 
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .nutrition-card {
@@ -1568,9 +1568,9 @@ html {
 }
 
 .nutrition-container {
-  width: 85%;
-  max-width: 1400px;
-  margin: auto;
+  width: 75%;
+  max-width: 980px;
+  margin: 0 auto;
 }
 
 .nutrition-summary {
@@ -1631,22 +1631,18 @@ html {
 
 .nutrition-card {
   background: #08131b;
-
-  border-radius: 18px;
-
-  padding: 35px;
-
-  text-align: center;
-
+  border-radius: 14px;
+  padding: 18px 20px;
+  text-align: left;
   border: 1px solid rgba(0, 229, 255, 0.15);
+  min-height: 130px;
 }
 
 .nutrition-card h1 {
   color: #00e5ff;
-
-  font-size: 48px;
-
-  margin-bottom: 8px;
+  font-size: 30px;
+  margin: 6px 0;
+  line-height: 1;
 }
 
 .nutrition-card p {
@@ -1667,6 +1663,21 @@ html {
   overflow: hidden;
 }
 
+.nutrition-card h2 {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+.nutrition-card p {
+  font-size: 12px;
+  color: #8ca3ad;
+}
+
+.nutrition-card small {
+  font-size: 11px;
+  color: #8ca3ad;
+}
+
 .progress-fill {
   height: 100%;
 
@@ -1685,21 +1696,18 @@ html {
 
 .food-search,
 .food-log {
-  background: #08131b;
-
-  border-radius: 18px;
-
-  padding: 30px;
-
-  min-height: 550px;
-
+   background: #08131b;
+  border-radius: 14px;
+  padding: 20px 22px;
+  min-height: 300px;
   border: 1px solid rgba(0, 229, 255, 0.15);
 }
 
 .food-search h2,
 .food-log h2 {
   color: white;
-
+  font-size: 22px;
+  margin-bottom: 14px;
   margin-bottom: 20px;
 }
 
@@ -1711,28 +1719,21 @@ html {
 
 .search-bar input {
   flex: 1;
-
-  height: 55px;
-
+  height: 30px;
   background: #0d1a22;
-
   border: none;
-
-  border-radius: 12px;
-
+  border-radius: 10px;
   padding-left: 20px;
-
   color: white;
-
   outline: none;
 }
 
 .search-btn {
-  width: 160px;
+  width: 130px;
 
   border: none;
 
-  border-radius: 12px;
+  border-radius: 10px;
 
   background: #00d7ff;
 
