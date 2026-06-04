@@ -119,10 +119,41 @@ def forgot_password():
             "to": [email],
             "subject": "GymMind Password Reset",
             "html": """
-            <h2>GymMind Password Reset</h2>
-            <p>You requested a password reset.</p>
-            <p>If this was you, please follow the instructions in the app.</p>
-            """
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
+    <h1 style="color:#4CAF50;">GYMMIND AI</h1>
+
+    <h2>Reset Your Password</h2>
+
+    <p>We received a request to reset your password.</p>
+
+    <p>
+        Click the button below to create a new password.
+    </p>
+
+    <a
+        href="http://localhost:3000/reset-password"
+        style="
+            display:inline-block;
+            padding:12px 24px;
+            background:#4CAF50;
+            color:white;
+            text-decoration:none;
+            border-radius:8px;
+            font-weight:bold;
+        "
+    >
+        Reset Password
+    </a>
+
+    <p style="margin-top:30px;">
+        If you did not request this change, you can safely ignore this email.
+    </p>
+
+    <p>
+        Your Mind. Your Body. Your Evolution.
+    </p>
+</div>
+"""
         })
 
         return jsonify({
@@ -133,6 +164,28 @@ def forgot_password():
         return jsonify({
             "error": str(e)
         }), 500
+
+@api.route("/reset-password", methods=["POST"])
+def reset_password():
+    data = request.get_json()
+
+    email = data.get("email", "").strip().lower()
+    password = data.get("password")
+
+    if not email or not password:
+        return jsonify({"error": "Email and password are required"}), 400
+
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    user.set_password(password)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Password updated successfully"
+    }), 200
 
 
 @api.route("/protected", methods=["GET"])

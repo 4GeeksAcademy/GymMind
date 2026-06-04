@@ -6,19 +6,46 @@ export const ResetPassword = () => {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [message, setMessage] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [email, setEmail] = useState("");
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+
         if (password.length < 8) {
             setMessage("Password must be at least 8 characters");
             return;
         }
+
         if (password !== confirmPassword) {
             setMessage("Passwords do not match");
             return;
         }
 
-        setMessage("Password validation successful");
+        try {
+            const response = await fetch(
+                `${import.meta.env.VITE_BACKEND_URL}/api/reset-password`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setMessage(data.message);
+            } else {
+                setMessage(data.error);
+            }
+        } catch (error) {
+            setMessage("Something went wrong");
+        }
     };
 
     return (
@@ -29,6 +56,13 @@ export const ResetPassword = () => {
                 <p>Create a new password for your account.</p>
 
                 <form onSubmit={handleSubmit}>
+                    <label>Email</label>
+                    <input
+                        type="email"
+                        placeholder="you@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
                     <label>New Password</label>
                     <div className="password-container">
                         <input
