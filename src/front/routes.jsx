@@ -7,6 +7,7 @@ import { Layout } from "./pages/Layout";
 import { Home } from "./pages/Home";
 import { Signup } from "./pages/Signup";
 import { Login } from "./pages/Login";
+import { ForgotPassword } from "./pages/ForgotPassword";
 import { Dashboard } from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
@@ -16,6 +17,7 @@ import { Nutrition } from "./pages/Nutrition";
 import { MyWorkout } from "./pages/MyWorkout";
 import { Terms } from "./pages/Terms";
 import { Privacy } from "./pages/Privacy";
+import { ResetPassword } from "./pages/ResetPassword";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -23,6 +25,8 @@ export const router = createBrowserRouter(
       <Route path="/" element={<Home />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/edit-profile" element={<EditProfile />} />
