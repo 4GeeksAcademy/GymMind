@@ -283,47 +283,6 @@ class ProgressPhoto(db.Model):
             "taken_at": self.taken_at.isoformat()
         }
 
-class FoodLog(db.Model):
-    __tablename__ = "food_log"
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    user_id = db.Column(
-        db.Integer,
-        db.ForeignKey("user.id"),
-        nullable=False
-    )
-
-    food_name = db.Column(db.String(255), nullable=False)
-    calories = db.Column(db.Float, nullable=False)
-    protein = db.Column(db.Float, nullable=False)
-    carbs = db.Column(db.Float, nullable=False)
-    fats = db.Column(db.Float, nullable=False)
-
-    category = db.Column(db.String(100))
-    serving = db.Column(db.String(100))
-    source = db.Column(db.String(100))
-
-    created_at = db.Column(
-        db.DateTime,
-        default=datetime.utcnow
-    )
-
-    def serialize(self):
-        return {
-            "id": self.id,
-            "user_id": self.user_id,
-            "food_name": self.food_name,
-            "calories": self.calories,
-            "protein": self.protein,
-            "carbs": self.carbs,
-            "fats": self.fats,
-            "category": self.category,
-            "serving": self.serving,
-            "source": self.source,
-            "created_at": self.created_at.isoformat()
-        }
-
 
 class FavoriteMeal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
