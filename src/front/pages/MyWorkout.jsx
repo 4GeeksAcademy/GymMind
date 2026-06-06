@@ -18,6 +18,7 @@ export const MyWorkout = () => {
   const [unit, setUnit] = useState("kg");
   const [workoutPreview, setWorkoutPreview] = useState(true);
   const [routineFeedback, setRoutineFeedback] = useState(null);
+  const [workoutFinished, setWorkoutFinished] = useState(false);
 
   // Difficulty rating per exercise
   const [exDifficulty, setExDifficulty] = useState({});
@@ -295,13 +296,11 @@ export const MyWorkout = () => {
     }
   };
 
-  const finishWorkout = () => {
-    setTimerRunning(false);
-    setPendingDifficultyEx(null);
-    const newCompleted = {};
-    workout.exercises.forEach((_, i) => { newCompleted[i] = true; });
-    setExCompleted(newCompleted);
-  };
+const finishWorkout = () => {
+  setTimerRunning(false);
+  setPendingDifficultyEx(null);
+  setWorkoutFinished(true);
+}; 
 
   const fmtTime = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
   const fmtBreak = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
@@ -488,19 +487,21 @@ export const MyWorkout = () => {
           {user?.fitness_goal && <div className="wk-goal-tag">🎯 Goal: {user.fitness_goal}</div>}
 
           {/* AI RECOMMENDATION */}
-          <div className="wk-ai-rec">
-            <div className="wk-ai-rec-badge">🤖 AI Coach — Today's recommendation</div>
-            {loadingRec ? (
-              <div style={{ fontSize: "13px", color: "var(--muted)", fontStyle: "italic" }}>Analyzing your training history...</div>
-            ) : aiRecommendation ? (
-              <>
-                <div className="wk-ai-rec-group">→ {aiRecommendation.recommended_group}</div>
-                <div className="wk-ai-rec-reason">{aiRecommendation.reason}</div>
-              </>
-            ) : (
-              <div className="wk-ai-rec-reason">Select a muscle group below to get started.</div>
-            )}
-          </div>
+          {!workout && !loading && (
+            <div className="wk-ai-rec">
+              <div className="wk-ai-rec-badge">🤖 AI Coach — Today's recommendation</div>
+              {loadingRec ? (
+                <div style={{ fontSize: "13px", color: "var(--muted)", fontStyle: "italic" }}>Analyzing your training history...</div>
+              ) : aiRecommendation ? (
+                <>
+                  <div className="wk-ai-rec-group">→ {aiRecommendation.recommended_group}</div>
+                  <div className="wk-ai-rec-reason">{aiRecommendation.reason}</div>
+                </>
+              ) : (
+                <div className="wk-ai-rec-reason">Select a muscle group below to get started.</div>
+              )}
+            </div>
+          )}
 
           {/* MUSCLE GROUP SELECTOR */}
           {!workout && !loading && (
@@ -539,7 +540,7 @@ export const MyWorkout = () => {
           )}
 
           {/* WORKOUT PREVIEW */}
-          {workout && !loading && !allDone && workoutPreview && (
+          {workout && !loading && !allDone && !workoutFinished && workoutPreview && (
             <div className="wk-card">
               <div className="wk-card-title">📋 {workout.workout_name}</div>
               <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "16px", lineHeight: "1.6" }}>{workout.description}</p>
@@ -604,7 +605,7 @@ export const MyWorkout = () => {
           )}
 
           {/* ACTIVE WORKOUT */}
-          {workout && !loading && !allDone && !workoutPreview && (
+          {workout && !loading && !allDone && !workoutFinished && !workoutPreview && (
             <>
               {/* WORKOUT HEADER */}
               <div className="wk-card">
@@ -663,7 +664,7 @@ export const MyWorkout = () => {
                 <div className="wk-card-title">📋 Exercises</div>
                 {workout.exercises.map((ex, ei) => {
                   const isDone = exCompleted[ei];
-                  const isActive = workoutStarted && !isDone && Object.entries(exCompleted).every(([k, v]) => parseInt(k) >= ei || v);
+                  const isActive = workoutStarted && !isDone && Object.values(exCompleted).filter(Boolean).length === ei;
                   const isUpcoming = workoutStarted && !isDone && !isActive;
                   const sets = setData[ei] || [];
                   const isPendingDiff = pendingDifficultyEx === ei;
@@ -740,6 +741,9 @@ export const MyWorkout = () => {
                                       onChange={e => {
                                         const val = unit === "lbs" ? (parseFloat(e.target.value) / 2.2046).toFixed(2) : e.target.value;
                                         updateSetField(ei, si, "weight", val);
+                                      }}
+                                      onBlur={e => {
+                                        const val = unit === "lbs" ? (parseFloat(e.target.value) / 2.2046).toFixed(2) : e.target.value;
                                         if (val) {
                                           setSetData(prev => {
                                             const copy = { ...prev };
@@ -830,11 +834,12 @@ export const MyWorkout = () => {
           )}
 
           {/* COMPLETION */}
-          {allDone && (
+          {(allDone || workoutFinished) && (
             <CompletionScreen
               seconds={seconds}
               fmtTime={fmtTime}
               workout={workout}
+              exCompleted={exCompleted}
               onNewWorkout={() => { setWorkout(null); setExCompleted({}); setSeconds(0); setTimerRunning(false); setWorkoutStarted(false); setWorkoutPreview(true); setRoutineFeedback(null); setExDifficulty({}); setPendingDifficultyEx(null); }}
               token={token}
               backendUrl={backendUrl}
@@ -849,7 +854,7 @@ export const MyWorkout = () => {
   );
 };
 
-const CompletionScreen = ({ seconds, fmtTime, workout, onNewWorkout, token, backendUrl, navigate, setData, unit }) => {
+const CompletionScreen = ({ seconds, fmtTime, workout,exCompleted, onNewWorkout, token, backendUrl, navigate, setData, unit }) => {
   const [selectedMood, setSelectedMood] = useState(null);
   const [moodSaved, setMoodSaved] = useState(false);
   const [prevVolume, setPrevVolume] = useState(null);
@@ -907,7 +912,7 @@ const CompletionScreen = ({ seconds, fmtTime, workout, onNewWorkout, token, back
       <div style={{ fontSize: "56px", marginBottom: "12px" }}>🎉</div>
       <div className="wk-complete-title">WORKOUT COMPLETE!</div>
       <p style={{ fontSize: "14px", color: "var(--muted)", marginBottom: "16px" }}>
-        You crushed {workout?.exercises?.length} exercises. Weights logged.
+        You crushed {Object.values(exCompleted).filter(Boolean).length} exercises
       </p>
       <div className="wk-complete-time">{fmtTime(seconds)}</div>
       <div className="wk-complete-time-label">Total workout time</div>
