@@ -15,7 +15,8 @@ from google import genai
 import json
 from api.common_foods import COMMON_FOODS
 import re
-
+import resend
+from api.models import FavoriteMeal
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -36,10 +37,35 @@ motivations = {
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
+resend.api_key = os.getenv("RESEND_API_KEY")
+
+FRONTEND_URL = os.getenv("FRONTEND_URL")
+
 
 @api.route('/hello', methods=['POST', 'GET'])
 def handle_hello():
     return jsonify({"message": "Hello! I'm a message that came from the backend"}), 200
+
+
+@api.route("/test-email", methods=["GET"])
+def test_email():
+    try:
+        response = resend.Emails.send({
+            "from": "onboarding@resend.dev",
+            "to": ["meylin103@gmail.com"],
+            "subject": "GymMind Test Email",
+            "html": "<h1>Hello from GymMind!</h1><p>Your Resend integration is working.</p>"
+        })
+
+        return jsonify({
+            "message": "Email sent",
+            "response": response
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 
 @api.route('/signup', methods=['POST'])
@@ -74,12 +100,10 @@ def login():
         return jsonify({"msg": "Invalid email or password"}), 401
     access_token = create_access_token(identity=str(user.id))
     return jsonify({"token": access_token, "user": user.serialize()}), 200
-
-
 @api.route("/forgot-password", methods=["POST"])
 def forgot_password():
     data = request.get_json()
-    email = data.get("email")
+    email = data.get("email", "").strip().lower()
 
     if not email:
         return jsonify({"error": "Email is required"}), 400
@@ -89,8 +113,164 @@ def forgot_password():
     if not user:
         return jsonify({"error": "Email not found"}), 404
 
+    try:
+        resend.Emails.send({
+            "from": "onboarding@resend.dev",
+            "to": [email],
+            "subject": "GymMind AI - Reset Your Password",
+            "html": f"""
+            <div style="
+                background:#050b12;
+                padding:40px 20px;
+                font-family:Arial,sans-serif;
+            ">
+
+                <div style="
+                    max-width:600px;
+                    margin:auto;
+                    background:#0a1118;
+                    border:1px solid #00d9ff;
+                    border-radius:16px;
+                    padding:40px;
+                    box-shadow:0 0 20px rgba(0,217,255,0.15);
+                ">
+
+                    <div style="text-align:center;">
+
+                        <h1 style="
+                            color:#00d9ff;
+                            font-size:42px;
+                            letter-spacing:4px;
+                            margin-bottom:10px;
+                        ">
+                            GYMMIND AI
+                        </h1>
+
+                        <div style="
+                            width:120px;
+                            height:3px;
+                            background:#00d9ff;
+                            margin:0 auto 30px auto;
+                            border-radius:4px;
+                        "></div>
+
+                        <h2 style="
+                            color:white;
+                            font-size:34px;
+                            letter-spacing:2px;
+                            margin-bottom:30px;
+                        ">
+                            RESET YOUR PASSWORD
+                        </h2>
+
+                    </div>
+
+                    <p style="
+                        color:#d1d5db;
+                        font-size:18px;
+                        margin-bottom:20px;
+                    ">
+                        Hello <strong style="color:#00d9ff;">{user.first_name}</strong>,
+                    </p>
+
+                    <p style="
+                        color:#b6c2cf;
+                        font-size:16px;
+                        line-height:1.7;
+                    ">
+                        We received a request to reset the password for your GymMind account.
+                    </p>
+
+                    <p style="
+                        color:#b6c2cf;
+                        font-size:16px;
+                        line-height:1.7;
+                    ">
+                        Click the button below to create a new password and continue your fitness journey.
+                    </p>
+
+                    <div style="text-align:center;margin:40px 0;">
+
+                        <a
+                            href="{FRONTEND_URL}/reset-password"
+                            style="
+                                background:#00d9ff;
+                                color:#041018;
+                                padding:18px 36px;
+                                border-radius:10px;
+                                text-decoration:none;
+                                font-size:18px;
+                                font-weight:700;
+                                letter-spacing:1px;
+                                display:inline-block;
+                            "
+                        >
+                            RESET PASSWORD
+                        </a>
+
+                    </div>
+
+                    <div style="
+                        border-top:1px solid #1f2937;
+                        padding-top:25px;
+                    ">
+
+                        <p style="
+                            color:#94a3b8;
+                            text-align:center;
+                            line-height:1.7;
+                        ">
+                            If you didn't request this password reset,
+                            you can safely ignore this email.
+                        </p>
+
+                        <p style="
+                            color:#00d9ff;
+                            text-align:center;
+                            margin-top:25px;
+                            letter-spacing:1px;
+                        ">
+                            Your Mind. Your Body. Your Evolution.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+            """
+        })
+
+        return jsonify({
+            "message": "Password reset email sent"
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500
+
+
+@api.route("/reset-password", methods=["POST"])
+def reset_password():
+    data = request.get_json()
+
+    email = data.get("email", "").strip().lower()
+    password = data.get("password")
+
+    if not email or not password:
+        return jsonify({"error": "Email and password are required"}), 400
+
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    user.set_password(password)
+    db.session.commit()
+
     return jsonify({
-        "message": "Password reset email sent"
+        "message": "Password updated successfully"
     }), 200
 
 
@@ -486,7 +666,7 @@ def chat_with_ai():
     if not message:
         return jsonify({"error": "Message is required"}), 400
     try:
-        system_prompt = f"""You are GymMind AI Coach, a personal fitness and wellness assistant. 
+        system_prompt = f"""You are GymMind AI Coach, a personal fitness and wellness assistant.
         You help users with workout advice, nutrition tips, motivation, and emotional support.
         Keep responses concise, friendly and motivational.
         {f'User context: {context}' if context else ''}"""
@@ -576,7 +756,8 @@ Return ONLY a valid JSON object with this exact structure, no extra text:
     "description": "string",
     "muscle_group": "{muscle_group}",
     "exercises": [
-        {{"name": "string", "muscle": "string", "equipment": "machine or free weight", "sets": number, "reps": number, "instructions": "string"}}
+        {{"name": "string", "muscle": "string", "equipment": "machine or free weight",
+            "sets": number, "reps": number, "instructions": "string"}}
     ]
 }}
 
