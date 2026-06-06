@@ -17,7 +17,11 @@ export const MyWorkout = () => {
   const [weightRecs, setWeightRecs] = useState({});
   const [unit, setUnit] = useState("kg");
   const [workoutPreview, setWorkoutPreview] = useState(true);
-  const [routineFeedback, setRoutineFeedback] = useState(null); // "easy" | "hard" | null
+  const [routineFeedback, setRoutineFeedback] = useState(null);
+
+  // Difficulty rating per exercise
+  const [exDifficulty, setExDifficulty] = useState({});
+  const [pendingDifficultyEx, setPendingDifficultyEx] = useState(null); // index of exercise awaiting difficulty
 
   // Countdown + Timer
   const [countdown, setCountdown] = useState(null);
@@ -130,6 +134,8 @@ export const MyWorkout = () => {
     setActiveVideo(null);
     setSetData({});
     setExCompleted({});
+    setExDifficulty({});
+    setPendingDifficultyEx(null);
     setSeconds(0);
     setBreakActive(false);
     setWorkoutStarted(false);
@@ -154,7 +160,6 @@ export const MyWorkout = () => {
         initSetData(data.exercises);
         fetchVideos(data.exercises);
         fetchWeightRecs(data.exercises);
-        // Save to backend so AI Coach knows user generated a workout today
         await saveWorkoutToBackend(data);
       } else { alert(data.error || "Failed to generate workout"); }
     } catch (e) { alert("Connection error."); }
@@ -163,10 +168,6 @@ export const MyWorkout = () => {
 
   const handleRoutineFeedback = (feedback) => {
     setRoutineFeedback(feedback);
-    if (feedback === "just_right") {
-      setWorkoutPreview(false);
-      return;
-    }
     generateWorkout(feedback);
   };
 
@@ -242,6 +243,36 @@ export const MyWorkout = () => {
     setTimeout(() => setValidationAlert(null), 3000);
   };
 
+  const logExerciseSet = async (ex, s, difficulty) => {
+    const weightKg = unit === "lbs" ? (parseFloat(s.weight) / 2.2046).toFixed(2) : s.weight;
+    try {
+      await fetch(`${backendUrl}/api/exercise-log`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          exercise_name: ex.name,
+          weight: parseFloat(weightKg),
+          sets: 1,
+          reps: parseInt(s.reps) || ex.reps,
+          difficulty: difficulty,
+        }),
+      });
+    } catch (e) {}
+  };
+
+  const handleDifficultySelect = async (exIdx, difficulty) => {
+    setExDifficulty(prev => ({ ...prev, [exIdx]: difficulty }));
+    setPendingDifficultyEx(null);
+
+    // Log all sets of this exercise with the selected difficulty
+    const ex = workout.exercises[exIdx];
+    const sets = setData[exIdx] || [];
+    for (const s of sets) {
+      if (s.done) await logExerciseSet(ex, s, difficulty);
+    }
+    startBreak("exercise");
+  };
+
   const toggleSetDone = async (exIdx, setIdx) => {
     const s = setData[exIdx]?.[setIdx];
     if (!s) return;
@@ -252,26 +283,12 @@ export const MyWorkout = () => {
     const newDone = !s.done;
     updateSetField(exIdx, setIdx, "done", newDone);
     if (newDone) {
-      const ex = workout.exercises[exIdx];
-      const weightKg = unit === "lbs" ? (parseFloat(s.weight) / 2.2046).toFixed(2) : s.weight;
-      try {
-        await fetch(`${backendUrl}/api/exercise-log`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
-            exercise_name: ex.name,
-            weight: parseFloat(weightKg),
-            sets: 1,
-            reps: parseInt(s.reps) || ex.reps,
-            difficulty: "easy",
-          }),
-        });
-      } catch (e) {}
       const updatedSets = setData[exIdx].map((st, i) => i === setIdx ? { ...st, done: true } : st);
       const allSetsDone = updatedSets.every(st => st.done);
       if (allSetsDone) {
         setExCompleted(prev => ({ ...prev, [exIdx]: true }));
-        startBreak("exercise");
+        // Show difficulty rating instead of logging immediately
+        setPendingDifficultyEx(exIdx);
       } else {
         startBreak("set");
       }
@@ -280,6 +297,7 @@ export const MyWorkout = () => {
 
   const finishWorkout = () => {
     setTimerRunning(false);
+    setPendingDifficultyEx(null);
     const newCompleted = {};
     workout.exercises.forEach((_, i) => { newCompleted[i] = true; });
     setExCompleted(newCompleted);
@@ -336,13 +354,10 @@ export const MyWorkout = () => {
         .wk-generate-btn{background:var(--accent);color:#000;padding:12px 32px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:opacity 0.2s;width:100%;}
         .wk-generate-btn:hover{opacity:0.85;}
         .wk-generate-btn:disabled{opacity:0.4;cursor:not-allowed;}
-        .wk-feedback-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
         .wk-feedback-btn{flex:1;padding:10px 8px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;text-align:center;}
         .wk-feedback-btn:hover{border-color:var(--accent);}
         .wk-feedback-btn.easy{border-color:rgba(0,255,136,0.4);color:var(--accent2);}
         .wk-feedback-btn.hard{border-color:rgba(255,107,107,0.4);color:#ff6b6b;}
-        .wk-feedback-btn.just-right{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,0.08);}
-        .wk-feedback-label{font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:1px;}
         .wk-workout-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px;}
         .wk-workout-info{flex:1;}
         .wk-workout-info h2{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;margin-bottom:4px;}
@@ -362,8 +377,6 @@ export const MyWorkout = () => {
         .wk-progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
         .wk-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width 0.5s ease;}
         .wk-science-note{font-size:12px;color:var(--muted);padding:8px 12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;margin-top:12px;}
-        .wk-start-btn{background:var(--accent2);color:#000;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;width:100%;margin-top:12px;transition:transform 0.2s;letter-spacing:1px;}
-        .wk-start-btn:hover{transform:translateY(-2px);}
         .wk-break{background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.25);border-radius:12px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:16px;}
         .wk-break-left{flex:1;}
         .wk-break-left h3{font-size:14px;font-weight:600;color:var(--accent);margin-bottom:3px;}
@@ -377,6 +390,7 @@ export const MyWorkout = () => {
         .wk-ex-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;transition:all 0.2s;}
         .wk-ex-card.active{border-color:rgba(0,229,255,0.3);background:rgba(0,229,255,0.03);}
         .wk-ex-card.done{opacity:0.5;}
+        .wk-ex-card.upcoming{opacity:0.7;}
         .wk-ex-header{display:flex;align-items:flex-start;gap:12px;}
         .wk-ex-num{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--muted);flex-shrink:0;margin-top:1px;}
         .wk-ex-card.active .wk-ex-num{background:var(--accent);color:#000;border-color:var(--accent);}
@@ -405,6 +419,14 @@ export const MyWorkout = () => {
         .wk-set-check{width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:12px;color:transparent;transition:all 0.2s;}
         .wk-set-check:hover{border-color:var(--accent2);}
         .wk-set-check.done{background:rgba(0,255,136,0.15);border-color:rgba(0,255,136,0.4);color:var(--accent2);}
+        .wk-diff-row{display:flex;gap:8px;margin-top:12px;padding:12px;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);border-radius:8px;}
+        .wk-diff-label{font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:600;}
+        .wk-diff-btn{flex:1;padding:8px 4px;border-radius:6px;border:1px solid var(--border);background:transparent;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;text-align:center;}
+        .wk-diff-btn.very-easy{border-color:rgba(0,255,136,0.5);color:var(--accent2);}
+        .wk-diff-btn.easy{border-color:rgba(0,229,255,0.5);color:var(--accent);}
+        .wk-diff-btn.hard{border-color:rgba(255,165,0,0.5);color:#f97316;}
+        .wk-diff-btn.very-hard{border-color:rgba(255,107,107,0.5);color:#ff6b6b;}
+        .wk-diff-btn:hover{opacity:0.8;transform:scale(1.02);}
         .wk-loading{text-align:center;padding:48px;}
         .wk-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:wk-spin 0.8s linear infinite;margin:0 auto;}
         .wk-loading-text{font-size:14px;color:var(--muted);margin-top:16px;}
@@ -542,21 +564,43 @@ export const MyWorkout = () => {
               ))}
 
               {/* AI COACH FEEDBACK */}
-              <div style={{ marginTop: "20px", padding: "16px", background: "rgba(0,229,255,0.04)", border: "1px solid rgba(0,229,255,0.15)", borderRadius: "10px" }}>
-                <div className="wk-feedback-label">🤖 AI Coach — How does this routine feel?</div>
-                <div className="wk-feedback-row">
-                  <button className="wk-feedback-btn easy" onClick={() => handleRoutineFeedback("easy")}>
+              <div style={{ marginTop: "20px", padding: "16px", background: "rgba(0,229,255,0.04)", border: "1px solid rgba(0,229,255,0.12)", borderRadius: "10px", textAlign: "center" }}>
+                <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "14px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "1px" }}>
+                  🤖 How does this routine feel?
+                </div>
+                <div style={{ display: "flex", gap: "10px", alignItems: "center", justifyContent: "center" }}>
+                  <button
+                    className="wk-feedback-btn easy"
+                    onClick={() => handleRoutineFeedback("easy")}
+                    style={{ flex: 1, padding: "10px", fontSize: "12px", opacity: "0.7" }}
+                  >
                     😅 Too easy
                   </button>
-                  <button className="wk-feedback-btn just-right" onClick={() => handleRoutineFeedback("just_right")}>
-                    ✅ Just right — Start!
+                  <button
+                    onClick={() => { setWorkoutPreview(false); startCountdown(); }}
+                    style={{
+                      flex: 2, padding: "16px", borderRadius: "10px", border: "none",
+                      background: "linear-gradient(135deg, #00ff88, #00e5ff)",
+                      color: "#000", fontWeight: "800", fontSize: "18px", cursor: "pointer",
+                      fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "2px",
+                      boxShadow: "0 0 20px rgba(0,255,136,0.4)", transition: "transform 0.2s",
+                    }}
+                    onMouseOver={e => e.currentTarget.style.transform = "scale(1.03)"}
+                    onMouseOut={e => e.currentTarget.style.transform = "scale(1)"}
+                  >
+                    🔥 LET'S GO!
                   </button>
-                  <button className="wk-feedback-btn hard" onClick={() => handleRoutineFeedback("hard")}>
-                    🔥 Too hard
+                  <button
+                    className="wk-feedback-btn hard"
+                    onClick={() => handleRoutineFeedback("hard")}
+                    style={{ flex: 1, padding: "10px", fontSize: "12px", opacity: "0.7" }}
+                  >
+                    😰 Too hard
                   </button>
                 </div>
               </div>
             </div>
+            
           )}
 
           {/* ACTIVE WORKOUT */}
@@ -597,11 +641,6 @@ export const MyWorkout = () => {
                 <div className="wk-science-note">
                   🔬 Recommended rest: <strong>{restTimes.label}</strong>
                 </div>
-                {!workoutStarted && (
-                  <button className="wk-start-btn" onClick={startCountdown}>
-                    START WORKOUT
-                  </button>
-                )}
               </div>
 
               {/* BREAK BANNER */}
@@ -625,29 +664,49 @@ export const MyWorkout = () => {
                 {workout.exercises.map((ex, ei) => {
                   const isDone = exCompleted[ei];
                   const isActive = workoutStarted && !isDone && Object.entries(exCompleted).every(([k, v]) => parseInt(k) >= ei || v);
+                  const isUpcoming = workoutStarted && !isDone && !isActive;
                   const sets = setData[ei] || [];
+                  const isPendingDiff = pendingDifficultyEx === ei;
+
                   return (
-                    <div key={ei} className={`wk-ex-card ${isDone ? "done" : isActive ? "active" : ""}`}>
+                    <div key={ei} className={`wk-ex-card ${isDone ? "done" : isActive ? "active" : isUpcoming ? "upcoming" : ""}`}>
                       <div className="wk-ex-header">
                         <div className="wk-ex-num">{isDone ? "✓" : ei + 1}</div>
                         <div className="wk-ex-info">
                           <div className="wk-ex-name">
                             {ex.name}
                             {ex.equipment && <span className="wk-ex-tag">{ex.equipment}</span>}
+                            {isDone && exDifficulty[ei] && (
+                              <span style={{ marginLeft: "8px", fontSize: "10px", color: "var(--muted)" }}>
+                                {exDifficulty[ei] === "very_easy" ? "😅 Very easy" :
+                                 exDifficulty[ei] === "easy" ? "👍 Easy" :
+                                 exDifficulty[ei] === "hard" ? "💪 Hard" : "🔥 Very hard"}
+                              </span>
+                            )}
                           </div>
                           <div className="wk-ex-meta">
                             {ex.muscle} · <span style={{ color: "var(--accent)" }}>{ex.sets} sets × {ex.reps} reps</span>
                           </div>
                         </div>
                         <div className="wk-ex-actions">
-                          <button
-                            className={`wk-btn-sm ${!videoIds[ex.name] ? "loading" : ""}`}
-                            onClick={() => setActiveVideo(activeVideo === ex.name ? null : ex.name)}
-                          >
-                            {!videoIds[ex.name] ? "⏳" : activeVideo === ex.name ? "▼ Hide" : "▶ Video"}
-                          </button>
+                          {!isUpcoming && (
+                            <button
+                              className={`wk-btn-sm ${!videoIds[ex.name] ? "loading" : ""}`}
+                              onClick={() => setActiveVideo(activeVideo === ex.name ? null : ex.name)}
+                            >
+                              {!videoIds[ex.name] ? "⏳" : activeVideo === ex.name ? "▼ Hide" : "▶ Video"}
+                            </button>
+                          )}
                         </div>
                       </div>
+
+                      {/* Upcoming exercise preview */}
+                      {isUpcoming && (
+                        <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--muted)" }}>
+                          {ex.sets} sets × {ex.reps} reps · {ex.equipment}
+                        </div>
+                      )}
+
                       {isActive && (
                         <div className="wk-ex-details">
                           <p className="wk-instructions">{ex.instructions}</p>
@@ -681,6 +740,15 @@ export const MyWorkout = () => {
                                       onChange={e => {
                                         const val = unit === "lbs" ? (parseFloat(e.target.value) / 2.2046).toFixed(2) : e.target.value;
                                         updateSetField(ei, si, "weight", val);
+                                        if (val) {
+                                          setSetData(prev => {
+                                            const copy = { ...prev };
+                                            copy[ei] = copy[ei].map((s, idx) =>
+                                              idx !== si && !s.weight && !s.done ? { ...s, weight: val } : s
+                                            );
+                                            return copy;
+                                          });
+                                        }
                                       }}
                                       disabled={s.done}
                                     />
@@ -709,6 +777,20 @@ export const MyWorkout = () => {
                               ))}
                             </tbody>
                           </table>
+
+                          {/* Difficulty rating after all sets done */}
+                          {isPendingDiff && (
+                            <div style={{ background: "rgba(0,229,255,0.04)", border: "1px solid rgba(0,229,255,0.15)", borderRadius: "10px", padding: "14px", marginTop: "8px" }}>
+                              <div className="wk-diff-label">🤖 How was this exercise?</div>
+                              <div className="wk-diff-row">
+                                <button className="wk-diff-btn very-easy" onClick={() => handleDifficultySelect(ei, "very_easy")}>😅 Too easy</button>
+                                <button className="wk-diff-btn easy" onClick={() => handleDifficultySelect(ei, "easy")}>👍 Easy</button>
+                                <button className="wk-diff-btn hard" onClick={() => handleDifficultySelect(ei, "hard")}>💪 Hard</button>
+                                <button className="wk-diff-btn very-hard" onClick={() => handleDifficultySelect(ei, "very_hard")}>🔥 Max effort</button>
+                              </div>
+                            </div>
+                          )}
+
                           {activeVideo === ex.name && videoIds[ex.name] && (
                             <div style={{ marginTop: "12px", borderRadius: "8px", overflow: "hidden" }}>
                               <iframe
@@ -753,7 +835,7 @@ export const MyWorkout = () => {
               seconds={seconds}
               fmtTime={fmtTime}
               workout={workout}
-              onNewWorkout={() => { setWorkout(null); setExCompleted({}); setSeconds(0); setTimerRunning(false); setWorkoutStarted(false); setWorkoutPreview(true); setRoutineFeedback(null); }}
+              onNewWorkout={() => { setWorkout(null); setExCompleted({}); setSeconds(0); setTimerRunning(false); setWorkoutStarted(false); setWorkoutPreview(true); setRoutineFeedback(null); setExDifficulty({}); setPendingDifficultyEx(null); }}
               token={token}
               backendUrl={backendUrl}
               navigate={navigate}
@@ -770,7 +852,7 @@ export const MyWorkout = () => {
 const CompletionScreen = ({ seconds, fmtTime, workout, onNewWorkout, token, backendUrl, navigate, setData, unit }) => {
   const [selectedMood, setSelectedMood] = useState(null);
   const [moodSaved, setMoodSaved] = useState(false);
-  const [volumeComparison, setVolumeComparison] = useState(null);
+  const [prevVolume, setPrevVolume] = useState(null);
 
   const moods = [
     { id: "great", label: "🔥 Amazing" },
@@ -780,7 +862,6 @@ const CompletionScreen = ({ seconds, fmtTime, workout, onNewWorkout, token, back
     { id: "low", label: "😔 Exhausted" },
   ];
 
-  // Calculate today's total volume from setData
   const todayVolume = Object.values(setData).flat().reduce((total, s) => {
     if (s.done && s.weight && s.reps) {
       const weightKg = unit === "lbs" ? parseFloat(s.weight) / 2.2046 : parseFloat(s.weight);
@@ -789,22 +870,25 @@ const CompletionScreen = ({ seconds, fmtTime, workout, onNewWorkout, token, back
     return total;
   }, 0);
 
-  // Fetch last session volume for same muscle group
+  // Fetch previous session volume for same muscle group
   useEffect(() => {
     if (!workout?.muscle_group) return;
-    const fetchComparison = async () => {
+    const fetchPrevVolume = async () => {
       try {
-        const today = new Date().toISOString().split("T")[0];
-        const res = await fetch(`${backendUrl}/api/exercise-log/date/${today}`, {
+        const res = await fetch(`${backendUrl}/api/exercise-log/muscle-volume/${encodeURIComponent(workout.muscle_group)}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        if (!res.ok) return;
-        // We already have today's data, just show the volume
-        setVolumeComparison({ todayVolume: Math.round(todayVolume) });
+        if (res.ok) {
+          const data = await res.json();
+          setPrevVolume(data.previous_volume);
+        }
       } catch (e) {}
     };
-    fetchComparison();
+    fetchPrevVolume();
   }, []);
+
+  const volumeDiff = prevVolume !== null ? Math.round(todayVolume - prevVolume) : null;
+  const volumePct = prevVolume && prevVolume > 0 ? Math.round(((todayVolume - prevVolume) / prevVolume) * 100) : null;
 
   const saveMood = async (moodId) => {
     setSelectedMood(moodId);
@@ -831,18 +915,22 @@ const CompletionScreen = ({ seconds, fmtTime, workout, onNewWorkout, token, back
       {/* VOLUME COMPARISON */}
       {todayVolume > 0 && (
         <div className="wk-comparison">
-          <div className="wk-comparison-title">📊 Today's Session Summary</div>
+          <div className="wk-comparison-title">📊 {workout?.muscle_group} Session Summary</div>
           <div className="wk-comparison-row">
-            <span className="wk-comparison-label">Total volume lifted</span>
+            <span className="wk-comparison-label">Total volume today</span>
             <span className="wk-comparison-val up">{Math.round(todayVolume).toLocaleString()} kg</span>
           </div>
+          {prevVolume !== null && (
+            <div className="wk-comparison-row">
+              <span className="wk-comparison-label">vs last {workout?.muscle_group} session</span>
+              <span className={`wk-comparison-val ${volumeDiff >= 0 ? "up" : "down"}`}>
+                {volumeDiff >= 0 ? `+${volumeDiff}` : volumeDiff} kg ({volumePct >= 0 ? `+${volumePct}` : volumePct}%)
+              </span>
+            </div>
+          )}
           <div className="wk-comparison-row">
             <span className="wk-comparison-label">Exercises completed</span>
             <span className="wk-comparison-val">{workout?.exercises?.length}</span>
-          </div>
-          <div className="wk-comparison-row">
-            <span className="wk-comparison-label">Muscle group</span>
-            <span className="wk-comparison-val" style={{ color: "var(--accent)" }}>{workout?.muscle_group}</span>
           </div>
         </div>
       )}
@@ -876,6 +964,18 @@ const CompletionScreen = ({ seconds, fmtTime, workout, onNewWorkout, token, back
           See your progress →
         </button>
       </div>
+      <button
+        onClick={() => {
+          const text = `💪 Just crushed a ${workout?.muscle_group} workout on GymMind AI!\n\n🏋️ ${workout?.exercises?.length} exercises completed\n⏱️ Time: ${fmtTime(seconds)}\n📊 Total volume: ${Math.round(todayVolume).toLocaleString()} kg\n\nTry GymMind AI — your AI-powered fitness coach! 🤖`;
+          window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+        }}
+        style={{ marginTop: "12px", background: "#25D366", color: "#fff", border: "none", padding: "10px 20px", borderRadius: "8px", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%", maxWidth: "300px", margin: "12px auto 0" }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+        </svg>
+        Share results on WhatsApp
+      </button>
     </div>
   );
 };

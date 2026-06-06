@@ -7,6 +7,7 @@ export const Login = () => {
   const { dispatch } = useGlobalReducer();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,10 +49,25 @@ export const Login = () => {
           <label>Email</label>
           <input type="email" placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           <label>Password</label>
-          <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <div className="password-container">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
           <div className="options">
             <label><input type="checkbox" /> Remember me</label>
-            <a href="#">Forgot your password?</a>
+            <Link to="/forgot-password">Forgot your password?</Link>
           </div>
           <button type="submit" className="signin-btn">Sign In</button>
           <div className="divider">
