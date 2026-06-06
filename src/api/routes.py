@@ -1048,3 +1048,53 @@ Write 1-2 sentences. Be specific, energetic, and personal. Use their name. In En
         return jsonify({"message": response.text}), 200
     except Exception as e:
         return jsonify({"message": f"Keep pushing, {user.first_name}! Every workout counts."}), 200
+
+@api.route('/badges/<int:user_id>', methods=['GET'])
+@jwt_required()
+def get_badges(user_id):
+    from api.models import Workout, ExerciseLog
+    from datetime import timedelta
+
+    workouts = Workout.query.filter_by(user_id=user_id).order_by(Workout.date.desc()).all()
+    logs = ExerciseLog.query.filter_by(user_id=user_id).all()
+
+    total_workouts = len(workouts)
+    total_volume = sum(l.weight * l.sets * l.reps for l in logs if l.weight)
+
+    # Streak
+    streak = 0
+    if workouts:
+        sorted_dates = sorted(set(w.date for w in workouts), reverse=True)
+        check_date = date.today()
+        for d in sorted_dates:
+            if (check_date - d).days <= 1:
+                streak += 1
+                check_date = d - timedelta(days=1)
+            else:
+                break
+
+    badges = []
+
+    if total_workouts >= 1:
+        badges.append({"id": "first_workout", "name": "First Workout", "icon": "🥉", "description": "Completed your first workout"})
+    if total_workouts >= 5:
+        badges.append({"id": "five_workouts", "name": "5 Workouts", "icon": "🥈", "description": "Completed 5 workouts"})
+    if total_workouts >= 10:
+        badges.append({"id": "ten_workouts", "name": "10 Workouts", "icon": "🥇", "description": "Completed 10 workouts"})
+    if streak >= 3:
+        badges.append({"id": "streak_3", "name": "3 Day Streak", "icon": "🔥", "description": "Trained 3 days in a row"})
+    if streak >= 7:
+        badges.append({"id": "streak_7", "name": "7 Day Streak", "icon": "⚡", "description": "Trained 7 days in a row"})
+    if total_volume >= 1000:
+        badges.append({"id": "volume_1k", "name": "1,000 kg Club", "icon": "💪", "description": "Lifted 1,000 kg total"})
+    if total_volume >= 10000:
+        badges.append({"id": "volume_10k", "name": "10,000 kg Club", "icon": "🏆", "description": "Lifted 10,000 kg total"})
+
+    return jsonify({
+        "badges": badges,
+        "stats": {
+            "total_workouts": total_workouts,
+            "total_volume": round(total_volume),
+            "streak": streak
+        }
+    }), 200
