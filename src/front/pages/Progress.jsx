@@ -77,7 +77,7 @@ export const Progress = () => {
         body: JSON.stringify({
           user_id: user.id,
           weight: parseFloat(weightInput),
-          date: getDateStr()   // ← usa los dropdowns
+          date: getDateStr()
         })
       });
       if (response.ok) {
@@ -197,13 +197,9 @@ export const Progress = () => {
         .pr-form-label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
         .pr-form-input { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 14px; color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
         .pr-form-input:focus { border-color: var(--accent); }
-
-        /* Quitar flechas nativas del input número */
         .pr-form-input[type=number]::-webkit-inner-spin-button,
         .pr-form-input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .pr-form-input[type=number] { -moz-appearance: textfield; }
-
-        /* Estilos para los selects de fecha */
         .pr-form-input option { background: #0d1318; color: var(--text); }
         select.pr-form-input {
           appearance: none;
@@ -215,7 +211,6 @@ export const Progress = () => {
           padding-right: 28px;
           cursor: pointer;
         }
-
         .pr-date-selects { display: flex; gap: 6px; }
         .pr-btn-accent { background: var(--accent); color: #000; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; white-space: nowrap; align-self: flex-end; }
         .pr-success-msg { background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.2); border-radius: 8px; padding: 8px 14px; font-size: 13px; color: var(--accent2); margin-top: 10px; }
@@ -290,6 +285,14 @@ export const Progress = () => {
         .pr-side-empty { text-align: center; padding: 24px 0; color: var(--muted); font-size: 13px; }
         .pr-cal-wrap { display: flex; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--bg2); margin-bottom: 16px; }
         .pr-cal-main { flex: 1; padding: 20px; min-width: 0; }
+
+        /* BADGES */
+        .pr-badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+        .pr-badge-card { background: rgba(0,229,255,0.04); border: 1px solid rgba(0,229,255,0.15); border-radius: 10px; padding: 14px; text-align: center; transition: transform 0.2s; }
+        .pr-badge-card:hover { transform: translateY(-2px); }
+        .pr-badge-icon { font-size: 32px; margin-bottom: 6px; }
+        .pr-badge-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+        .pr-badge-desc { font-size: 11px; color: var(--muted); }
 
         /* EMPTY / LOADING */
         .pr-empty { text-align: center; padding: 20px; color: var(--muted); font-size: 13px; }
@@ -367,7 +370,6 @@ export const Progress = () => {
               <div className="pr-card">
                 <div className="pr-card-title">⚖️ Log today's weight</div>
                 <div className="pr-log-form">
-                  {/* Input de peso SIN flechas */}
                   <div className="pr-form-group">
                     <label className="pr-form-label">Weight (kg)</label>
                     <input
@@ -381,7 +383,6 @@ export const Progress = () => {
                     />
                   </div>
 
-                  {/* Fecha con 3 dropdowns */}
                   <div className="pr-form-group">
                     <label className="pr-form-label">Date</label>
                     <div className="pr-date-selects">
@@ -573,6 +574,9 @@ export const Progress = () => {
                   })}
                 </div>
               </div>
+
+              {/* ── BADGES ── */}
+              <BadgesSection userId={user?.id} token={token} backendUrl={backendUrl} />
             </>
           )}
         </div>
@@ -581,7 +585,47 @@ export const Progress = () => {
   );
 };
 
-// ── Componente DayDetail (sin cambios) ────────────────────────────────
+// ── BadgesSection ─────────────────────────────────────────────────────
+const BadgesSection = ({ userId, token, backendUrl }) => {
+  const [badges, setBadges] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId || !token) return;
+    fetch(`${backendUrl}/api/badges/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => setBadges(data.badges || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [userId]);
+
+  return (
+    <div className="pr-card">
+      <div className="pr-card-title">🏅 Achievements</div>
+      {loading ? (
+        <div style={{ fontSize: "13px", color: "var(--muted)" }}>Loading...</div>
+      ) : badges.length === 0 ? (
+        <div style={{ fontSize: "13px", color: "var(--muted)", textAlign: "center", padding: "20px 0" }}>
+          Complete workouts to earn badges! 💪
+        </div>
+      ) : (
+        <div className="pr-badge-grid">
+          {badges.map(badge => (
+            <div key={badge.id} className="pr-badge-card">
+              <div className="pr-badge-icon">{badge.icon}</div>
+              <div className="pr-badge-name">{badge.name}</div>
+              <div className="pr-badge-desc">{badge.description}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── DayDetail ─────────────────────────────────────────────────────────
 const DayDetail = ({ date, isTrained, weight, token, backendUrl }) => {
   const [exLogs, setExLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
@@ -655,4 +699,4 @@ const DayDetail = ({ date, isTrained, weight, token, backendUrl }) => {
   );
 };
 
-export default Progress;
+export default Progress; 
