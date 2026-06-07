@@ -244,10 +244,11 @@ export const MyWorkout = () => {
     setTimeout(() => setValidationAlert(null), 3000);
   };
 
-  const logExerciseSet = async (ex, s, difficulty) => {
+const logExerciseSet = async (ex, s, difficulty) => {
     const weightKg = unit === "lbs" ? (parseFloat(s.weight) / 2.2046).toFixed(2) : s.weight;
+    console.log("Logging:", ex.name, "weight:", weightKg, "sets:", 1, "reps:", s.reps, "difficulty:", difficulty);
     try {
-      await fetch(`${backendUrl}/api/exercise-log`, {
+      const res = await fetch(`${backendUrl}/api/exercise-log`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -258,10 +259,13 @@ export const MyWorkout = () => {
           difficulty: difficulty,
         }),
       });
-    } catch (e) {}
-  };
+      const data = await res.json();
+      console.log("Response:", res.status, data);
+    } catch (e) { console.log("Error:", e); }
+  }; 
 
   const handleDifficultySelect = async (exIdx, difficulty) => {
+    console.log("handleDifficultySelect called", exIdx, difficulty);
     setExDifficulty(prev => ({ ...prev, [exIdx]: difficulty }));
     setPendingDifficultyEx(null);
 
@@ -296,11 +300,23 @@ export const MyWorkout = () => {
     }
   };
 
-const finishWorkout = () => {
+const finishWorkout = async () => {
   setTimerRunning(false);
   setPendingDifficultyEx(null);
+  
+  // Guardar todos los sets completados
+  if (workout) {
+    for (const [exIdx, sets] of Object.entries(setData)) {
+      const ex = workout.exercises[parseInt(exIdx)];
+      for (const s of sets) {
+        if (s.done && s.weight) {
+          await logExerciseSet(ex, s, exDifficulty[exIdx] || "easy");
+        }
+      }
+    }
+  }
   setWorkoutFinished(true);
-}; 
+};
 
   const fmtTime = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
   const fmtBreak = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
@@ -782,19 +798,6 @@ const finishWorkout = () => {
                             </tbody>
                           </table>
 
-                          {/* Difficulty rating after all sets done */}
-                          {isPendingDiff && (
-                            <div style={{ background: "rgba(0,229,255,0.04)", border: "1px solid rgba(0,229,255,0.15)", borderRadius: "10px", padding: "14px", marginTop: "8px" }}>
-                              <div className="wk-diff-label">🤖 How was this exercise?</div>
-                              <div className="wk-diff-row">
-                                <button className="wk-diff-btn very-easy" onClick={() => handleDifficultySelect(ei, "very_easy")}>😅 Too easy</button>
-                                <button className="wk-diff-btn easy" onClick={() => handleDifficultySelect(ei, "easy")}>👍 Easy</button>
-                                <button className="wk-diff-btn hard" onClick={() => handleDifficultySelect(ei, "hard")}>💪 Hard</button>
-                                <button className="wk-diff-btn very-hard" onClick={() => handleDifficultySelect(ei, "very_hard")}>🔥 Max effort</button>
-                              </div>
-                            </div>
-                          )}
-
                           {activeVideo === ex.name && videoIds[ex.name] && (
                             <div style={{ marginTop: "12px", borderRadius: "8px", overflow: "hidden" }}>
                               <iframe
@@ -809,6 +812,19 @@ const finishWorkout = () => {
                           )}
                         </div>
                       )}
+
+                      {isPendingDiff && (
+                        <div style={{ background: "rgba(0,229,255,0.04)", border: "1px solid rgba(0,229,255,0.15)", borderRadius: "10px", padding: "14px", marginTop: "8px" }}>
+                          <div className="wk-diff-label">🤖 How was this exercise?</div>
+                          <div className="wk-diff-row">
+                            <button className="wk-diff-btn very-easy" onClick={() => handleDifficultySelect(ei, "very_easy")}>😅 Too easy</button>
+                            <button className="wk-diff-btn easy" onClick={() => handleDifficultySelect(ei, "easy")}>👍 Easy</button>
+                            <button className="wk-diff-btn hard" onClick={() => handleDifficultySelect(ei, "hard")}>💪 Hard</button>
+                            <button className="wk-diff-btn very-hard" onClick={() => handleDifficultySelect(ei, "very_hard")}>🔥 Max effort</button>
+                          </div>
+                        </div>
+                      )}
+
                     </div>
                   );
                 })}
@@ -840,7 +856,8 @@ const finishWorkout = () => {
               fmtTime={fmtTime}
               workout={workout}
               exCompleted={exCompleted}
-              onNewWorkout={() => { setWorkout(null); setExCompleted({}); setSeconds(0); setTimerRunning(false); setWorkoutStarted(false); setWorkoutPreview(true); setRoutineFeedback(null); setExDifficulty({}); setPendingDifficultyEx(null); }}
+              workoutFinished={workoutFinished}
+              onNewWorkout={() => { setWorkout(null); setExCompleted({}); setSeconds(0); setTimerRunning(false); setWorkoutStarted(false); setWorkoutPreview(true); setRoutineFeedback(null); setExDifficulty({}); setPendingDifficultyEx(null); setWorkoutFinished(false); }}
               token={token}
               backendUrl={backendUrl}
               navigate={navigate}
@@ -854,7 +871,7 @@ const finishWorkout = () => {
   );
 };
 
-const CompletionScreen = ({ seconds, fmtTime, workout,exCompleted, onNewWorkout, token, backendUrl, navigate, setData, unit }) => {
+const CompletionScreen = ({ seconds, fmtTime, workout, exCompleted, workoutFinished, onNewWorkout, token, backendUrl, navigate, setData, unit }) => {
   const [selectedMood, setSelectedMood] = useState(null);
   const [moodSaved, setMoodSaved] = useState(false);
   const [prevVolume, setPrevVolume] = useState(null);
@@ -912,7 +929,7 @@ const CompletionScreen = ({ seconds, fmtTime, workout,exCompleted, onNewWorkout,
       <div style={{ fontSize: "56px", marginBottom: "12px" }}>🎉</div>
       <div className="wk-complete-title">WORKOUT COMPLETE!</div>
       <p style={{ fontSize: "14px", color: "var(--muted)", marginBottom: "16px" }}>
-        You crushed {Object.values(exCompleted).filter(Boolean).length} exercises
+        You crushed {Object.values(exCompleted).filter(Boolean).length} exercises. Weights logged.
       </p>
       <div className="wk-complete-time">{fmtTime(seconds)}</div>
       <div className="wk-complete-time-label">Total workout time</div>

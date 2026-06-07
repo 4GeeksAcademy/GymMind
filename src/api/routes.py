@@ -836,8 +836,8 @@ def add_exercise_log():
     sets = body.get("sets")
     reps = body.get("reps")
     difficulty = body.get("difficulty")
-    if not all([exercise_name, weight, sets, reps, difficulty]):
-        return jsonify({"error": "All fields are required"}), 400
+    if not all([exercise_name, sets, reps]):
+        return jsonify({"error": "exercise_name, sets and reps are required"}), 400
     log = ExerciseLog(
         user_id=current_user,
         exercise_name=exercise_name,
@@ -999,9 +999,12 @@ def get_progress_photos(user_id):
 @api.route('/exercise-log/date/<string:date>', methods=['GET'])
 @jwt_required()
 def get_exercise_logs_by_date(date):
-    from api.models import ExerciseLog
+    from datetime import date as date_type
     current_user = int(get_jwt_identity())
-    logs = ExerciseLog.query.filter_by(user_id=current_user, date=date).all()
+    logs = ExerciseLog.query.filter(
+        ExerciseLog.user_id == current_user,
+        ExerciseLog.date == date_type.fromisoformat(date)
+    ).all()
     return jsonify([log.serialize() for log in logs]), 200
 
 
