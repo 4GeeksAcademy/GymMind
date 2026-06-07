@@ -24,6 +24,13 @@ export const Signup = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+    const [notification, setNotification] = useState(null);
+
+    const showNotification = (msg, type = "error") => {
+        setNotification({ msg, type });
+        setTimeout(() => setNotification(null), 3500);
+    };
+
     const handleChange = (event) => {
         setFormData({
             ...formData,
@@ -71,10 +78,10 @@ export const Signup = () => {
                 sessionStorage.setItem("token", data.token);
                 sessionStorage.setItem("user", JSON.stringify(data.user));
 
-                alert("Account created successfully");
-                navigate("/dashboard");
+                showNotification("Account created successfully! Redirecting...", "success");
+                setTimeout(() => navigate("/dashboard"), 1500);
             } else {
-                alert(data.error);
+                showNotification(data.error);
             }
 
         } catch (error) {
@@ -84,6 +91,19 @@ export const Signup = () => {
 
     return (
         <div className="signup-page">
+
+            {notification && (
+                <div style={{
+                    position: "fixed", top: "24px", left: "50%", transform: "translateX(-50%)",
+                    background: "rgba(255,80,80,0.1)",
+                    border: "1px solid #ff6b6b",
+                    color: "#ff6b6b",
+                    padding: "12px 24px", borderRadius: "8px", fontSize: "14px", fontWeight: "500",
+                    zIndex: 9999, backdropFilter: "blur(10px)", whiteSpace: "nowrap"
+                }}>
+                    {notification.msg}
+                </div>
+            )}
 
             <nav className="signup-navbar">
 
@@ -263,11 +283,11 @@ export const Signup = () => {
                                 sessionStorage.setItem("user", JSON.stringify(data.user));
                                 navigate("/dashboard");
                             } else {
-                                alert(data.error);
+                                showNotification(data.error);
                             }
                         }}
                         onError={() => {
-                            alert("Google login failed");
+                            showNotification("Google login failed");
                         }}
                     />
 
