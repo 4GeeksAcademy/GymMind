@@ -1996,3 +1996,668 @@ html {
   letter-spacing: 2px;
   color: #00e5ff;
 }
+
+.legal-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0, 229, 255, 0.08),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(0, 255, 163, 0.06),
+      transparent 35%
+    ),
+    #050b10;
+  color: #ffffff;
+  padding: 90px 20px;
+}
+
+.legal-container {
+  max-width: 980px;
+  margin: 0 auto;
+  background: rgba(8, 19, 27, 0.92);
+  border: 1px solid rgba(0, 229, 255, 0.18);
+  border-radius: 22px;
+  padding: 55px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.45);
+}
+
+.legal-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 35px;
+  color: #00e5ff;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.legal-label {
+  color: #00e5ff;
+  letter-spacing: 4px;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.legal-container h1 {
+  font-size: 46px;
+  line-height: 1.1;
+  margin-bottom: 10px;
+  color: #ffffff;
+}
+
+.legal-date {
+  color: #8ca3ad;
+  margin-bottom: 35px;
+}
+
+.legal-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 229, 255, 0.45),
+    transparent
+  );
+  margin: 35px 0;
+}
+
+.legal-container h2 {
+  margin-top: 30px;
+  margin-bottom: 12px;
+  color: #00e5ff;
+  font-size: 22px;
+}
+
+.legal-container p {
+  color: #cbd5df;
+  line-height: 1.85;
+  font-size: 16px;
+}
+
+.legal-note {
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.18);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin: 25px 0;
+  color: #dcefff;
+}
+
+@media (max-width: 768px) {
+  .legal-container {
+    padding: 32px 24px;
+  }
+
+  .legal-container h1 {
+    font-size: 34px;
+  }
+}
+
+.terms-error {
+  color: #ff5f5f;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.nutrition-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 30px 0;
+}
+
+.food-search-hint {
+  display: block;
+  margin-top: 10px;
+  color: #8ca3ad;
+  font-size: 13px;
+}
+
+.food-source {
+  margin-top: 4px;
+  color: #8ca3ad;
+  font-size: 12px;
+}
+
+.history-btn {
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: #00e5ff;
+  color: #001018;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.favorite-btn {
+  margin: 14px 0;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: #00e5ff;
+  color: #001018;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.favorite-meals-section {
+  margin-top: 30px;
+}
+
+.favorite-toggle-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: #00e5ff;
+  color: #001018;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.favorite-meals-list {
+  margin-top: 20px;
+}
+
+.favorite-meal-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 12px;
+  color: #ff5f5f;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.show-password-btn {
+  background: transparent;
+  border: none;
+  color: #00e5ff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: -10px;
+  margin-bottom: 14px;
+}
+
+.show-password-btn:hover {
+  text-decoration: underline;
+}
+
+.show-confirm-password-btn {
+  background: transparent;
+  border: none;
+  color: #00e5ff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: -10px;
+  margin-bottom: 14px;
+}
+.show-confirm-password-btn:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .nutrition-navbar {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .nutrition-navbar-links {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .nutrition-container {
+    padding: 16px;
+  }
+
+  .nutrition-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .food-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .search-bar {
+    flex-direction: column;
+  }
+
+  .search-bar input,
+  .search-bar button {
+    width: 100%;
+  }
+
+  .meal-results-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .food-log-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .food-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+.mobile-navbar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .db-nav,
+  .nutrition-navbar {
+    display: none;
+  }
+
+  .mobile-navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 18px;
+    background: #050b0f;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+
+  .mobile-navbar-logo {
+    color: #00e5ff;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+  }
+
+  .hamburger-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: white;
+    font-size: 24px;
+    border-radius: 10px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+
+  .mobile-menu {
+    position: absolute;
+    top: 64px;
+    right: 16px;
+    min-width: 220px;
+    background: #071217;
+    border: 1px solid rgba(0, 229, 255, 0.25);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.45);
+  }
+
+  .mobile-menu button {
+    background: transparent;
+    border: none;
+    color: white;
+    text-align: left;
+    font-size: 15px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+  }
+
+  .mobile-menu button:hover {
+    background: rgba(0, 229, 255, 0.08);
+    color: #00e5ff;
+  }
+
+  .mobile-logout {
+    color: #ff6b6b !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    margin-top: 6px;
+    padding-top: 12px !important;
+  }
+}
+
+.mobile-navbar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .db-nav,
+  .nutrition-navbar,
+  .moodcheck-navbar,
+  .pr-nav,
+  .pf-nav,
+  .wk-nav {
+    display: none;
+  }
+
+  .mobile-navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 18px;
+    background: #050b0f;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+
+  .mobile-navbar-logo {
+    color: #00e5ff;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+  }
+
+  .hamburger-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: white;
+    font-size: 24px;
+    border-radius: 10px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+
+  .mobile-menu {
+    position: absolute;
+    top: 64px;
+    right: 16px;
+    min-width: 220px;
+    background: #071217;
+    border: 1px solid rgba(0, 229, 255, 0.25);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.45);
+  }
+
+  .mobile-menu button {
+    background: transparent;
+    border: none;
+    color: white;
+    text-align: left;
+    font-size: 15px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+  }
+
+  .mobile-menu button:hover {
+    background: rgba(0, 229, 255, 0.08);
+    color: #00e5ff;
+  }
+
+  .mobile-logout {
+    color: #ff6b6b !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    margin-top: 6px;
+    padding-top: 12px !important;
+  }
+}
+
+.mobile-navbar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-navbar {
+    display: block;
+  }
+
+  .wk-nav {
+    display: none;
+  }
+}
+
+/* Premium compact nutrition layout */
+
+.nutrition-container {
+  width: 72%;
+  max-width: 920px;
+}
+
+.nutrition-summary {
+  padding: 20px 22px;
+  margin-bottom: 22px;
+}
+
+.nutrition-summary h2 {
+  font-size: 17px;
+}
+
+.nutrition-summary p {
+  font-size: 14px;
+}
+
+.macro-tags {
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.macro-tag {
+  padding: 8px 13px;
+  font-size: 13px;
+}
+
+.nutrition-grid {
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.nutrition-card {
+  min-height: 125px;
+  padding: 16px 18px;
+}
+
+.nutrition-card h1 {
+  font-size: 28px;
+}
+
+.nutrition-card h2 {
+  font-size: 18px;
+}
+
+.nutrition-card p {
+  font-size: 12px;
+}
+
+.progress-line {
+  height: 5px;
+  margin: 10px auto;
+}
+
+.food-search,
+.food-log {
+  padding: 18px 20px;
+  min-height: 300px;
+}
+
+.food-search h2,
+.food-log h2 {
+  font-size: 21px;
+  margin-bottom: 12px;
+}
+
+.search-bar input {
+  height: 40px;
+  font-size: 13px;
+}
+
+.search-btn,
+.history-btn,
+.favorite-toggle-btn {
+  height: 40px;
+  padding: 0 18px;
+  font-size: 13px;
+  border-radius: 9px;
+}
+
+.nutrition-divider {
+  margin: 18px 0;
+}
+
+.food-log-item {
+  padding: 10px 0;
+}
+
+.food-name {
+  font-size: 15px;
+}
+
+.food-macros,
+.food-source,
+.food-search-hint {
+  font-size: 12px;
+}
+
+.delete-food-btn {
+  font-size: 18px;
+}
+
+.goal-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.goal-btn {
+  border: none;
+  background: transparent;
+  color: #8f9bab;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.goal-btn:hover {
+  color: white;
+}
+
+.goal-btn.active {
+  background: #00e5ff;
+  color: #001018;
+}
+
+.nutrition-card {
+  min-height: 115px;
+  padding: 14px 16px;
+}
+
+.nutrition-card h1 {
+  font-size: 26px;
+}
+
+.nutrition-card h2 {
+  font-size: 16px;
+}
+
+.nutrition-card p {
+  font-size: 12px;
+}
+
+.progress-line {
+  height: 5px;
+  margin: 9px auto;
+}
+
+.food-search h2,
+.food-log h2 {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.food-search h2 span,
+.food-log h2 span {
+  font-size: 20px;
+}
+
+.food-log {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.food-log::-webkit-scrollbar {
+  width: 6px;
+}
+
+.food-log::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 255, 0.35);
+  border-radius: 999px;
+}
+
+.food-log::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.success-message {
+  color: #00e5ff;
+  margin-top: 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+#pricing {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 90px 24px;
+}
+
+#pricing h2 {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+#pricing .pricing-cards {
+  width: 100%;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 24px;
+  align-items: stretch;
+}
+
+#pricing .pricing-card {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  min-height: 480px;
+}
+
+@media (max-width: 992px) {
+  #pricing .pricing-cards {
+    grid-template-columns: 1fr !important;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+}
