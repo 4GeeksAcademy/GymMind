@@ -5,6 +5,8 @@ set -o errexit
 npm install
 npm run build
 
+python -m pip install pipenv
+
 pipenv install
 
 pipenv run upgrade
