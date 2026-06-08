@@ -47,27 +47,6 @@ def handle_hello():
     return jsonify({"message": "Hello! I'm a message that came from the backend"}), 200
 
 
-@api.route("/test-email", methods=["GET"])
-def test_email():
-    try:
-        response = resend.Emails.send({
-            "from": "onboarding@resend.dev",
-            "to": ["meylin103@gmail.com"],
-            "subject": "GymMind Test Email",
-            "html": "<h1>Hello from GymMind!</h1><p>Your Resend integration is working.</p>"
-        })
-
-        return jsonify({
-            "message": "Email sent",
-            "response": response
-        }), 200
-
-    except Exception as e:
-        return jsonify({
-            "error": str(e)
-        }), 500
-
-
 @api.route('/signup', methods=['POST'])
 def signup():
     body = request.get_json()
@@ -100,6 +79,8 @@ def login():
         return jsonify({"msg": "Invalid email or password"}), 401
     access_token = create_access_token(identity=str(user.id))
     return jsonify({"token": access_token, "user": user.serialize()}), 200
+
+
 @api.route("/forgot-password", methods=["POST"])
 def forgot_password():
     data = request.get_json()
@@ -246,8 +227,10 @@ def forgot_password():
         }), 200
 
     except Exception as e:
+        print("Resend error:", e)
+
         return jsonify({
-            "error": str(e)
+            "error": "Email service is currently unavailable."
         }), 500
 
 
@@ -418,6 +401,7 @@ def healthy_meals():
 def add_food_log():
     user_id = int(get_jwt_identity())
     body = request.get_json()
+
     new_food = FoodLog(
         user_id=user_id,
         food_name=body.get("food_name"),
@@ -429,20 +413,31 @@ def add_food_log():
         serving=body.get("serving"),
         source=body.get("source")
     )
+
     db.session.add(new_food)
     db.session.commit()
-    return jsonify({"message": "Food added to log", "food": new_food.serialize()}), 201
+
+    return jsonify({
+        "message": "Food added to log",
+        "food": new_food.serialize()
+    }), 201
 
 
 @api.route("/food-log/today", methods=["GET"])
 @jwt_required()
 def get_today_food_log():
-    from api.models import NutritionLog as FoodLog
     user_id = int(get_jwt_identity())
+
     today = date.today()
+
     foods = FoodLog.query.filter(
-        FoodLog.user_id == user_id, db.func.date(FoodLog.date) == today).all()
-    return jsonify({"foods": [food.serialize() for food in foods]}), 200
+        FoodLog.user_id == user_id,
+        db.func.date(FoodLog.created_at) == today
+    ).order_by(FoodLog.created_at.desc()).all()
+
+    return jsonify({
+        "foods": [food.serialize() for food in foods]
+    }), 200
 
 
 @api.route("/food-log/<int:food_id>", methods=["DELETE"])
@@ -460,23 +455,38 @@ def delete_food_log(food_id):
 @api.route("/food-log/history", methods=["GET"])
 @jwt_required()
 def get_food_log_history():
-    from api.models import NutritionLog as FoodLog
     user_id = int(get_jwt_identity())
-    foods = FoodLog.query.filter_by(
-        user_id=user_id).order_by(FoodLog.date.desc()).all()
-    history = {}
-    for food in foods:
-        day = food.date.isoformat()
-        if day not in history:
-            history[day] = {"date": day, "foods": [], "totals": {
-                "calories": 0, "protein": 0, "carbs": 0, "fats": 0}}
-        history[day]["foods"].append(food.serialize())
-        history[day]["totals"]["calories"] += food.calories
-        history[day]["totals"]["protein"] += food.protein
-        history[day]["totals"]["carbs"] += food.carbs
-        history[day]["totals"]["fats"] += food.fats
-    return jsonify({"history": list(history.values())}), 200
 
+    foods = FoodLog.query.filter_by(
+        user_id=user_id
+    ).order_by(FoodLog.created_at.desc()).all()
+
+    history = {}
+
+    for food in foods:
+        day = food.created_at.strftime("%Y-%m-%d")
+
+        if day not in history:
+            history[day] = {
+                "date": day,
+                "foods": [],
+                "totals": {
+                    "calories": 0,
+                    "protein": 0,
+                    "carbs": 0,
+                    "fats": 0
+                }
+            }
+
+        history[day]["foods"].append(food.serialize())
+        history[day]["totals"]["calories"] += food.calories or 0
+        history[day]["totals"]["protein"] += food.protein or 0
+        history[day]["totals"]["carbs"] += food.carbs or 0
+        history[day]["totals"]["fats"] += food.fats or 0
+
+    return jsonify({
+        "history": list(history.values())
+    }), 200
 
 @api.route('/user/<int:user_id>', methods=['GET'])
 def get_user_profile(user_id):
@@ -1052,13 +1062,15 @@ Write 1-2 sentences. Be specific, energetic, and personal. Use their name. In En
     except Exception as e:
         return jsonify({"message": f"Keep pushing, {user.first_name}! Every workout counts."}), 200
 
+
 @api.route('/badges/<int:user_id>', methods=['GET'])
 @jwt_required()
 def get_badges(user_id):
     from api.models import Workout, ExerciseLog
     from datetime import timedelta
 
-    workouts = Workout.query.filter_by(user_id=user_id).order_by(Workout.date.desc()).all()
+    workouts = Workout.query.filter_by(
+        user_id=user_id).order_by(Workout.date.desc()).all()
     logs = ExerciseLog.query.filter_by(user_id=user_id).all()
 
     total_workouts = len(workouts)
@@ -1079,19 +1091,26 @@ def get_badges(user_id):
     badges = []
 
     if total_workouts >= 1:
-        badges.append({"id": "first_workout", "name": "First Workout", "icon": "🥉", "description": "Completed your first workout"})
+        badges.append({"id": "first_workout", "name": "First Workout",
+                      "icon": "🥉", "description": "Completed your first workout"})
     if total_workouts >= 5:
-        badges.append({"id": "five_workouts", "name": "5 Workouts", "icon": "🥈", "description": "Completed 5 workouts"})
+        badges.append({"id": "five_workouts", "name": "5 Workouts",
+                      "icon": "🥈", "description": "Completed 5 workouts"})
     if total_workouts >= 10:
-        badges.append({"id": "ten_workouts", "name": "10 Workouts", "icon": "🥇", "description": "Completed 10 workouts"})
+        badges.append({"id": "ten_workouts", "name": "10 Workouts",
+                      "icon": "🥇", "description": "Completed 10 workouts"})
     if streak >= 3:
-        badges.append({"id": "streak_3", "name": "3 Day Streak", "icon": "🔥", "description": "Trained 3 days in a row"})
+        badges.append({"id": "streak_3", "name": "3 Day Streak",
+                      "icon": "🔥", "description": "Trained 3 days in a row"})
     if streak >= 7:
-        badges.append({"id": "streak_7", "name": "7 Day Streak", "icon": "⚡", "description": "Trained 7 days in a row"})
+        badges.append({"id": "streak_7", "name": "7 Day Streak",
+                      "icon": "⚡", "description": "Trained 7 days in a row"})
     if total_volume >= 1000:
-        badges.append({"id": "volume_1k", "name": "1,000 kg Club", "icon": "💪", "description": "Lifted 1,000 kg total"})
+        badges.append({"id": "volume_1k", "name": "1,000 kg Club",
+                      "icon": "💪", "description": "Lifted 1,000 kg total"})
     if total_volume >= 10000:
-        badges.append({"id": "volume_10k", "name": "10,000 kg Club", "icon": "🏆", "description": "Lifted 10,000 kg total"})
+        badges.append({"id": "volume_10k", "name": "10,000 kg Club",
+                      "icon": "🏆", "description": "Lifted 10,000 kg total"})
 
     return jsonify({
         "badges": badges,
