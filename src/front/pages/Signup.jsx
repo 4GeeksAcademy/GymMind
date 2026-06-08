@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+import { Link } from "react-router-dom";
 
 
 
@@ -18,6 +19,18 @@ export const Signup = () => {
 
     const [termsAccepted, setTermsAccepted] = useState(false);
 
+    const [submitAttempted, setSubmitAttempted] = useState(false);
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    const [notification, setNotification] = useState(null);
+
+    const showNotification = (msg, type = "error") => {
+        setNotification({ msg, type });
+        setTimeout(() => setNotification(null), 3500);
+    };
+
     const handleChange = (event) => {
         setFormData({
             ...formData,
@@ -28,6 +41,7 @@ export const Signup = () => {
     const handleSubmit = async (event) => {
 
         event.preventDefault();
+        setSubmitAttempted(true);
 
         if (formData.password !== formData.confirm_password) {
             alert("Passwords do not match");
@@ -35,7 +49,6 @@ export const Signup = () => {
         }
 
         if (!termsAccepted) {
-            alert("You must accept the Terms of Service and Privacy Policy to continue.");
             return;
         }
 
@@ -48,7 +61,12 @@ export const Signup = () => {
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify({
+                        first_name: formData.first_name,
+                        last_name: formData.last_name,
+                        email: formData.email,
+                        password: formData.password
+                    })
                 }
             );
 
@@ -60,10 +78,10 @@ export const Signup = () => {
                 sessionStorage.setItem("token", data.token);
                 sessionStorage.setItem("user", JSON.stringify(data.user));
 
-                alert("Account created successfully");
-                navigate("/dashboard");
+                showNotification("Account created successfully! Redirecting...", "success");
+                setTimeout(() => navigate("/dashboard"), 1500);
             } else {
-                alert(data.error);
+                showNotification(data.error);
             }
 
         } catch (error) {
@@ -73,6 +91,19 @@ export const Signup = () => {
 
     return (
         <div className="signup-page">
+
+            {notification && (
+                <div style={{
+                    position: "fixed", top: "24px", left: "50%", transform: "translateX(-50%)",
+                    background: "rgba(255,80,80,0.1)",
+                    border: "1px solid #ff6b6b",
+                    color: "#ff6b6b",
+                    padding: "12px 24px", borderRadius: "8px", fontSize: "14px", fontWeight: "500",
+                    zIndex: 9999, backdropFilter: "blur(10px)", whiteSpace: "nowrap"
+                }}>
+                    {notification.msg}
+                </div>
+            )}
 
             <nav className="signup-navbar">
 
@@ -154,12 +185,20 @@ export const Signup = () => {
                     <label>Password</label>
 
                     <input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         name="password"
                         placeholder="Minimum 8 characters"
                         value={formData.password}
                         onChange={handleChange}
                     />
+
+                    <button
+                        type="button"
+                        className="show-password-btn"
+                        onClick={() => setShowPassword(!showPassword)}
+                    >
+                        {showPassword ? "Hide" : "Show"}
+                    </button>
 
                     <div className="password-lines">
                         <span></span>
@@ -171,13 +210,19 @@ export const Signup = () => {
                     <label>Confirm Password</label>
 
                     <input
-                        type="password"
+                        type={showConfirmPassword ? "text" : "password"}
                         name="confirm_password"
                         placeholder="••••••••"
                         value={formData.confirm_password}
                         onChange={handleChange}
                     />
-
+                    <button
+                        type="button"
+                        className="show-confirm-password-btn"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                        {showConfirmPassword ? "Hide" : "Show"}
+                    </button>
                     <div className="terms">
                         <input
                             type="checkbox"
@@ -185,9 +230,20 @@ export const Signup = () => {
                             onChange={(e) => setTermsAccepted(e.target.checked)}
                         />
                         <p>
-                            I accept the <span>Terms of Service</span> and{" "}
-                            <span>Privacy Policy</span>
+                            I accept the{" "}
+                            <Link to="/terms" >
+                                Terms of Service
+                            </Link>
+                            {" "}and{" "}
+                            <Link to="/privacy" >
+                                Privacy Policy
+                            </Link>
                         </p>
+                        {!termsAccepted && submitAttempted && (
+                            <p className="terms-error">
+                                You must accept the Terms of Service and Privacy Policy.
+                            </p>
+                        )}
                     </div>
 
                     <button
@@ -227,11 +283,11 @@ export const Signup = () => {
                                 sessionStorage.setItem("user", JSON.stringify(data.user));
                                 navigate("/dashboard");
                             } else {
-                                alert(data.error);
+                                showNotification(data.error);
                             }
                         }}
                         onError={() => {
-                            alert("Google login failed");
+                            showNotification("Google login failed");
                         }}
                     />
 

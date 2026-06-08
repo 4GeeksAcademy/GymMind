@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 
 const BAD_WORDS = ["fuck", "shit", "ass", "bitch", "bastard", "dick", "pussy", "cunt", "nigger", "faggot"];
 
@@ -21,7 +22,8 @@ const isFakeDomain = (email) => {
 };
 
 const EditProfile = () => {
-    const userId = 1;
+    const { store } = useGlobalReducer();
+    const userId = store.user?.id || JSON.parse(sessionStorage.getItem("user") || "{}").id;
     const [form, setForm] = useState({
         first_name: "", last_name: "", email: "",
         nickname: "", gender: "", date_of_birth: "",
@@ -39,6 +41,11 @@ const EditProfile = () => {
     const [dobYear, setDobYear] = useState("");
 
     useEffect(() => {
+        const token = sessionStorage.getItem("token");
+        if (!token || !userId) {
+            navigate("/login");
+            return;
+        }
         fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/${userId}`)
             .then(res => res.json())
             .then(data => {
@@ -56,7 +63,7 @@ const EditProfile = () => {
                 if (data.photo_url) setPhotoPreview(data.photo_url);
             })
             .catch(() => setError("Could not connect to server"));
-    }, []);
+    }, [userId]);
 
     useEffect(() => {
         if (form.date_of_birth) {
@@ -299,6 +306,9 @@ const EditProfile = () => {
                 .ep-number-input { background: #0d1318; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: var(--accent); font-size: 15px; font-weight: 700; width: 72px; text-align: center; padding: 6px 8px; outline: none; font-family: 'DM Sans', sans-serif; -moz-appearance: textfield; }
                 .ep-number-input::-webkit-outer-spin-button,
                 .ep-number-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+                input[type=number]::-webkit-outer-spin-button,
+                input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+                input[type=number] { -moz-appearance: textfield; }
 
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
                 @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -472,59 +482,83 @@ const EditProfile = () => {
                     <div className="ep-card">
                         <div className="ep-card-title">📏 Measurements</div>
 
-                        <div style={{ marginBottom: "24px" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                                <label className="ep-label" style={{ margin: 0 }}>Weight</label>
-                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        {/* WEIGHT */}
+                        <div style={{ marginBottom: "32px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "12px" }}>
+                                <div>
+                                    <label className="ep-label" style={{ margin: 0 }}>Weight</label>
+                                    <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>30 — 200 kg</div>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(0,229,255,0.07)", border: "1px solid rgba(0,229,255,0.2)", borderRadius: "10px", padding: "6px 12px" }}>
                                     <input
                                         type="number"
-                                        className="ep-number-input"
-                                        name="weight"
                                         min="30" max="200"
-                                        value={form.weight || 70}
+                                        value={form.weight === "" ? "" : form.weight}
                                         onChange={(e) => {
-                                            const val = Math.min(200, Math.max(30, Number(e.target.value)));
-                                            setForm({ ...form, weight: val });
+                                            const raw = e.target.value;
+                                            if (raw === "" || raw === "-") { setForm({ ...form, weight: "" }); return; }
+                                            const val = Number(raw);
+                                            if (!isNaN(val)) setForm({ ...form, weight: val });
                                         }}
+                                        onBlur={(e) => {
+                                            const val = Number(e.target.value);
+                                            if (isNaN(val) || val < 30) setForm({ ...form, weight: 30 });
+                                            else if (val > 200) setForm({ ...form, weight: 200 });
+                                        }}
+                                        style={{ background: "transparent", border: "none", color: "#00e5ff", fontSize: "22px", fontWeight: "700", width: "56px", textAlign: "center", outline: "none", fontFamily: "'DM Sans', sans-serif", MozAppearance: "textfield", WebkitAppearance: "none" }}
                                     />
-                                    <span style={{ color: "var(--muted)", fontSize: "13px" }}>kg</span>
+                                    <span style={{ color: "var(--muted)", fontSize: "13px", fontWeight: "500" }}>kg</span>
                                 </div>
                             </div>
-                            <input
-                                type="range" name="weight" min="30" max="200" step="1"
-                                value={form.weight || 70} onChange={handleChange}
-                                className="ep-slider"
-                            />
-                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--muted)", marginTop: "4px" }}>
-                                <span>30 kg</span><span>200 kg</span>
+                            <div style={{ position: "relative", height: "6px", borderRadius: "99px", background: "rgba(255,255,255,0.08)", margin: "0 0 6px" }}>
+                                <div style={{ position: "absolute", left: 0, top: 0, height: "100%", borderRadius: "99px", background: "linear-gradient(90deg, #0066ff, #00e5ff)", width: `${((Number(form.weight) || 70) - 30) / 170 * 100}%`, transition: "width 0.1s" }} />
+                                <input
+                                    type="range" min="30" max="200" step="1"
+                                    value={Number(form.weight) || 70}
+                                    onChange={(e) => setForm({ ...form, weight: Number(e.target.value) })}
+                                    style={{ position: "absolute", top: "50%", left: 0, transform: "translateY(-50%)", width: "100%", opacity: 0, cursor: "pointer", height: "20px", margin: 0 }}
+                                />
+                                <div style={{ position: "absolute", top: "50%", transform: "translate(-50%, -50%)", left: `${((Number(form.weight) || 70) - 30) / 170 * 100}%`, width: "18px", height: "18px", borderRadius: "50%", background: "#00e5ff", border: "3px solid #080c10", boxShadow: "0 0 8px rgba(0,229,255,0.6)", pointerEvents: "none", transition: "left 0.1s" }} />
                             </div>
                         </div>
 
+                        {/* HEIGHT */}
                         <div>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                                <label className="ep-label" style={{ margin: 0 }}>Height</label>
-                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "12px" }}>
+                                <div>
+                                    <label className="ep-label" style={{ margin: 0 }}>Height</label>
+                                    <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>100 — 250 cm</div>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(0,229,255,0.07)", border: "1px solid rgba(0,229,255,0.2)", borderRadius: "10px", padding: "6px 12px" }}>
                                     <input
                                         type="number"
-                                        className="ep-number-input"
-                                        name="height"
                                         min="100" max="250"
-                                        value={form.height || 170}
+                                        value={form.height === "" ? "" : form.height}
                                         onChange={(e) => {
-                                            const val = Math.min(250, Math.max(100, Number(e.target.value)));
-                                            setForm({ ...form, height: val });
+                                            const raw = e.target.value;
+                                            if (raw === "" || raw === "-") { setForm({ ...form, height: "" }); return; }
+                                            const val = Number(raw);
+                                            if (!isNaN(val)) setForm({ ...form, height: val });
                                         }}
+                                        onBlur={(e) => {
+                                            const val = Number(e.target.value);
+                                            if (isNaN(val) || val < 100) setForm({ ...form, height: 100 });
+                                            else if (val > 250) setForm({ ...form, height: 250 });
+                                        }}
+                                        style={{ background: "transparent", border: "none", color: "#00e5ff", fontSize: "22px", fontWeight: "700", width: "56px", textAlign: "center", outline: "none", fontFamily: "'DM Sans', sans-serif", MozAppearance: "textfield", WebkitAppearance: "none" }}
                                     />
-                                    <span style={{ color: "var(--muted)", fontSize: "13px" }}>cm</span>
+                                    <span style={{ color: "var(--muted)", fontSize: "13px", fontWeight: "500" }}>cm</span>
                                 </div>
                             </div>
-                            <input
-                                type="range" name="height" min="100" max="250" step="1"
-                                value={form.height || 170} onChange={handleChange}
-                                className="ep-slider"
-                            />
-                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--muted)", marginTop: "4px" }}>
-                                <span>100 cm</span><span>250 cm</span>
+                            <div style={{ position: "relative", height: "6px", borderRadius: "99px", background: "rgba(255,255,255,0.08)", margin: "0 0 6px" }}>
+                                <div style={{ position: "absolute", left: 0, top: 0, height: "100%", borderRadius: "99px", background: "linear-gradient(90deg, #0066ff, #00e5ff)", width: `${((Number(form.height) || 170) - 100) / 150 * 100}%`, transition: "width 0.1s" }} />
+                                <input
+                                    type="range" min="100" max="250" step="1"
+                                    value={Number(form.height) || 170}
+                                    onChange={(e) => setForm({ ...form, height: Number(e.target.value) })}
+                                    style={{ position: "absolute", top: "50%", left: 0, transform: "translateY(-50%)", width: "100%", opacity: 0, cursor: "pointer", height: "20px", margin: 0 }}
+                                />
+                                <div style={{ position: "absolute", top: "50%", transform: "translate(-50%, -50%)", left: `${((Number(form.height) || 170) - 100) / 150 * 100}%`, width: "18px", height: "18px", borderRadius: "50%", background: "#00e5ff", border: "3px solid #080c10", boxShadow: "0 0 8px rgba(0,229,255,0.6)", pointerEvents: "none", transition: "left 0.1s" }} />
                             </div>
                         </div>
                     </div>

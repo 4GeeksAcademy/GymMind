@@ -4,7 +4,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime, date
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
 db = SQLAlchemy()
 
 
@@ -23,7 +22,8 @@ class User(db.Model):
     weight: Mapped[float] = mapped_column(Float, nullable=True)
     height: Mapped[float] = mapped_column(Float, nullable=True)
     phone_number: Mapped[str] = mapped_column(String(30), nullable=True)
-    photo_url: Mapped[str] = mapped_column(String(300), nullable=True)
+    photo_url: Mapped[str] = mapped_column(String(500), nullable=True)
+    fitness_goal: Mapped[str] = mapped_column(String(50), nullable=True)
 
     # Relationships
     profile: Mapped["Profile"] = relationship(
@@ -35,6 +35,8 @@ class User(db.Model):
                           ] = relationship(back_populates="user")
     nutrition_logs: Mapped[list["NutritionLog"]
                            ] = relationship(back_populates="user")
+    progress_photos: Mapped[list["ProgressPhoto"]
+                            ] = relationship(back_populates="user")
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
@@ -55,7 +57,7 @@ class User(db.Model):
             "height": self.height,
             "phone_number": self.phone_number,
             "photo_url": self.photo_url,
-
+            "fitness_goal": self.fitness_goal,
         }
 
 
@@ -192,4 +194,113 @@ class NutritionLog(db.Model):
             "carbs": self.carbs,
             "fats": self.fats,
             "date": self.date.isoformat()
+        }
+
+
+class FoodLog(db.Model):
+    __tablename__ = "food_log"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False
+    )
+
+    food_name = db.Column(db.String(255), nullable=False)
+    calories = db.Column(db.Float, nullable=False)
+    protein = db.Column(db.Float, nullable=False)
+    carbs = db.Column(db.Float, nullable=False)
+    fats = db.Column(db.Float, nullable=False)
+
+    category = db.Column(db.String(100))
+    serving = db.Column(db.String(100))
+    source = db.Column(db.String(100))
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "food_name": self.food_name,
+            "calories": self.calories,
+            "protein": self.protein,
+            "carbs": self.carbs,
+            "fats": self.fats,
+            "category": self.category,
+            "serving": self.serving,
+            "source": self.source,
+            "created_at": self.created_at.isoformat()
+        }
+
+
+class ExerciseLog(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        db.ForeignKey("user.id"), nullable=False)
+    exercise_name: Mapped[str] = mapped_column(String(150), nullable=False)
+    sets: Mapped[int] = mapped_column(nullable=False)
+    reps: Mapped[int] = mapped_column(nullable=False)
+    weight: Mapped[float] = mapped_column(Float, nullable=True)
+    difficulty: Mapped[str] = mapped_column(String(50), nullable=True)
+    date: Mapped[date] = mapped_column(
+        Date, nullable=False, default=datetime.utcnow)
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "exercise_name": self.exercise_name,
+            "sets": self.sets,
+            "reps": self.reps,
+            "weight": self.weight,
+            "difficulty": self.difficulty,
+            "date": self.date.isoformat()
+        }
+
+
+class ProgressPhoto(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        db.ForeignKey("user.id"), nullable=False)
+    photo_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    notes: Mapped[str] = mapped_column(String(300), nullable=True)
+    taken_at: Mapped[datetime] = mapped_column(
+        nullable=False, default=datetime.utcnow)
+    user: Mapped["User"] = relationship(back_populates="progress_photos")
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "photo_url": self.photo_url,
+            "notes": self.notes,
+            "taken_at": self.taken_at.isoformat()
+        }
+
+
+class FavoriteMeal(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    meal_name = db.Column(db.String(255), nullable=False)
+    calories = db.Column(db.Float)
+    protein = db.Column(db.Float)
+    carbs = db.Column(db.Float)
+    fats = db.Column(db.Float)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "meal_name": self.meal_name,
+            "calories": self.calories,
+            "protein": self.protein,
+            "carbs": self.carbs,
+            "fats": self.fats
         }

@@ -1,23 +1,57 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
+import { MobileNavbar } from "../components/MobileNavbar";
 
 export const Dashboard = () => {
   const navigate = useNavigate();
   const { store, dispatch } = useGlobalReducer();
+
   const [selectedMood, setSelectedMood] = useState(null);
   const [aiMessage, setAiMessage] = useState(null);
+  const [moodLoading, setMoodLoading] = useState(false);
+  const [progressLogs, setProgressLogs] = useState([]);
+  const [workouts, setWorkouts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Get user from store or sessionStorage
-  const user = store.user || JSON.parse(sessionStorage.getItem("user"));
+  const user = store.user || JSON.parse(sessionStorage.getItem("user") || "{}");
   const token = store.token || sessionStorage.getItem("token");
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const [coachMessage, setCoachMessage] = useState(null); 
 
-  // Redirect to login if not authenticated
   useEffect(() => {
-    if (!token) {
-      navigate("/login");
-    }
+    if (!token) navigate("/login");
   }, [token]);
+
+  useEffect(() => {
+    if (!user?.id || !token) return;
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [progressRes, workoutRes] = await Promise.all([
+          fetch(`${backendUrl}/api/progress/${user.id}`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${backendUrl}/api/workout/${user.id}`, { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+        if (progressRes.ok) setProgressLogs(await progressRes.json());
+        if (workoutRes.ok) setWorkouts(await workoutRes.json());
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [user?.id, token]);
+
+  useEffect(() => {
+  if (!token) return;
+  fetch(`${backendUrl}/api/dashboard/message`, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+    .then(res => res.json())
+    .then(data => setCoachMessage(data.message))
+    .catch(() => {});
+}, [token]);
 
   const handleLogout = () => {
     sessionStorage.removeItem("token");
@@ -27,33 +61,29 @@ export const Dashboard = () => {
   };
 
   const moods = [
-    { id: "great", emoji: "🔥", label: "Great", message: "You're on fire today! Your AI Coach has an intense workout ready. Channel that energy and go all in — today is your day to set a new personal record!" },
-    { id: "good", emoji: "😊", label: "Good", message: "Feeling good is the perfect foundation. Stay focused and consistent — every rep today brings you closer to your goal. Let's make it count!" },
-    { id: "okay", emoji: "😐", label: "Okay", message: "Even on okay days, showing up is what separates those who reach their goals from those who don't. A moderate session today will keep your momentum going." },
-    { id: "tired", emoji: "😴", label: "Tired", message: "Rest is part of the process. Consider a light recovery session or stretching today. Pushing through exhaustion can lead to injury — listen to your body." },
-    { id: "low", emoji: "😔", label: "Low", message: "It's okay to have off days — everyone does. Your AI Coach believes in you. Start with just 5 minutes. Once you begin, momentum will carry you through." },
+    { id: "great", emoji: "🔥", label: "Great" },
+    { id: "good", emoji: "😊", label: "Good" },
+    { id: "okay", emoji: "😐", label: "Okay" },
+    { id: "tired", emoji: "😴", label: "Tired" },
+    { id: "low", emoji: "😔", label: "Low" },
   ];
 
-  const weekDays = [
-    { name: "Mon", trained: true },
-    { name: "Tue", trained: true },
-    { name: "Wed", trained: true },
-    { name: "Thu", trained: false },
-    { name: "Fri", today: true },
-    { name: "Sat", trained: false },
-    { name: "Sun", trained: false },
-  ];
-
-  const exercises = [
-    { icon: "🦵", name: "Barbell Squat", muscle: "Quadriceps", sets: "4 sets × 10 reps", done: true },
-    { icon: "🫁", name: "Romanian Deadlift", muscle: "Hamstrings", sets: "3 sets × 12 reps", done: true },
-    { icon: "🦴", name: "Leg Press", muscle: "Quadriceps", sets: "4 sets × 12 reps", done: false },
-    { icon: "💪", name: "Calf Raises", muscle: "Calves", sets: "3 sets × 15 reps", done: false },
-  ];
-
-  const handleMoodSelect = (mood) => {
+  const handleMoodSelect = async (mood) => {
     setSelectedMood(mood.id);
-    setAiMessage(mood.message);
+    setMoodLoading(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/mood`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ mood: mood.id }),
+      });
+      const data = await res.json();
+      if (res.ok) setAiMessage(data.mood_check?.ai_message || null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setMoodLoading(false);
+    }
   };
 
   const getGreeting = () => {
@@ -65,19 +95,58 @@ export const Dashboard = () => {
 
   const firstName = user?.first_name || user?.email?.split("@")[0] || "there";
 
+  // Stats
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const daysTrainedThisMonth = workouts.filter(w => new Date(w.date) >= startOfMonth).length;
+  const daysTrainedThisWeek = workouts.filter(w => new Date(w.date) >= startOfWeek).length;
+  const currentWeight = progressLogs.length > 0 ? progressLogs[0].weight : null;
+  const firstWeight = progressLogs.length > 0 ? progressLogs[progressLogs.length - 1].weight : null;
+  const weightChange = currentWeight && firstWeight ? (currentWeight - firstWeight).toFixed(1) : null;
+
+  // Streak counter
+  const calcStreak = () => {
+    if (workouts.length === 0) return 0;
+    const sortedDates = [...new Set(workouts.map(w => w.date))].sort().reverse();
+    let streak = 0;
+    let checkDate = new Date();
+    checkDate.setHours(0, 0, 0, 0);
+    for (const dateStr of sortedDates) {
+      const workoutDate = new Date(dateStr);
+      workoutDate.setHours(0, 0, 0, 0);
+      const diff = (checkDate - workoutDate) / (1000 * 60 * 60 * 24);
+      if (diff <= 1) {
+        streak++;
+        checkDate = workoutDate;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    return streak;
+  };
+  const streak = calcStreak();
+
+  // Week tracker
+  const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const todayIndex = now.getDay() === 0 ? 6 : now.getDay() - 1;
+  const trainedDates = workouts.map(w => new Date(w.date).toDateString());
+  const getWeekDayDate = (index) => {
+    const date = new Date(startOfWeek);
+    date.setDate(startOfWeek.getDate() + index);
+    return date;
+  };
+
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
-
-        :root {
-          --bg: #080c10; --bg2: #0d1318; --accent: #00e5ff; --accent2: #00ff88;
-          --text: #f0f4f8; --muted: #6b7c8f; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08);
-        }
-
+        :root { --bg: #080c10; --bg2: #0d1318; --accent: #00e5ff; --accent2: #00ff88; --text: #f0f4f8; --muted: #6b7c8f; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08); }
         .db-body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
-
-        /* NAV */
         .db-nav { display: flex; align-items: center; height: 56px; background: rgba(8,12,16,0.97); border-bottom: 1px solid var(--border); padding: 0 20px; width: 100%; position: sticky; top: 0; z-index: 100; }
         .db-logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--accent); white-space: nowrap; flex-shrink: 0; margin-right: 24px; cursor: pointer; }
         .db-nav-links { display: flex; gap: 24px; flex: 1; }
@@ -87,38 +156,27 @@ export const Dashboard = () => {
         .db-nav-cta { display: flex; gap: 10px; align-items: center; flex-shrink: 0; margin-left: 24px; }
         .db-avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(0,229,255,0.1); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--accent); cursor: pointer; overflow: hidden; flex-shrink: 0; }
         .db-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .db-btn-danger { background: transparent; border: 1px solid rgba(255,80,80,0.3); color: #ff6b6b; padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.2s; }
-        .db-btn-danger:hover { background: rgba(255,80,80,0.08); }
-
-        /* PAGE */
+        .db-btn-danger { background: transparent; border: 1px solid rgba(255,80,80,0.3); color: #ff6b6b; padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
         .db-page { padding: 28px 24px; max-width: 1000px; margin: 0 auto; width: 100%; }
         .db-section-label { font-size: 12px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
         .db-page-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 2px; margin-bottom: 24px; }
-
-        /* STATS */
         .db-stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
         .db-stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
         .db-stat-icon { font-size: 18px; margin-bottom: 6px; }
         .db-stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--accent); letter-spacing: 1px; }
         .db-stat-num.green { color: var(--accent2); }
+        .db-stat-num.orange { color: #f97316; }
+        .db-stat-num.muted { color: var(--muted); font-size: 16px; padding-top: 6px; }
         .db-stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-        /* CARD */
         .db-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
         .db-card-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
-
-        /* WEEK */
         .db-week-row { display: flex; gap: 6px; }
         .db-day-chip { flex: 1; text-align: center; padding: 10px 4px; border-radius: 8px; border: 1px solid var(--border); font-size: 11px; }
         .db-day-chip.trained { background: rgba(0,255,136,0.08); border-color: rgba(0,255,136,0.3); color: var(--accent2); }
         .db-day-chip.today { border-color: var(--accent); color: var(--accent); }
         .db-day-name { font-weight: 600; margin-bottom: 2px; }
         .db-day-status { font-size: 10px; }
-
-        /* GRID */
         .db-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-
-        /* MOOD */
         .db-mood-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
         .db-mood-chip { background: var(--card); border: 1px solid var(--border); padding: 8px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; color: var(--text); }
         .db-mood-chip:hover { border-color: var(--accent); color: var(--accent); }
@@ -126,31 +184,27 @@ export const Dashboard = () => {
         .db-ai-message { background: rgba(0,229,255,0.06); border: 1px solid rgba(0,229,255,0.2); border-radius: 10px; padding: 14px; font-size: 13px; color: var(--text); line-height: 1.6; }
         .db-ai-badge { font-size: 11px; color: var(--accent); font-weight: 600; margin-bottom: 6px; }
         .db-mood-placeholder { font-size: 13px; color: var(--muted); font-style: italic; text-align: center; padding: 12px 0; }
-
-        /* EXERCISES */
-        .db-exercise-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-        .db-exercise-row:last-child { border-bottom: none; }
-        .db-exercise-img { width: 36px; height: 36px; border-radius: 6px; background: rgba(0,229,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-        .db-exercise-name { font-size: 13px; font-weight: 500; }
-        .db-exercise-name.done { text-decoration: line-through; color: var(--muted); }
-        .db-exercise-muscle { font-size: 11px; color: var(--muted); }
-        .db-exercise-check { margin-left: auto; accent-color: var(--accent2); width: 16px; height: 16px; cursor: pointer; }
-        .db-btn-sm { background: var(--accent); color: #000; padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; }
-        .db-btn-sm-outline { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 5px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
-
-        /* PROGRESS */
         .db-progress-entry { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
         .db-progress-entry:last-child { border-bottom: none; }
         .db-progress-date { color: var(--muted); }
         .db-progress-weight { color: var(--accent); font-weight: 600; }
-
+        .db-empty-state { text-align: center; padding: 20px; color: var(--muted); font-size: 13px; }
+        .db-btn-sm { background: var(--accent); color: #000; padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; }
+        .db-btn-sm-outline { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 5px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+        .db-loading { text-align: center; padding: 60px; color: var(--muted); }
+        .db-spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: db-spin 0.8s linear infinite; margin: 0 auto 12px; }
+        @keyframes db-spin { to { transform: rotate(360deg); } }
         @keyframes db-fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
         .db-page > * { animation: db-fadeUp 0.4s ease both; }
+        @media (max-width: 768px) {
+        .db-nav {
+              display: none !important;
+          }
+      }
       `}</style>
 
       <div className="db-body">
-
-        {/* NAVBAR */}
+        <MobileNavbar />
         <nav className="db-nav">
           <div className="db-logo" onClick={() => navigate("/")}>GymMind AI</div>
           <div className="db-nav-links">
@@ -162,11 +216,7 @@ export const Dashboard = () => {
             <a onClick={() => navigate("/profile")}>Profile</a>
           </div>
           <div className="db-nav-cta">
-            <div
-              className="db-avatar"
-              onClick={() => navigate("/profile")}
-              title="Go to profile"
-            >
+            <div className="db-avatar" onClick={() => navigate("/profile")}>
               {user?.photo_url
                 ? <img src={user.photo_url} alt="profile" />
                 : (user?.first_name?.[0] || "U").toUpperCase()
@@ -177,123 +227,142 @@ export const Dashboard = () => {
         </nav>
 
         <div className="db-page">
-
           <div className="db-section-label">Welcome back</div>
           <div className="db-page-title">{getGreeting()}, {firstName.toUpperCase()} 👋</div>
 
-          {/* STATS */}
-          <div className="db-stats-row">
-            <div className="db-stat-card">
-              <div className="db-stat-icon">🔥</div>
-              <div className="db-stat-num">12</div>
-              <div className="db-stat-label">Days trained this month</div>
+          {coachMessage && (
+            <div style={{ background: "rgba(0,229,255,0.04)", border: "1px solid rgba(0,229,255,0.15)", borderRadius: "10px", padding: "14px 18px", marginBottom: "20px", fontSize: "14px", color: "var(--text)", lineHeight: "1.6" }}>
+              <div style={{ fontSize: "11px", color: "var(--accent)", fontWeight: "600", marginBottom: "6px", letterSpacing: "1px", textTransform: "uppercase" }}>🤖 AI Coach</div>
+              {coachMessage}
             </div>
-            <div className="db-stat-card">
-              <div className="db-stat-icon">📉</div>
-              <div className="db-stat-num green">-2.4</div>
-              <div className="db-stat-label">kg lost this month</div>
-            </div>
-            <div className="db-stat-card">
-              <div className="db-stat-icon">🏋️</div>
-              <div className="db-stat-num">5</div>
-              <div className="db-stat-label">Workouts this week</div>
-            </div>
-            <div className="db-stat-card">
-              <div className="db-stat-icon">🎯</div>
-              <div className="db-stat-num" style={{ fontSize: "18px", paddingTop: "4px" }}>
-                {user?.fitness_goal || "Set your goal"}
-              </div>
-              <div className="db-stat-label">Current goal</div>
-            </div>
-          </div>
+          )}
 
-          {/* WEEK TRACKER */}
-          <div className="db-card">
-            <div className="db-card-title">📅 This week</div>
-            <div className="db-week-row">
-              {weekDays.map((day) => (
-                <div key={day.name} className={`db-day-chip ${day.trained ? "trained" : ""} ${day.today ? "today" : ""}`}>
-                  <div className="db-day-name">{day.name}</div>
-                  <div className="db-day-status">{day.trained ? "✅" : day.today ? "Today" : "—"}</div>
+          {loading ? (
+            <div className="db-loading">
+              <div className="db-spinner"></div>
+              <div>Loading your data...</div>
+            </div>
+          ) : (
+            <>
+              {/* STATS */}
+              <div className="db-stats-row">
+                <div className="db-stat-card">
+                  <div className="db-stat-icon">🔥</div>
+                  <div className="db-stat-num">{daysTrainedThisMonth}</div>
+                  <div className="db-stat-label">Days trained this month</div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="db-grid-2">
-
-            {/* MOOD CHECK */}
-            <div className="db-card">
-              <div className="db-card-title">😌 Daily Mood Check</div>
-              <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "12px" }}>How are you feeling today?</p>
-              <div className="db-mood-row">
-                {moods.map((mood) => (
-                  <div
-                    key={mood.id}
-                    className={`db-mood-chip ${selectedMood === mood.id ? "selected" : ""}`}
-                    onClick={() => handleMoodSelect(mood)}
-                  >
-                    {mood.emoji} {mood.label}
+                <div className="db-stat-card">
+                  <div className="db-stat-icon">⚖️</div>
+                  <div className={`db-stat-num ${weightChange !== null && weightChange < 0 ? "green" : ""}`}>
+                    {weightChange !== null ? weightChange : "—"}
                   </div>
-                ))}
-              </div>
-              {aiMessage
-                ? <div className="db-ai-message">
-                  <div className="db-ai-badge">🤖 AI Coach</div>
-                  {aiMessage}
+                  <div className="db-stat-label">kg change</div>
                 </div>
-                : <div className="db-mood-placeholder">Select your mood to get a message from your AI Coach</div>
-              }
-            </div>
-
-            {/* TODAY'S WORKOUT */}
-            <div className="db-card">
-              <div className="db-card-title">
-                <span>🏋️ Today's Workout</span>
-                <button className="db-btn-sm" onClick={() => navigate("/workout")}>Start workout</button>
-              </div>
-              {exercises.map((ex) => (
-                <div key={ex.name} className="db-exercise-row">
-                  <div className="db-exercise-img">{ex.icon}</div>
-                  <div>
-                    <div className={`db-exercise-name ${ex.done ? "done" : ""}`}>{ex.name}</div>
-                    <div className="db-exercise-muscle">{ex.muscle} · {ex.sets}</div>
-                  </div>
-                  <input type="checkbox" className="db-exercise-check" defaultChecked={ex.done} />
+                <div className="db-stat-card">
+                  <div className="db-stat-icon">🏋️</div>
+                  <div className="db-stat-num">{daysTrainedThisWeek}</div>
+                  <div className="db-stat-label">Workouts this week</div>
                 </div>
-              ))}
-            </div>
-
-          </div>
-
-          {/* PROGRESS MINI */}
-          <div className="db-card">
-            <div className="db-card-title">
-              <span>📈 Recent Progress</span>
-              <button className="db-btn-sm-outline" onClick={() => navigate("/progress")}>View all</button>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-              <div>
-                {[
-                  { date: "Today", weight: "62.0 kg" },
-                  { date: "Yesterday", weight: "62.2 kg" },
-                  { date: "3 days ago", weight: "62.5 kg" },
-                  { date: "4 days ago", weight: "62.8 kg" },
-                ].map((entry) => (
-                  <div key={entry.date} className="db-progress-entry">
-                    <span className="db-progress-date">{entry.date}</span>
-                    <span className="db-progress-weight">{entry.weight}</span>
+                <div className="db-stat-card">
+                  <div className="db-stat-icon">⚡</div>
+                  <div className={`db-stat-num ${streak > 0 ? "orange" : "muted"}`}>
+                    {streak > 0 ? `${streak}🔥` : "0"}
                   </div>
-                ))}
+                  <div className="db-stat-label">Day streak</div>
+                </div>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "rgba(0,229,255,0.04)", borderRadius: "10px", padding: "16px", textAlign: "center" }}>
-                <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "40px", color: "var(--accent2)" }}>-0.8</div>
-                <div style={{ fontSize: "12px", color: "var(--muted)" }}>kg lost this week</div>
-                <div style={{ fontSize: "11px", color: "var(--accent2)", marginTop: "4px" }}>↓ On track with your goal</div>
-              </div>
-            </div>
-          </div>
 
+              {/* WEEK TRACKER */}
+              <div className="db-card">
+                <div className="db-card-title">📅 This week</div>
+                <div className="db-week-row">
+                  {weekDays.map((day, index) => {
+                    const dayDate = getWeekDayDate(index);
+                    const isTrained = trainedDates.includes(dayDate.toDateString());
+                    const isToday = index === todayIndex;
+                    return (
+                      <div key={day} className={`db-day-chip ${isTrained ? "trained" : ""} ${isToday ? "today" : ""}`}>
+                        <div className="db-day-name">{day}</div>
+                        <div className="db-day-status">{isTrained ? "✅" : isToday ? "Today" : "—"}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="db-grid-2">
+
+                {/* MOOD CHECK */}
+                <div className="db-card">
+                  <div className="db-card-title">😌 Daily Mood Check</div>
+                  <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "12px" }}>How are you feeling today?</p>
+                  <div className="db-mood-row">
+                    {moods.map((mood) => (
+                      <div
+                        key={mood.id}
+                        className={`db-mood-chip ${selectedMood === mood.id ? "selected" : ""}`}
+                        onClick={() => handleMoodSelect(mood)}
+                      >
+                        {mood.emoji} {mood.label}
+                      </div>
+                    ))}
+                  </div>
+                  {moodLoading ? (
+                    <div className="db-mood-placeholder">Getting your AI message...</div>
+                  ) : aiMessage ? (
+                    <div className="db-ai-message">
+                      <div className="db-ai-badge">🤖 AI Coach</div>
+                      {aiMessage}
+                    </div>
+                  ) : (
+                    <div className="db-mood-placeholder">Select your mood to get a message from your AI Coach</div>
+                  )}
+                </div>
+
+                {/* RECENT PROGRESS */}
+                <div className="db-card">
+                  <div className="db-card-title">
+                    <span>📈 Recent Progress</span>
+                    <button className="db-btn-sm-outline" onClick={() => navigate("/progress")}>View all</button>
+                  </div>
+                  {progressLogs.length === 0 ? (
+                    <div className="db-empty-state">
+                      No weight logs yet.<br />
+                      <span style={{ color: "var(--accent)", cursor: "pointer", fontSize: "13px" }} onClick={() => navigate("/progress")}>
+                        Log your first weight →
+                      </span>
+                    </div>
+                  ) : (
+                    progressLogs.slice(0, 4).map((log, i) => (
+                      <div key={i} className="db-progress-entry">
+                        <span className="db-progress-date">{log.date}</span>
+                        <span className="db-progress-weight">{log.weight} kg</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+              </div>
+
+              {/* WORKOUT CTA */}
+              <div className="db-card" style={{ textAlign: "center", padding: "32px" }}>
+                <div style={{ fontSize: "32px", marginBottom: "12px" }}>🏋️</div>
+                <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "24px", letterSpacing: "1px", marginBottom: "8px" }}>
+                  {workouts.length === 0 ? "START YOUR FIRST WORKOUT" : "READY FOR TODAY'S WORKOUT?"}
+                </div>
+                <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "16px" }}>
+                  {workouts.length === 0
+                    ? "Your AI Coach will generate a personalized routine based on your fitness goal."
+                    : `You've completed ${daysTrainedThisMonth} workouts this month. Keep it up!`
+                  }
+                </p>
+                <button className="db-btn-sm" onClick={() => navigate("/workout")} style={{ padding: "10px 28px", fontSize: "14px" }}>
+                  {workouts.length === 0 ? "Generate my workout" : "Go to My Workout"}
+                </button>
+              </div>
+
+            </>
+          )}
         </div>
       </div>
     </>

@@ -1,17 +1,19 @@
 import React from "react";
 import { MoodCheck } from "../components/MoodCheck";
 import { Link, useNavigate } from "react-router-dom";
+import { MobileNavbar } from "../components/MobileNavbar";
 
 export const MoodCheckPage = () => {
     const navigate = useNavigate();
     return (
         <div className="moodcheck-page">
+            <MobileNavbar />
             <nav className="moodcheck-navbar">
                 <div className="moodcheck-left">
                     <div className="moodcheck-logo">GYMMIND AI</div>
                     <div className="moodcheck-links">
                         <Link to="/dashboard">Dashboard</Link>
-                        <Link to="/myworkout">My Workout</Link>
+                        <Link to="/workout">My Workout</Link>
                         <Link to="/moodcheck" className="active">Mood Check</Link>
                         <Link to="/progress">Progress</Link>
                         <Link to="/nutrition">Nutrition</Link>
