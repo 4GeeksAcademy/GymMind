@@ -602,19 +602,39 @@ const deleteFavoriteMeal = async (mealId) => {
                                     >
                                         ❤️ Save Favorite
                                     </button>
-                                    <h4>Ingredients</h4>
-                                    <ul>
-                                        {meal.ingredients?.map((ingredient, i) => (
-                                            <li key={i}>{ingredient}</li>
-                                        ))}
-                                    </ul>
+                                    <div className="recipe-details-grid">
+                                        <div className="recipe-section ingredients-section">
+                                            <div className="recipe-section-header">
+                                                <span>🥦</span>
+                                                <h4>Ingredients</h4>
+                                            </div>
 
-                                    <h4>Recipe</h4>
-                                    <ol>
-                                        {meal.instructions?.map((step, i) => (
-                                            <li key={i}>{step}</li>
-                                        ))}
-                                    </ol>
+                                            <ul className="ingredients-list">
+                                                {meal.ingredients?.map((ingredient, i) => (
+                                                    <li key={i}>
+                                                        <span className="ingredient-dot"></span>
+                                                        {ingredient}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+
+                                        <div className="recipe-section preparation-section">
+                                            <div className="recipe-section-header">
+                                                <span>👨‍🍳</span>
+                                                <h4>Preparation</h4>
+                                            </div>
+
+                                            <ol className="preparation-list">
+                                                {meal.instructions?.map((step, i) => (
+                                                    <li key={i}>
+                                                        <span className="step-number">{i + 1}</span>
+                                                        <p>{step}</p>
+                                                    </li>
+                                                ))}
+                                            </ol>
+                                        </div>
+                                    </div>
                                 </div>
                             ))}
                         </div>
