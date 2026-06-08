@@ -8,6 +8,12 @@ export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [notification, setNotification] = useState(null);
+
+  const showNotification = (msg, type = "error") => {
+    setNotification({ msg, type });
+    setTimeout(() => setNotification(null), 3500);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,16 +30,28 @@ export const Login = () => {
         dispatch({ type: "login", payload: { token: data.token, user: data.user } });
         navigate("/dashboard");
       } else {
-        alert(data.error || "Login failed");
+        showNotification(data.error || "Login failed");
       }
     } catch (error) {
       console.log(error);
-      alert("Login failed");
+      showNotification("Login failed");
     }
   };
 
   return (
     <div className="signin-page">
+      {notification && (
+        <div style={{
+          position: "fixed", top: "24px", left: "50%", transform: "translateX(-50%)",
+          background: notification.type === "success" ? "rgba(0,255,136,0.1)" : "rgba(255,80,80,0.1)",
+          border: `1px solid ${notification.type === "success" ? "#00ff88" : "#ff6b6b"}`,
+          color: notification.type === "success" ? "#00ff88" : "#ff6b6b",
+          padding: "12px 24px", borderRadius: "8px", fontSize: "14px", fontWeight: "500",
+          zIndex: 9999, backdropFilter: "blur(10px)", whiteSpace: "nowrap"
+        }}>
+          {notification.msg}
+        </div>
+      )}
       <nav className="signin-navbar">
         <div className="signin-logo">GYMMIND AI</div>
         <div className="signin-actions">
@@ -56,12 +74,7 @@ export const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-
-            <button
-              type="button"
-              className="password-toggle"
-              onClick={() => setShowPassword(!showPassword)}
-            >
+            <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)}>
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
