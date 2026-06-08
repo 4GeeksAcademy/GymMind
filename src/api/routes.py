@@ -418,6 +418,7 @@ def healthy_meals():
 def add_food_log():
     user_id = int(get_jwt_identity())
     body = request.get_json()
+
     new_food = FoodLog(
         user_id=user_id,
         food_name=body.get("food_name"),
@@ -429,20 +430,31 @@ def add_food_log():
         serving=body.get("serving"),
         source=body.get("source")
     )
+
     db.session.add(new_food)
     db.session.commit()
-    return jsonify({"message": "Food added to log", "food": new_food.serialize()}), 201
+
+    return jsonify({
+        "message": "Food added to log",
+        "food": new_food.serialize()
+    }), 201
 
 
 @api.route("/food-log/today", methods=["GET"])
 @jwt_required()
 def get_today_food_log():
-    from api.models import NutritionLog as FoodLog
     user_id = int(get_jwt_identity())
+
     today = date.today()
+
     foods = FoodLog.query.filter(
-        FoodLog.user_id == user_id, db.func.date(FoodLog.date) == today).all()
-    return jsonify({"foods": [food.serialize() for food in foods]}), 200
+        FoodLog.user_id == user_id,
+        db.func.date(FoodLog.created_at) == today
+    ).order_by(FoodLog.created_at.desc()).all()
+
+    return jsonify({
+        "foods": [food.serialize() for food in foods]
+    }), 200
 
 
 @api.route("/food-log/<int:food_id>", methods=["DELETE"])
@@ -460,23 +472,38 @@ def delete_food_log(food_id):
 @api.route("/food-log/history", methods=["GET"])
 @jwt_required()
 def get_food_log_history():
-    from api.models import NutritionLog as FoodLog
     user_id = int(get_jwt_identity())
-    foods = FoodLog.query.filter_by(
-        user_id=user_id).order_by(FoodLog.date.desc()).all()
-    history = {}
-    for food in foods:
-        day = food.date.isoformat()
-        if day not in history:
-            history[day] = {"date": day, "foods": [], "totals": {
-                "calories": 0, "protein": 0, "carbs": 0, "fats": 0}}
-        history[day]["foods"].append(food.serialize())
-        history[day]["totals"]["calories"] += food.calories
-        history[day]["totals"]["protein"] += food.protein
-        history[day]["totals"]["carbs"] += food.carbs
-        history[day]["totals"]["fats"] += food.fats
-    return jsonify({"history": list(history.values())}), 200
 
+    foods = FoodLog.query.filter_by(
+        user_id=user_id
+    ).order_by(FoodLog.created_at.desc()).all()
+
+    history = {}
+
+    for food in foods:
+        day = food.created_at.strftime("%Y-%m-%d")
+
+        if day not in history:
+            history[day] = {
+                "date": day,
+                "foods": [],
+                "totals": {
+                    "calories": 0,
+                    "protein": 0,
+                    "carbs": 0,
+                    "fats": 0
+                }
+            }
+
+        history[day]["foods"].append(food.serialize())
+        history[day]["totals"]["calories"] += food.calories or 0
+        history[day]["totals"]["protein"] += food.protein or 0
+        history[day]["totals"]["carbs"] += food.carbs or 0
+        history[day]["totals"]["fats"] += food.fats or 0
+
+    return jsonify({
+        "history": list(history.values())
+    }), 200
 
 @api.route('/user/<int:user_id>', methods=['GET'])
 def get_user_profile(user_id):
