@@ -356,7 +356,7 @@ export const Signup = () => {
 
                 <h2>Pricing</h2>
 
-                <div className="section-grid">
+                <div className="pricing-cards">
                     <div className="pricing-card">
                         <h3>Free</h3>
                         <h1>$0</h1>
